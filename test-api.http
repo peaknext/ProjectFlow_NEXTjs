@@ -1,0 +1,52 @@
+### ProjectFlow API Tests
+### Use REST Client extension in VSCode
+
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### Variables (update after login)
+@sessionToken = your-session-token-here
+
+###############################################
+# Authentication Tests
+###############################################
+
+### 1. Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "sakonpalliative@gmail.com",
+  "password": "your-password"
+}
+
+### 2. Get Current User (requires auth)
+GET {{baseUrl}}/api/users/me
+Authorization: Bearer {{sessionToken}}
+
+### 3. Logout
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{sessionToken}}
+
+###############################################
+# Tasks Tests
+###############################################
+
+### 4. Get All Tasks
+GET {{baseUrl}}/api/tasks
+Authorization: Bearer {{sessionToken}}
+
+### 5. Get Tasks by Project
+GET {{baseUrl}}/api/tasks?projectId=your-project-id
+Authorization: Bearer {{sessionToken}}
+
+### 6. Get Tasks with Filters
+GET {{baseUrl}}/api/tasks?isClosed=false&limit=10
+Authorization: Bearer {{sessionToken}}
+
+###############################################
+# Health Check (if needed)
+###############################################
+
+### 7. Check if API is running
+GET {{baseUrl}}/api/health

@@ -1,0 +1,108 @@
+{
+  "project": {
+    "name": "ProjectFlow",
+    "description": "Migration from Google App Script to Next.js with 95% feature parity",
+    "tech_stack": [
+      "Next.js",
+      "TypeScript",
+      "shadcn/ui",
+      "Tailwind CSS",
+      "Prisma",
+      "PostgreSQL"
+    ]
+  },
+
+  "claude_code": {
+    "model": "claude-sonnet-4-5-20250929",
+    "skills_enabled": true,
+    "mcp_servers_enabled": true,
+
+    "custom_skills": {
+      "migration_analyzer": {
+        "description": "Analyze GAS code and suggest Next.js equivalents",
+        "trigger": "When analyzing .gs files or migration tasks"
+      },
+      "ui_comparison": {
+        "description": "Compare old UI screenshots with new implementation",
+        "trigger": "During UI/UX validation"
+      },
+      "prisma_schema_builder": {
+        "description": "Generate Prisma schemas from GAS data structures",
+        "trigger": "When defining database models"
+      }
+    },
+
+    "context_management": {
+      "always_include": [
+        "docs/architecture.md",
+        "docs/migration-plan.md",
+        "prisma/schema.prisma"
+      ],
+      "include_on_demand": [
+        "docs/gas-functions.md",
+        "src/lib/constants.ts",
+        "tailwind.config.ts"
+      ]
+    }
+  },
+
+  "mcp_servers": {
+    "filesystem": {
+      "enabled": true,
+      "purpose": "Read GAS files and create new Next.js files",
+      "priority": "high"
+    },
+    "postgres": {
+      "enabled": true,
+      "purpose": "Direct database queries for migration validation",
+      "config": {
+        "connection_string": "${DATABASE_URL}"
+      },
+      "priority": "high"
+    },
+    "git": {
+      "enabled": true,
+      "purpose": "Track changes and create migration commits",
+      "priority": "medium"
+    },
+    "web_search": {
+      "enabled": true,
+      "purpose": "Latest Next.js 15 and shadcn best practices",
+      "priority": "medium"
+    },
+    "screenshot": {
+      "enabled": true,
+      "purpose": "Compare old vs new UI",
+      "priority": "low"
+    },
+    "shadcn": {
+      "enabled": true,
+      "purpose": "Generate shadcn components",
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"]
+    }
+  },
+
+  "working_modes": {
+    "migration_mode": {
+      "description": "Converting GAS functions to Next.js",
+      "context_focus": ["gas-functions.md", "legacy code"],
+      "output_style": "Step-by-step with comparison"
+    },
+    "ui_building_mode": {
+      "description": "Building shadcn components",
+      "context_focus": ["components/", "shadcn docs"],
+      "output_style": "Complete component with variants"
+    },
+    "database_mode": {
+      "description": "Prisma schema and migrations",
+      "context_focus": ["schema.prisma", "GAS data"],
+      "output_style": "Schema + migration scripts"
+    },
+    "testing_mode": {
+      "description": "Validation against 95% target",
+      "context_focus": ["test results", "feature checklist"],
+      "output_style": "Test results + gap analysis"
+    }
+  }
+}

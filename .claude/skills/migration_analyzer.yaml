@@ -1,0 +1,41 @@
+name: GAS Migration Analyzer
+description: Analyze Google App Script code and suggest Next.js equivalents
+version: 1.0
+
+triggers:
+  - "analyze GAS function"
+  - "migrate this code"
+  - "convert from GAS"
+
+instructions: |
+  When analyzing GAS code:
+  1. Identify the function purpose
+  2. Map GAS APIs to Next.js equivalents:
+     - SpreadsheetApp → Prisma queries
+     - UrlFetchApp → fetch() or axios
+     - HtmlService → Next.js pages/components
+     - ScriptApp → Next.js API routes
+  3. Suggest modern patterns (async/await, TypeScript)
+  4. Highlight breaking changes or limitations
+  5. Provide complete Next.js code with error handling
+
+output_format: |
+  ## Original GAS Function
+  ```javascript
+  [original code]
+  ```
+
+  ## Next.js Equivalent
+  ```typescript
+  [new code]
+  ```
+
+  ## Changes & Considerations
+  - Point 1
+  - Point 2
+
+  ## Testing Notes
+  - How to test this function
+
+---
+

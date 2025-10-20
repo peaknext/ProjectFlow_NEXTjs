@@ -1,0 +1,24 @@
+name: Prisma Schema Optimizer
+description: Optimize Prisma schemas and queries
+version: 1.0
+
+triggers:
+  - "optimize prisma"
+  - "improve query"
+  - "database performance"
+
+instructions: |
+  When working with Prisma:
+  1. Add proper indexes for frequently queried fields
+  2. Use proper relations (1-to-many, many-to-many)
+  3. Implement soft deletes if needed
+  4. Add @map for PostgreSQL naming conventions
+  5. Use @@index for composite indexes
+  6. Suggest query optimization (select, include)
+  7. Add database-level constraints
+
+best_practices:
+  - Use transactions for multi-model operations
+  - Implement connection pooling
+  - Use prepared statements
+  - Add proper error handling

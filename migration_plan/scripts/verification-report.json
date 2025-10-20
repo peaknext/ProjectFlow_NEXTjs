@@ -1,0 +1,111 @@
+{
+  "timestamp": "2025-10-20T14:58:24.166Z",
+  "success": false,
+  "recordCounts": [
+    {
+      "table": "Users",
+      "expected": 2,
+      "actual": 2,
+      "match": true
+    },
+    {
+      "table": "Sessions",
+      "expected": 2,
+      "actual": 2,
+      "match": true
+    },
+    {
+      "table": "Mission Groups",
+      "expected": 8,
+      "actual": 8,
+      "match": true
+    },
+    {
+      "table": "Divisions",
+      "expected": 44,
+      "actual": 44,
+      "match": true
+    },
+    {
+      "table": "Departments",
+      "expected": 71,
+      "actual": 71,
+      "match": true
+    },
+    {
+      "table": "Projects",
+      "expected": 12,
+      "actual": 12,
+      "match": true
+    },
+    {
+      "table": "Statuses",
+      "expected": 50,
+      "actual": 50,
+      "match": true
+    },
+    {
+      "table": "Tasks",
+      "expected": 10,
+      "actual": 10,
+      "match": true
+    },
+    {
+      "table": "Comments",
+      "expected": 0,
+      "actual": 0,
+      "match": true
+    },
+    {
+      "table": "Notifications",
+      "expected": 9,
+      "actual": 9,
+      "match": true
+    },
+    {
+      "table": "Checklists",
+      "expected": 0,
+      "actual": 7,
+      "match": false
+    },
+    {
+      "table": "Phases",
+      "expected": 31,
+      "actual": 31,
+      "match": true
+    },
+    {
+      "table": "IT Goals",
+      "expected": 21,
+      "actual": 21,
+      "match": true
+    },
+    {
+      "table": "Action Plans",
+      "expected": 16,
+      "actual": 16,
+      "match": true
+    },
+    {
+      "table": "Hospital Missions",
+      "expected": 0,
+      "actual": 4,
+      "match": false
+    }
+  ],
+  "integrityIssues": [],
+  "spotChecks": [
+    {
+      "type": "user",
+      "status": "pass"
+    },
+    {
+      "type": "department",
+      "status": "pass"
+    },
+    {
+      "type": "task",
+      "status": "pass"
+    }
+  ]
+}

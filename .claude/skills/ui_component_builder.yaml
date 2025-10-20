@@ -1,0 +1,26 @@
+name: shadcn Component Builder
+description: Build shadcn/ui components with best practices
+version: 1.0
+
+triggers:
+  - "create component"
+  - "build UI for"
+  - "make a form"
+
+instructions: |
+  When building UI components:
+  1. Use shadcn/ui components as base
+  2. Follow Tailwind CSS best practices
+  3. Implement proper TypeScript types
+  4. Add accessibility (ARIA labels)
+  5. Include responsive design
+  6. Add loading/error states
+  7. Use React Server Components when possible
+
+templates:
+  form: |
+    Use shadcn Form + react-hook-form + zod
+  table: |
+    Use shadcn Table with sorting, filtering, pagination
+  dialog: |
+    Use shadcn Dialog with proper focus management
