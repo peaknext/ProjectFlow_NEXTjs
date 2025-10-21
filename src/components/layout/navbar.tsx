@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bell, Search, ChevronDown, User, Moon, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/hooks/use-auth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ const currentUser = {
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
+  const { logout } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-card">
@@ -254,7 +256,10 @@ export function Navbar() {
               </div>
               <DropdownMenuSeparator />
               <div className="py-1">
-                <DropdownMenuItem className="text-red-600 py-3 px-4 pl-5">
+                <DropdownMenuItem
+                  className="text-red-600 py-3 px-4 pl-5 cursor-pointer"
+                  onClick={() => logout()}
+                >
                   <LogOut className="h-4 w-4 mr-3" />
                   ออกจากระบบ
                 </DropdownMenuItem>

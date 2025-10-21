@@ -15,7 +15,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  captionLayout = "label",
+  captionLayout = "dropdown",
   buttonVariant = "ghost",
   formatters,
   components,
@@ -29,15 +29,26 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "bg-background group/calendar p-3 [--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
+        "bg-transparent group/calendar p-3 w-[280px] [--cell-size:2rem]",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date, options) => {
+          // Always use Thai locale for month names
+          return date.toLocaleString("th-TH", { month: "long" });
+        },
+        formatWeekdayName: (date, options) => {
+          // Always use Thai locale for weekday names
+          return date.toLocaleString("th-TH", { weekday: "narrow" });
+        },
+        formatYearDropdown: (date, options) => {
+          // Convert to Buddhist Era (add 543 years)
+          const buddhistYear = date.getFullYear() + 543;
+          return buddhistYear.toString();
+        },
         ...formatters,
       }}
       classNames={{

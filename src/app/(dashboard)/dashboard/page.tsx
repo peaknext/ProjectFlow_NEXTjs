@@ -1,7 +1,10 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Plus, TrendingUp, CheckCircle2, AlertTriangle, Calendar as CalendarIcon, Settings2 } from "lucide-react"
+import { CreateTaskButton } from "@/components/common/create-task-button"
+import { TrendingUp, CheckCircle2, AlertTriangle, Calendar as CalendarIcon, Settings2 } from "lucide-react"
 
 export default function DashboardPage() {
   return (
@@ -14,10 +17,10 @@ export default function DashboardPage() {
             <Settings2 className="h-4 w-4 mr-2" />
             ตัวกรอง
           </Button>
-          <Button size="lg" className="h-12 text-primary-foreground">
-            <Plus className="h-5 w-5 mr-2" />
-            <span className="font-medium text-base">สร้างงานใหม่</span>
-          </Button>
+          <CreateTaskButton onClick={() => {
+            // TODO: Open create task modal
+            console.log('Create task clicked');
+          }} />
         </div>
       </div>
 

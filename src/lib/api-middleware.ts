@@ -25,6 +25,25 @@ type ApiHandler<T = any> = (
 export function withAuth<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
   return async (req: NextRequest, context: T) => {
     try {
+      // BYPASS AUTH FOR TESTING (controlled by .env)
+      if (process.env.BYPASS_AUTH === 'true') {
+        const authenticatedReq = req as AuthenticatedRequest;
+        // Mock session with first user from database
+        authenticatedReq.session = {
+          userId: 'user001',
+          user: {
+            id: 'user001',
+            email: 'test@example.com',
+            fullName: 'Test User',
+            role: 'ADMIN',
+            departmentId: 'dept001',
+            userStatus: 'ACTIVE',
+            profileImageUrl: null,
+          },
+        };
+        return await handler(authenticatedReq, context);
+      }
+
       const session = await getSession(req);
 
       if (!session) {

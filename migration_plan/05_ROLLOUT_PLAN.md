@@ -350,6 +350,22 @@ k6 run tests/load/api-load.js
 
 ## 2. Phased Rollout Plan
 
+⚠️ **CRITICAL BLOCKER**: Authentication frontend (login/registration/password reset pages) is NOT implemented.
+**Cannot proceed with rollout** until authentication pages are built and tested.
+
+**Required Before Phase 0:**
+- [ ] Login Page implementation
+- [ ] Registration Page implementation
+- [ ] Email Verification Page implementation
+- [ ] Password Reset Request Page implementation
+- [ ] Password Reset Page implementation
+- [ ] Session management in frontend
+- [ ] Auto-redirect logic (logged in → dashboard, logged out → login)
+
+**Estimated Time**: 3-4 days development + 2 days testing = **~1 week**
+
+---
+
 ### 2.1 Phase 0: Pre-Launch Prep (Week -2)
 
 **Objectives:**
@@ -358,6 +374,7 @@ k6 run tests/load/api-load.js
 - Setup monitoring
 
 **Tasks:**
+- [ ] ✅ **Authentication pages complete and tested** ← NEW BLOCKER
 - [ ] All tests passing (unit, integration, e2e)
 - [ ] Load testing completed (100 concurrent users)
 - [ ] Security audit passed

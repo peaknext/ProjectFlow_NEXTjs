@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { SyncStatusFooter } from "@/components/layout/sync-status-footer"
 
 const mainNavigation = [
   {
@@ -218,13 +219,8 @@ export function Sidebar() {
         </div>
       </ScrollArea>
 
-      {/* Footer - Fixed */}
-      <div className="border-t bg-muted/30 px-4 py-3">
-        <div className="text-xs text-center text-muted-foreground space-y-0.5">
-          <div className="font-medium">version 1.0.0</div>
-          <div>©2025 นพ.เกียรติศักดิ์ พรหมเสนสา</div>
-        </div>
-      </div>
+      {/* Footer - Fixed with Sync Status */}
+      <SyncStatusFooter />
     </div>
   )
 }

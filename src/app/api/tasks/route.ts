@@ -79,7 +79,6 @@ async function handler(req: AuthenticatedRequest) {
           select: {
             id: true,
             name: true,
-            color: true,
           },
         },
         creator: {
