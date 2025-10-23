@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 **DO NOT REVERT ANYTHING IF I DON'T REQUEST**
-**ProjectFlow** is a comprehensive project and task management system migrated from Google Apps Script to Next.js 15 + PostgreSQL. It's designed for healthcare organizations with hierarchical role-based access control and real-time collaboration features.
+**ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system migrated from Google Apps Script to Next.js 15 + PostgreSQL. It's designed for healthcare organizations with hierarchical role-based access control and real-time collaboration features.
 
 **Current Status**: Phase 2 Complete (API 100%), Phase 3 In Progress (Frontend ~50%)
 **Tech Stack**: Next.js 15 (App Router), TypeScript, PostgreSQL, Prisma ORM, React Query, Zustand, Tailwind CSS, shadcn/ui
@@ -53,10 +53,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Recent Completions (2025-10-23):**
 ✅ **Authentication Complete**: All authentication pages implemented with email verification and password reset flow via Resend API. See `AUTHENTICATION_IMPLEMENTATION_COMPLETE.md` for details.
 ✅ **Password Reset Complete**: Full password reset flow with popover validation, strength meter, and real-time matching. See `PASSWORD_RESET_IMPLEMENTATION.md` for details.
+✅ **Multi-Assignee System**: Tasks now support multiple assignees via `task_assignees` many-to-many table. API accepts `assigneeUserIds` array. Backward compatible with legacy `assigneeUserId` field. See `MULTI_ASSIGNEE_IMPLEMENTATION.md` for details.
 ✅ **Workspace API Complete**: Role-based hierarchical navigation API with **additionalRoles support**. See `src/app/api/workspace/route.ts` and `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md` for details.
 ✅ **Breadcrumb Navigation Complete**: Multi-level interactive breadcrumb with popover selectors for navigation. See "Navigation Components" section below.
 ✅ **Workspace Navigation Complete**: Collapsible cards design with text wrapping and direct department navigation. See `WORKSPACE_NAVIGATION_REDESIGN.md` for details.
 ✅ **Department Tasks View Complete**: Full department-level task management with optimistic updates, project grouping, pinned tasks section, and consistent UI sizing (h-8 for all selectors). See "Department Tasks View" section below.
+✅ **ADMIN Role Authentication Fix**: BYPASS_AUTH mode now fetches real user data from database. Use `BYPASS_USER_ID=admin001` for ADMIN testing. Created admin001 user via script.
+✅ **Department Navigation Fix**: Department tasks view now uses URL query parameter (`?departmentId=`) for navigation. Breadcrumb and project selector update correctly when navigating between departments.
+✅ **CreateTaskModal Project Selector Fix**: Modal now receives pre-filtered projects from parent component (simple pass-through pattern). Projects match breadcrumb selector.
 
 ## Commands
 
@@ -92,7 +96,8 @@ node tests/api/test-runner.js      # Run API tests directly
 - Dev server must be running on port 3010
 - Database must be seeded with test data from `prisma/seed.sql`
 - Test credentials: `admin@hospital.test` / `SecurePass123!`
-- For development: Set `BYPASS_AUTH=true` in `.env` to skip authentication (auto-creates session for user001)
+- For development: Set `BYPASS_AUTH=true` in `.env` to skip authentication
+- Use `BYPASS_USER_ID=admin001` to test as ADMIN role, or `BYPASS_USER_ID=user001` for LEADER role (default: user001)
 
 ### Migration
 
@@ -143,6 +148,7 @@ Beyond the original 71 documented endpoints, these have been added:
 - **Users**: 6-level role hierarchy (ADMIN → CHIEF → LEADER → HEAD → MEMBER → USER)
 - **Projects**: Belong to departments, have custom workflow statuses
 - **Tasks**: Support subtasks, checklists, comments with @mentions, priority 1-4
+- **Task Assignees**: Many-to-many relationship (tasks can have multiple assignees) via `task_assignees` table
 - **Sessions**: Bearer token authentication with 7-day expiry
 - **Notifications**: Real-time system with typed events
 - **History**: Task activity logging (NOT ActivityLog - use `prisma.history`)
@@ -229,8 +235,7 @@ export const GET = withAuth(handler);
 **⚠️ Partially Complete:**
 
 - ⚠️ Dashboard Page (Layout only, mock data)
-- ⚠️ Create Task Modal (Component structure complete, needs testing)
-- ⚠️ Department Tasks Page (Basic toolbar only, needs full table/filtering implementation)
+- ⚠️ Create Task Modal (Component structure complete, needs integration testing)
 
 **❌ Not Yet Implemented (~37+ components):**
 
@@ -402,26 +407,39 @@ export const GET = withAuth(handler);
     - `src/components/layout/department-toolbar.tsx` (passes workspace + projects)
     - `src/components/layout/project-toolbar.tsx` (passes workspace + projects)
 
-**Department Tasks View:** ✨ **NEW 2025-10-23**
+**Department Tasks View:** ✨ **COMPLETE 2025-10-23**
 
 - **DepartmentToolbar**: Toolbar component for department tasks view
   - **Layout**: Breadcrumb + Title + Create Task Button
   - **Data Loading**: Uses `useWorkspace()` hook to fetch hierarchical data
   - **Projects Extraction**: Flattens workspace hierarchy to get all projects for breadcrumb selector
-  - **File**: `src/components/layout/department-toolbar.tsx` (43 lines)
+  - **Project Pass-through**: Filters projects by current department and passes to both Breadcrumb and CreateTaskButton (simple pattern)
+  - **File**: `src/components/layout/department-toolbar.tsx`
 
-- **Department Tasks Page**: Main view for department-level task management
-  - **Route**: `/department/tasks`
+- **Department Tasks View**: Full department-level task management interface
+  - **Route**: `/department/tasks?departmentId=DEPT-XXX` (uses URL query parameter)
+  - **Status**: ✅ Complete with optimistic updates and project grouping
   - **Features**:
     - Interactive breadcrumb navigation (Mission Group > Division > Department > Project)
-    - Create task button
-    - Project grouping with expandable cards
-    - Task counts and statistics
+    - URL-based navigation (`?departmentId=`) for proper state management
+    - Project grouping with expandable cards (collapsible sections)
+    - Pinned tasks section at top
+    - Task filtering and sorting (6 fields)
+    - Bulk actions support
+    - Task counts and statistics per project
+    - Consistent UI sizing (h-8 for all selectors)
+    - Optimistic updates for all interactions
+    - All projects shown (empty projects collapsed by default, not hidden)
   - **Data Source**:
     - Uses `useDepartmentTasks()` hook
     - API: `GET /api/departments/[departmentId]/tasks` (includes missionGroup data)
   - **Navigation Store Population**: Auto-populates breadcrumb with department hierarchy
-  - **File**: `src/app/(dashboard)/department/tasks/page.tsx`
+  - **CreateTaskModal Integration**: Modal receives pre-filtered projects from DepartmentToolbar (matches breadcrumb projects)
+  - **Files**:
+    - `src/app/(dashboard)/department/tasks/page.tsx` - Main page (reads departmentId from URL)
+    - `src/components/views/department-tasks/` - View components
+    - `src/components/layout/department-toolbar.tsx` - Toolbar with project filtering
+    - `src/hooks/use-department-tasks.ts` - Data fetching hook
 
 ### Key Files to Know
 
@@ -458,18 +476,22 @@ export const GET = withAuth(handler);
 **Environment Variables (.env):**
 
 ```bash
-# Required
+# ===== REQUIRED =====
 DATABASE_URL="postgresql://user:password@host:port/database?schema=public"
+# Example: "postgresql://postgres:password@localhost:5432/projectflow?schema=public"
+# For render.com: "postgresql://username:password@hostname.region.render.com:5432/database_name"
 
-# Optional - Development
-BYPASS_AUTH=true              # Skip authentication (auto-creates session for user001)
+# ===== OPTIONAL - Development Only =====
+BYPASS_AUTH=true              # Skip authentication (fetches real user from database)
+BYPASS_USER_ID=admin001       # User ID for BYPASS_AUTH mode (default: user001 if not set)
+                              # Use admin001 for ADMIN role testing, user001 for LEADER role
 BYPASS_EMAIL=true             # Show email links in console instead of sending real emails
-PORT=3010                     # Dev server port (default: 3000)
+PORT=3010                     # Dev server port (default: 3000, but 3010 recommended to avoid conflicts)
 
-# Optional - Email (Resend API for production)
-RESEND_API_KEY="re_..."      # Resend API key for email verification and password reset
-RESEND_FROM_EMAIL="noreply@..."  # Sender email address
-NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for email links
+# ===== OPTIONAL - Production Email (Resend API) =====
+RESEND_API_KEY="re_..."              # Resend API key for email verification and password reset
+RESEND_FROM_EMAIL="noreply@..."      # Sender email address (must be verified domain)
+NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for email links (change for production)
 ```
 
 ### Password Reset Flow ✅ **COMPLETE 2025-10-23**
@@ -645,6 +667,7 @@ npm run prisma:generate  # Always run this after schema changes
 6. **Navigation state management** - Use `useNavigationStore` for breadcrumb state (don't rely on URL only)
 7. **BYPASS_AUTH for testing** - Set `BYPASS_AUTH=true` in `.env` to skip authentication during development
 8. **Use `prisma.history` NOT `prisma.activityLog`** - The model is called `History` in the schema, not `ActivityLog`
+9. **Multi-assignee system** - Use `assigneeUserIds` array in API calls, not singular `assigneeUserId` (legacy field kept for backward compatibility but avoid using it for new code)
 
 ## 🔧 Common Workflows
 
@@ -1153,7 +1176,8 @@ If you're a new Claude instance working on this project, start here:
 7. **Thai terminology matters** - Use correct terms (หน่วยงาน not แผนก)
 8. **Soft deletes only** - Never use `.delete()`, use `.update()` with `deletedAt`
 9. **Navigation components are NEW** - Breadcrumb and workspace navigation added on 2025-10-23
-10. **Department Tasks is PARTIAL** - Only basic page structure exists, needs full implementation
+10. **Department Tasks is COMPLETE** - Full implementation with optimistic updates (completed 2025-10-23)
+11. **Multi-assignee system** - Tasks support multiple assignees via `task_assignees` table (breaking change from single assignee)
 
 ### Most Important Files to Know
 
@@ -1188,7 +1212,27 @@ If you're a new Claude instance working on this project, start here:
 
 ## 📝 Recent Changes (Changelog)
 
-### 2025-10-23 (Latest - Part 3) ✨ **NEW**
+### 2025-10-23 (Latest - Part 4) ✨ **NEW**
+
+- ✅ **ADMIN Role Authentication Fix** - BYPASS_AUTH now fetches real user data from database
+  - Modified `src/lib/api-middleware.ts` to use `BYPASS_USER_ID` env variable
+  - Created admin001 user via `scripts/create-admin-user.ts`
+  - ADMIN users can now access all 9 Mission Groups and 72 Departments
+- ✅ **Department Navigation Fix** - Department tasks view uses URL query parameter
+  - Page reads `departmentId` from `?departmentId=DEPT-XXX` query param
+  - Breadcrumb and workspace navigation update correctly when navigating between departments
+  - Navigation state no longer tied to user's primary department
+- ✅ **Project Display Fix** - All projects now visible (not hidden when empty)
+  - Removed hiding logic from department tasks view
+  - Empty projects collapse by default (can be expanded)
+  - Shows empty state message: "ไม่มีงานที่ตรงกับตัวกรอง"
+- ✅ **CreateTaskModal Project Selector Fix** - Simple pass-through pattern
+  - DepartmentToolbar filters projects by department
+  - Passes filtered projects to both Breadcrumb AND CreateTaskButton
+  - Modal uses pre-filtered projects (matches breadcrumb)
+  - Removed complex cache fallback logic
+
+### 2025-10-23 (Part 3)
 
 - ✅ **Calendar View Improvements** - Removed empty state, calendar always visible
 - ✅ **FullCalendar Styling** - Rounded corners, muted button colors, shadcn/ui design system integration

@@ -13,7 +13,13 @@ interface ModalState {
   createTask: {
     isOpen: boolean;
     projectId?: string;
+    projectName?: string;
+    departmentId?: string; // For filtering projects by department in modal
+    availableProjects?: Array<{ id: string; name: string; status?: string }>; // Pre-filtered projects
     defaultStatusId?: string;
+    parentTaskId?: string; // For creating subtasks
+    defaultStartDate?: string;
+    defaultDueDate?: string;
   };
   editTask: {
     isOpen: boolean;
@@ -45,6 +51,9 @@ interface UIState {
   // Pinned tasks (per user)
   pinnedTaskIds: string[];
 
+  // Getters (convenience)
+  createTaskModal: ModalState['createTask'];
+
   // Actions - Loading states
   setTaskClosing: (taskId: string, type: CloseTaskType) => void;
   setTaskClosingComplete: (taskId: string) => void;
@@ -52,7 +61,16 @@ interface UIState {
   setTaskUpdating: (taskId: string, isUpdating: boolean) => void;
 
   // Actions - Modals
-  openCreateTaskModal: (projectId: string, defaultStatusId?: string) => void;
+  openCreateTaskModal: (options?: {
+    projectId?: string;
+    projectName?: string;
+    departmentId?: string; // For filtering projects by department
+    availableProjects?: Array<{ id: string; name: string; status?: string }>; // Pre-filtered projects
+    parentTaskId?: string;
+    defaultStatusId?: string;
+    defaultStartDate?: string;
+    defaultDueDate?: string;
+  }) => void;
   closeCreateTaskModal: () => void;
   openEditTaskModal: (taskId: string) => void;
   closeEditTaskModal: () => void;
@@ -91,6 +109,11 @@ export const useUIStore = create<UIState>()(
       modals: initialModalState,
       pinnedTaskIds: [],
 
+      // Getters
+      get createTaskModal() {
+        return get().modals.createTask;
+      },
+
       // Loading state actions
       setTaskClosing: (taskId, type) =>
         set((state) => ({
@@ -124,11 +147,21 @@ export const useUIStore = create<UIState>()(
         }),
 
       // Modal actions
-      openCreateTaskModal: (projectId, defaultStatusId) =>
+      openCreateTaskModal: (options = {}) =>
         set((state) => ({
           modals: {
             ...state.modals,
-            createTask: { isOpen: true, projectId, defaultStatusId },
+            createTask: {
+              isOpen: true,
+              projectId: options.projectId,
+              projectName: options.projectName,
+              departmentId: options.departmentId, // Store departmentId for filtering
+              availableProjects: options.availableProjects, // Store pre-filtered projects
+              defaultStatusId: options.defaultStatusId,
+              parentTaskId: options.parentTaskId,
+              defaultStartDate: options.defaultStartDate,
+              defaultDueDate: options.defaultDueDate,
+            },
           },
         })),
 

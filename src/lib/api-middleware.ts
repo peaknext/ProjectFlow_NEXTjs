@@ -28,17 +28,38 @@ export function withAuth<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
       // BYPASS AUTH FOR TESTING (controlled by .env)
       if (process.env.BYPASS_AUTH === 'true') {
         const authenticatedReq = req as AuthenticatedRequest;
-        // Mock session with first user from database
+
+        // Fetch real user from database (defaults to user001, or use BYPASS_USER_ID env)
+        const bypassUserId = process.env.BYPASS_USER_ID || 'user001';
+        const user = await prisma.user.findUnique({
+          where: { id: bypassUserId },
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            departmentId: true,
+            userStatus: true,
+            profileImageUrl: true,
+          },
+        });
+
+        if (!user) {
+          console.error(`BYPASS_AUTH: User ${bypassUserId} not found in database`);
+          return ErrorResponses.unauthorized();
+        }
+
+        // Create session from real user data
         authenticatedReq.session = {
-          userId: 'user001',
+          userId: user.id,
           user: {
-            id: 'user001',
-            email: 'test@example.com',
-            fullName: 'Test User',
-            role: 'ADMIN',
-            departmentId: 'dept001',
-            userStatus: 'ACTIVE',
-            profileImageUrl: null,
+            id: user.id,
+            email: user.email,
+            fullName: user.fullName,
+            role: user.role,
+            departmentId: user.departmentId,
+            userStatus: user.userStatus,
+            profileImageUrl: user.profileImageUrl,
           },
         };
         return await handler(authenticatedReq, context);

@@ -13,19 +13,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { StatusSlider } from '@/components/ui/status-slider';
 import { AssigneePopover } from '@/components/ui/assignee-popover';
-import { PriorityPopover, PriorityValue } from '@/components/ui/priority-popover';
-import { DifficultyPopover, DifficultyValue } from '@/components/ui/difficulty-popover';
+import { StatusSlider } from '@/components/ui/status-slider';
+import { PriorityPopover } from '@/components/ui/priority-popover';
+import { DifficultyPopover } from '@/components/ui/difficulty-popover';
 import { DateInput } from '@/components/ui/date-picker-popover';
 import { ProjectPopover } from '@/components/ui/project-popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { ParentTaskPopover } from '@/components/ui/parent-task-popover';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useCreateTask } from '@/hooks/use-tasks';
 import { api } from '@/lib/api-client';
@@ -146,6 +140,12 @@ export function CreateTaskModal() {
   }, [watchProjectId]);
 
   async function loadInitialData() {
+    console.log('[CreateTaskModal] loadInitialData called', {
+      departmentId: createTaskModal.departmentId,
+      projectId: createTaskModal.projectId,
+      availableProjects: createTaskModal.availableProjects?.length,
+    });
+
     // Reset form first (but keep default values)
     reset({
       name: '',
@@ -161,13 +161,32 @@ export function CreateTaskModal() {
 
     // Load available projects for selector
     let projects: Project[] = [];
-    try {
-      const cachedWorkspace = queryClient.getQueryData(['workspace']) as any;
-      if (cachedWorkspace?.workspace) {
-        projects = extractProjectsFromWorkspace(cachedWorkspace.workspace);
+
+    // Use pre-filtered projects if provided (from DepartmentToolbar)
+    if (createTaskModal.availableProjects && createTaskModal.availableProjects.length > 0) {
+      console.log('[CreateTaskModal] Using pre-filtered projects:', createTaskModal.availableProjects.length);
+      projects = createTaskModal.availableProjects;
+    } else {
+      // Fallback to workspace cache if no pre-filtered projects
+      console.log('[CreateTaskModal] No pre-filtered projects, trying workspace cache');
+      try {
+        const cachedWorkspace = queryClient.getQueryData(['workspace']) as any;
+
+        if (cachedWorkspace?.workspace) {
+          // If departmentId is provided, filter projects by department
+          if (createTaskModal.departmentId) {
+            projects = extractProjectsFromWorkspace(
+              cachedWorkspace.workspace,
+              createTaskModal.departmentId
+            );
+          } else {
+            projects = extractProjectsFromWorkspace(cachedWorkspace.workspace);
+          }
+          console.log('[CreateTaskModal] Loaded projects from workspace cache:', projects.length);
+        }
+      } catch (error) {
+        console.error('Failed to load projects from workspace cache:', error);
       }
-    } catch (error) {
-      console.error('Failed to load projects:', error);
     }
 
     // If opened from project view with projectId
@@ -196,13 +215,28 @@ export function CreateTaskModal() {
     setAvailableProjects(projects);
   }
 
-  function extractProjectsFromWorkspace(workspace: any): Project[] {
+  function extractProjectsFromWorkspace(workspace: any, filterDepartmentId?: string): Project[] {
     const projects: Project[] = [];
 
+    console.log('[extractProjectsFromWorkspace]', {
+      viewType: workspace.viewType,
+      hasHierarchical: !!workspace.hierarchical,
+      filterDepartmentId,
+    });
+
     if (workspace.viewType === 'hierarchical' && workspace.hierarchical) {
+      console.log('[extractProjectsFromWorkspace] Using hierarchical view, MGs:', workspace.hierarchical.length);
       workspace.hierarchical.forEach((mg: any) => {
         mg.divisions?.forEach((div: any) => {
           div.departments?.forEach((dept: any) => {
+            console.log('[extractProjectsFromWorkspace] Checking dept:', dept.id, 'filter:', filterDepartmentId);
+            // If filterDepartmentId is provided, only include projects from that department
+            if (filterDepartmentId && dept.id !== filterDepartmentId) {
+              console.log('[extractProjectsFromWorkspace] Skipping dept:', dept.id);
+              return; // Skip this department
+            }
+
+            console.log('[extractProjectsFromWorkspace] Including dept:', dept.id, 'projects:', dept.projects?.length);
             dept.projects?.forEach((proj: any) => {
               projects.push({
                 id: proj.id,
@@ -414,21 +448,19 @@ export function CreateTaskModal() {
               )}
             </div>
 
-            {/* Status Slider */}
-            <div className="my-8">
-              <Controller
-                name="statusId"
-                control={control}
-                render={({ field }) => (
-                  <StatusSlider
-                    statuses={projectStatuses}
-                    value={field.value}
-                    onChange={field.onChange}
-                    disabled={isLoadingProjectData}
-                  />
-                )}
-              />
-            </div>
+            {/* Status Slider (full width) */}
+            <Controller
+              name="statusId"
+              control={control}
+              render={({ field }) => (
+                <StatusSlider
+                  statuses={projectStatuses}
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={isLoadingProjectData}
+                />
+              )}
+            />
 
             {/* Grid: Assignee, Priority, Difficulty, Dates, Project */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -534,8 +566,10 @@ export function CreateTaskModal() {
 
               {/* Project Selector */}
               <div>
-                <Label>
-                  โปรเจค <span className="text-red-500">*</span>
+                <Label className="block mb-1">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    โปรเจค <span className="text-red-500">*</span>
+                  </span>
                 </Label>
                 <Controller
                   name="projectId"
@@ -562,26 +596,24 @@ export function CreateTaskModal() {
               </div>
             </div>
 
-            {/* Parent Task Selector (unless creating subtask) */}
+            {/* Parent Task Selector (unless creating subtask) - FULL WIDTH */}
             {!createTaskModal.parentTaskId && projectTasks.length > 0 && (
               <div>
-                <Label htmlFor="parent-task">งานหลัก (Parent Task)</Label>
+                <Label className="block mb-1">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    งานหลัก (ถ้ามี)
+                  </span>
+                </Label>
                 <Controller
                   name="parentTaskId"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="parent-task" className="mt-1">
-                        <SelectValue placeholder="เลือกงานหลัก (ถ้ามี)..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projectTasks.map((task) => (
-                          <SelectItem key={task.id} value={task.id}>
-                            {task.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ParentTaskPopover
+                      tasks={projectTasks}
+                      value={field.value}
+                      onChange={(taskId) => field.onChange(taskId)}
+                      placeholder="ไม่มี (งานหลัก)"
+                    />
                   )}
                 />
               </div>
@@ -604,20 +636,13 @@ export function CreateTaskModal() {
         {/* Footer */}
         <footer className="flex justify-end gap-3 p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
           <Button
-            variant="outline"
-            onClick={closeCreateTaskModal}
-            disabled={createTask.isPending}
-            className="min-w-[100px]"
-          >
-            ยกเลิก
-          </Button>
-          <Button
             onClick={handleFormSubmit(onSubmit)}
             disabled={createTask.isPending || isLoadingProjectData}
-            className="min-w-[150px]"
+            size="lg"
+            className="min-w-[200px] text-base"
           >
             {createTask.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             )}
             สร้างงาน
           </Button>

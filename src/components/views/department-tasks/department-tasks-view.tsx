@@ -75,7 +75,19 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
   const [pinnedSortField, setPinnedSortField] = useState<SortField>('priority');
   const [pinnedSortOrder, setPinnedSortOrder] = useState<SortOrder>('asc');
   const [projectSorts, setProjectSorts] = useState<Record<string, { field: SortField; order: SortOrder }>>({});
-  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
+
+  // Initialize collapsed state: collapse projects with no tasks (after filter)
+  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(() => {
+    const collapsed = new Set<string>();
+    projects.forEach((project) => {
+      const nonPinnedTasks = project.tasks.filter((task) => !task.isPinned && !task.isClosed);
+      if (nonPinnedTasks.length === 0) {
+        collapsed.add(project.id);
+      }
+    });
+    return collapsed;
+  });
+
   const [isPinnedCollapsed, setIsPinnedCollapsed] = useState<boolean>(false);
 
   // Filter state with localStorage persistence
@@ -531,8 +543,6 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
         const totalTasks = project.tasks.length;
         const completedTasks = project.tasks.filter((t) => t.isClosed).length;
 
-        if (sortedTasks.length === 0) return null;
-
         return (
           <Card key={project.id}>
             <CardHeader className="pb-4">
@@ -659,22 +669,30 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedTasks.map((task) => (
-                      <TaskRow
-                        key={task.id}
-                        task={task}
-                        statuses={project.statuses}
-                        users={allUsers}
-                        isSelected={selectedTasks.has(task.id)}
-                        onToggleSelect={toggleSelectTask}
-                        showProjectColumn={false}
-                        customMutations={{
-                          updateTask: updateTaskMutation,
-                          closeTask: closeTaskMutation,
-                          togglePinTask: togglePinMutation,
-                        }}
-                      />
-                    ))}
+                    {sortedTasks.length > 0 ? (
+                      sortedTasks.map((task) => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          statuses={project.statuses}
+                          users={allUsers}
+                          isSelected={selectedTasks.has(task.id)}
+                          onToggleSelect={toggleSelectTask}
+                          showProjectColumn={false}
+                          customMutations={{
+                            updateTask: updateTaskMutation,
+                            closeTask: closeTaskMutation,
+                            togglePinTask: togglePinMutation,
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <TableRow>
+                        <td colSpan={8} className="h-24 text-center text-muted-foreground">
+                          ไม่มีงานที่ตรงกับตัวกรอง
+                        </td>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>

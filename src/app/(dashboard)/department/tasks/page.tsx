@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { useDepartmentTasks } from "@/hooks/use-department-tasks";
 import { DepartmentTasksView } from "@/components/views/department-tasks";
 import { DepartmentToolbar } from "@/components/layout/department-toolbar";
@@ -12,7 +13,18 @@ import { useNavigationStore } from "@/stores/use-navigation-store";
 export default function DepartmentTasksPage() {
   // Get current user from auth hook
   const { user, isLoading: isLoadingUser } = useAuth();
-  const departmentId = user?.departmentId || user?.department?.id;
+  const searchParams = useSearchParams();
+
+  // Get departmentId from URL query param or fallback to user's department
+  const departmentIdFromUrl = searchParams.get("departmentId");
+  const departmentId = departmentIdFromUrl || user?.departmentId || user?.department?.id;
+
+  console.log('[DepartmentTasksPage] Department ID:', {
+    fromUrl: departmentIdFromUrl,
+    fromUser: user?.departmentId,
+    final: departmentId,
+  });
+
   const { setDepartment } = useNavigationStore();
 
   // Fetch department tasks
@@ -139,7 +151,7 @@ export default function DepartmentTasksPage() {
   if (!data || data.projects.length === 0) {
     return (
       <div className="h-full flex flex-col">
-        <DepartmentToolbar />
+        <DepartmentToolbar departmentId={departmentId} />
 
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
@@ -158,7 +170,7 @@ export default function DepartmentTasksPage() {
   // Success state - display data
   return (
     <div className="h-full flex flex-col">
-      <DepartmentToolbar />
+      <DepartmentToolbar departmentId={departmentId} />
 
       <div className="flex-1 overflow-auto p-6">
         <DepartmentTasksView
