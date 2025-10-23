@@ -4,6 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
+**DO NOT REVERT ANYTHING IF I DON'T REQUEST**
 **ProjectFlow** is a comprehensive project and task management system migrated from Google Apps Script to Next.js 15 + PostgreSQL. It's designed for healthcare organizations with hierarchical role-based access control and real-time collaboration features.
 
 **Current Status**: Phase 2 Complete (API 100%), Phase 3 In Progress (Frontend ~50%)
@@ -39,6 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### ⚠️ Important: Thai Terminology
 
 **Use correct Thai terms in UI:**
+
 - ✅ **หน่วยงาน** (Department) - NOT "แผนก"
 - ✅ **กลุ่มงาน** (Division) - NOT "กอง"
 - ✅ **กลุ่มภารกิจ** (Mission Group)
@@ -54,7 +56,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ✅ **Workspace API Complete**: Role-based hierarchical navigation API with **additionalRoles support**. See `src/app/api/workspace/route.ts` and `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md` for details.
 ✅ **Breadcrumb Navigation Complete**: Multi-level interactive breadcrumb with popover selectors for navigation. See "Navigation Components" section below.
 ✅ **Workspace Navigation Complete**: Collapsible cards design with text wrapping and direct department navigation. See `WORKSPACE_NAVIGATION_REDESIGN.md` for details.
-⚠️ **Department Tasks Page**: Basic structure created but needs full implementation - only toolbar exists currently (see "Next Steps" above).
+✅ **Department Tasks View Complete**: Full department-level task management with optimistic updates, project grouping, pinned tasks section, and consistent UI sizing (h-8 for all selectors). See "Department Tasks View" section below.
 
 ## Commands
 
@@ -118,6 +120,7 @@ import { prisma } from "@/lib/db";
 **Additional API Endpoints:**
 
 Beyond the original 71 documented endpoints, these have been added:
+
 - **GET /api/workspace** - Returns workspace structure based on user role + additionalRoles
 - **GET /api/departments/[departmentId]/tasks** - Returns all tasks in a department with project grouping
 - **POST /api/tasks/bulk-update** - Batch update multiple tasks at once
@@ -142,6 +145,7 @@ Beyond the original 71 documented endpoints, these have been added:
 - **Tasks**: Support subtasks, checklists, comments with @mentions, priority 1-4
 - **Sessions**: Bearer token authentication with 7-day expiry
 - **Notifications**: Real-time system with typed events
+- **History**: Task activity logging (NOT ActivityLog - use `prisma.history`)
 
 ### API Routes (71 Endpoints)
 
@@ -193,11 +197,13 @@ export const GET = withAuth(handler);
 **✅ Complete (15 major components):**
 
 **Core Infrastructure (3):**
+
 - ✅ Layout System (Navbar, Sidebar, Footer with sync animation)
 - ✅ Theme System (Light/Dark mode with next-themes)
 - ✅ Session Management (AuthGuard, token storage, auto-redirect)
 
 **Authentication Pages (5):** ✅ **COMPLETE 2025-10-23**
+
 - ✅ Login Page (with "Remember Me" and validation)
 - ✅ Registration Page (with password strength indicator)
 - ✅ Email Verification Page (auto-verify + resend option)
@@ -205,11 +211,13 @@ export const GET = withAuth(handler);
 - ✅ Reset Password Page (with popover validation, strength meter, real-time matching)
 
 **Project Views (3):**
+
 - ✅ Board View (Kanban with drag-and-drop)
 - ✅ Calendar View (FullCalendar v6)
 - ✅ List View (Table with sorting/filtering)
 
 **Advanced Features (7):**
+
 - ✅ Task Detail Panel (Full CRUD with 11 optimistic mutations)
 - ✅ Workspace API (Hierarchical navigation by role)
 - ✅ Workspace Navigation (Collapsible cards with icons, text wrapping, direct department navigation)
@@ -219,11 +227,13 @@ export const GET = withAuth(handler);
 - ✅ Project Toolbar (Reusable toolbar for project views)
 
 **⚠️ Partially Complete:**
+
 - ⚠️ Dashboard Page (Layout only, mock data)
 - ⚠️ Create Task Modal (Component structure complete, needs testing)
 - ⚠️ Department Tasks Page (Basic toolbar only, needs full table/filtering implementation)
 
 **❌ Not Yet Implemented (~37+ components):**
+
 - ❌ User Management Pages
 - ❌ Reports/Analytics
 - ❌ Dashboard Widgets
@@ -235,13 +245,11 @@ export const GET = withAuth(handler);
 **State Management Strategy:**
 
 1. **Server State (React Query)**: All server data managed via `@tanstack/react-query`
-
    - Query keys are organized hierarchically (see `src/hooks/use-*.ts`)
    - Stale time: 2-5 minutes depending on data type
    - **Single source of truth**: Never duplicate server data in local state
 
 2. **Client State (Zustand)**: UI-only state
-
    - `useAppStore`: Current view, project selection
    - `useUIStore`: Modals, panels, task selection
    - `useSyncStore`: Sync animation state
@@ -355,6 +363,7 @@ export const GET = withAuth(handler);
 - All views share the same `ProjectToolbar` and `TaskFilterBar` components with optimistic updates
 
 **Shared Filter System:** ✨ **NEW 2025-10-23**
+
 - **TaskFilterBar**: Unified filter component across Board, Calendar, and List views
   - **Features**: Search, Status filter, Priority filter, Assignee filter, Hide closed tasks switch
   - **Persistence**: Hide closed tasks setting persists in localStorage across sessions
@@ -518,6 +527,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for email links
      - Thai language content
 
 **Files:**
+
 - `src/app/(auth)/forgot-password/page.tsx` - Forgot password page (NEW)
 - `src/app/(auth)/reset-password/page.tsx` - Reset password page (REDESIGNED)
 - `src/app/api/auth/request-reset/route.ts` - Request reset API (UPDATED)
@@ -525,10 +535,12 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for email links
 - `src/lib/email.ts` - Email functions with BYPASS_EMAIL mode (UPDATED)
 
 **API Endpoints:**
+
 - `POST /api/auth/request-reset` - Request password reset (send email)
 - `POST /api/auth/reset-password` - Reset password with token
 
 **Security Features:**
+
 - Token stored in database (not hashed, but expires)
 - Token expires after 1 hour
 - All existing sessions invalidated after password reset
@@ -536,6 +548,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for email links
 - Password requirements enforced (client + server)
 
 **Documentation:**
+
 - `PASSWORD_RESET_IMPLEMENTATION.md` - Complete implementation guide
 - `EMAIL_SETUP_GUIDE.md` - Email configuration and troubleshooting
 
@@ -631,6 +644,7 @@ npm run prisma:generate  # Always run this after schema changes
 5. **Optimistic updates everywhere** - All interactive UI must use the optimistic update pattern (see OPTIMISTIC_UPDATE_PATTERN.md)
 6. **Navigation state management** - Use `useNavigationStore` for breadcrumb state (don't rely on URL only)
 7. **BYPASS_AUTH for testing** - Set `BYPASS_AUTH=true` in `.env` to skip authentication during development
+8. **Use `prisma.history` NOT `prisma.activityLog`** - The model is called `History` in the schema, not `ActivityLog`
 
 ## 🔧 Common Workflows
 
@@ -639,6 +653,7 @@ npm run prisma:generate  # Always run this after schema changes
 When adding a new view component, follow this established pattern:
 
 1. **Create the page component** (`src/app/(dashboard)/[route]/page.tsx`):
+
    ```typescript
    // Minimal page that renders view component
    export default function NewViewPage() {
@@ -647,6 +662,7 @@ When adding a new view component, follow this established pattern:
    ```
 
 2. **Create the view component** (`src/components/views/new-view/new-view.tsx`):
+
    ```typescript
    import { useProject } from "@/hooks/use-projects";
    import { useTasks } from "@/hooks/use-tasks";
@@ -665,6 +681,7 @@ When adding a new view component, follow this established pattern:
    ```
 
 3. **Implement optimistic updates** for all interactions:
+
    ```typescript
    import { useSyncMutation } from "@/lib/use-sync-mutation";
 
@@ -714,21 +731,22 @@ When adding a new view component, follow this established pattern:
 All API endpoints follow the same pattern using middleware:
 
 1. **Create route file** (`src/app/api/[resource]/route.ts`):
+
    ```typescript
-   import { withAuth } from '@/lib/api-middleware';
-   import { successResponse, errorResponse } from '@/lib/api-response';
-   import { checkPermission } from '@/lib/permissions';
-   import { prisma } from '@/lib/db';
+   import { withAuth } from "@/lib/api-middleware";
+   import { successResponse, errorResponse } from "@/lib/api-response";
+   import { checkPermission } from "@/lib/permissions";
+   import { prisma } from "@/lib/db";
 
    async function handler(req: AuthenticatedRequest) {
      const userId = req.session.userId;
 
      // 1. Check permissions
-     const hasAccess = await checkPermission(userId, 'resource.read', {
-       resourceId: req.params.id
+     const hasAccess = await checkPermission(userId, "resource.read", {
+       resourceId: req.params.id,
      });
      if (!hasAccess) {
-       return errorResponse('FORBIDDEN', 'No access to resource', 403);
+       return errorResponse("FORBIDDEN", "No access to resource", 403);
      }
 
      // 2. Perform database operation
@@ -737,7 +755,7 @@ All API endpoints follow the same pattern using middleware:
      });
 
      if (!data) {
-       return errorResponse('NOT_FOUND', 'Resource not found', 404);
+       return errorResponse("NOT_FOUND", "Resource not found", 404);
      }
 
      // 3. Return success response
@@ -748,6 +766,7 @@ All API endpoints follow the same pattern using middleware:
    ```
 
 2. **Add TypeScript types** (`src/types/index.ts`):
+
    ```typescript
    export interface Resource {
      id: string;
@@ -757,13 +776,14 @@ All API endpoints follow the same pattern using middleware:
    ```
 
 3. **Create React Query hook** (`src/hooks/use-resource.ts`):
+
    ```typescript
-   import { useQuery } from '@tanstack/react-query';
-   import { api } from '@/lib/api-client';
+   import { useQuery } from "@tanstack/react-query";
+   import { api } from "@/lib/api-client";
 
    export const resourceKeys = {
-     all: ['resources'] as const,
-     detail: (id: string) => [...resourceKeys.all, 'detail', id] as const,
+     all: ["resources"] as const,
+     detail: (id: string) => [...resourceKeys.all, "detail", id] as const,
    };
 
    export function useResource(id: string) {
@@ -785,11 +805,13 @@ All API endpoints follow the same pattern using middleware:
 ### Testing Changes Locally
 
 1. **Start development server**:
+
    ```bash
    PORT=3010 npm run dev
    ```
 
 2. **Test API endpoints** (use test credentials):
+
    ```bash
    # Login first to get session token
    curl -X POST http://localhost:3010/api/auth/login \
@@ -802,6 +824,7 @@ All API endpoints follow the same pattern using middleware:
    ```
 
 3. **Test with BYPASS_AUTH** (development only):
+
    ```bash
    # Add to .env
    BYPASS_AUTH=true
@@ -811,6 +834,7 @@ All API endpoints follow the same pattern using middleware:
    ```
 
 4. **Check database state**:
+
    ```bash
    npm run prisma:studio
    ```
@@ -829,6 +853,7 @@ All API endpoints follow the same pattern using middleware:
 **Symptom**: `Error: listen EADDRINUSE :::3000`
 
 **Solution**:
+
 ```bash
 # Option 1: Use different port
 PORT=3010 npm run dev
@@ -847,6 +872,7 @@ kill -9 <PID>
 **Symptom**: `Cannot find module '@prisma/client'` or `PrismaClient is not a constructor`
 
 **Solution**:
+
 ```bash
 # Regenerate Prisma client (REQUIRED after schema changes)
 npm run prisma:generate
@@ -863,6 +889,7 @@ npm run prisma:generate
 **Symptom**: `401 Unauthorized` on all API requests
 
 **Solution**:
+
 ```bash
 # Option 1: Use bypass mode for development
 # Add to .env:
@@ -885,6 +912,7 @@ curl -X POST http://localhost:3010/api/auth/login \
 **Symptom**: `Can't reach database server` or `Connection timeout`
 
 **Solution**:
+
 ```bash
 # 1. Check DATABASE_URL in .env
 # Should be: postgresql://user:password@host:port/database
@@ -906,6 +934,7 @@ npx prisma db execute --file ./prisma/seed.sql --schema ./prisma/schema.prisma
 **Symptom**: Changes don't appear in browser after editing files
 
 **Solution**:
+
 ```bash
 # 1. Hard refresh browser (Ctrl+Shift+R or Cmd+Shift+R)
 
@@ -925,6 +954,7 @@ sudo sysctl -p
 **Symptom**: TypeScript errors about missing/wrong types
 
 **Solution**:
+
 ```bash
 # Always regenerate Prisma client after schema changes
 npm run prisma:generate
@@ -964,17 +994,14 @@ This project is migrating from Google Apps Script. Some naming conventions and p
 ### Performance Considerations
 
 1. **Project Board Endpoint**: Critical path - must load in < 200ms
-
    - Uses single query with all includes
    - Returns calculated fields to avoid client-side computation
 
 2. **Batch Operations**: Use `/api/batch` endpoint for bulk updates
-
    - Supports up to 100 operations
    - 6-10x faster than individual requests
 
 3. **React Query Stale Time**: Set appropriately per data type
-
    - User data: 5 minutes (rarely changes)
    - Task data: 2 minutes (moderate change)
    - Notifications: 1 minute (frequent updates)
@@ -1070,12 +1097,14 @@ If you're a new Claude instance working on this project, start here:
 ### ⚠️ Critical Information First
 
 **PROJECT STATUS:**
+
 - ✅ Backend: 100% Complete (74 API endpoints, database, auth)
 - 🔄 Frontend: ~50% Complete (15/50+ components done)
 - ❌ **NOT READY FOR DEPLOYMENT** - Still in active development
 - 🎯 Estimated completion: 2025-12-15 (8 weeks remaining)
 
 **KNOWN CRITICAL BUGS:**
+
 - 🔴 **Workspace API Additional Roles** - Multi-role users can't access all authorized data (see line 129)
 - ⚠️ Must fix before deployment
 
@@ -1088,23 +1117,27 @@ If you're a new Claude instance working on this project, start here:
 ### Then, Check What You're Being Asked To Do
 
 **If asked to implement a new feature:**
+
 1. Check if design exists in `NEXT_GOAL_DEPARTMENT_TASKS.md` or other design docs
 2. Follow the "Common Workflows" section patterns
 3. Use optimistic updates for all interactive UI
 4. Reference existing views (Board/Calendar/List) for consistency
 
 **If asked to fix a bug:**
+
 1. Check "Known Issues" section - it might already be documented
 2. Check "Troubleshooting Common Issues" for quick fixes
 3. Read related `.md` files for context (e.g., `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md`)
 
 **If asked to add an API endpoint:**
+
 1. Follow the API endpoint pattern in "Common Workflows"
 2. Use `withAuth()` middleware
 3. Check permissions with `checkPermission()`
 4. Return standardized responses (`successResponse()`, `errorResponse()`)
 
 **If asked about the codebase:**
+
 1. Check `PROJECT_STATUS.md` for current progress
 2. Check documentation files listed in "Documentation" section
 3. Read the Prisma schema (`prisma/schema.prisma`) for database structure
@@ -1125,18 +1158,21 @@ If you're a new Claude instance working on this project, start here:
 ### Most Important Files to Know
 
 **For Backend Work:**
+
 - `src/lib/auth.ts` - Authentication
 - `src/lib/permissions.ts` - Authorization
 - `src/lib/api-middleware.ts` - Middleware
 - `src/app/api/*/route.ts` - API endpoints
 
 **For Frontend Work:**
+
 - `src/hooks/use-*.ts` - React Query hooks
 - `src/stores/use-*-store.ts` - Zustand stores
 - `src/components/views/*` - View components
 - `OPTIMISTIC_UPDATE_PATTERN.md` - Critical pattern to follow
 
 **For Understanding the Project:**
+
 - `PROJECT_STATUS.md` - Current progress
 - `NEXT_GOAL_DEPARTMENT_TASKS.md` - Next major feature
 - `migration_plan/` - Architecture decisions
@@ -1153,6 +1189,7 @@ If you're a new Claude instance working on this project, start here:
 ## 📝 Recent Changes (Changelog)
 
 ### 2025-10-23 (Latest - Part 3) ✨ **NEW**
+
 - ✅ **Calendar View Improvements** - Removed empty state, calendar always visible
 - ✅ **FullCalendar Styling** - Rounded corners, muted button colors, shadcn/ui design system integration
 - ✅ **AssigneePopover Size Variants** - Added size prop (sm/md/lg) for consistent UI sizing
@@ -1161,6 +1198,7 @@ If you're a new Claude instance working on this project, start here:
 - ✅ **Filter Persistence** - Hide closed tasks switch persists in localStorage via usePersistedFilters hook
 
 ### 2025-10-23 (Part 2)
+
 - ✅ **Multi-Assignee System Complete** - Tasks now support multiple assignees (breaking change fixed!)
   - Added `task_assignees` table (many-to-many relationship)
   - Updated API endpoints to accept `assigneeUserIds` array
@@ -1169,6 +1207,7 @@ If you're a new Claude instance working on this project, start here:
   - See `MULTI_ASSIGNEE_IMPLEMENTATION.md` for full details
 
 ### 2025-10-23 (Part 1)
+
 - ✅ Added interactive breadcrumb navigation with popover selectors
 - ✅ Completed workspace navigation with collapsible cards design
 - ✅ Created navigation store (Zustand) for breadcrumb state management
@@ -1177,12 +1216,14 @@ If you're a new Claude instance working on this project, start here:
 - ✅ Updated API count to 74 endpoints (added workspace, department tasks, bulk update)
 
 ### 2025-10-22
+
 - ✅ Completed authentication system (5 pages)
 - ✅ Completed password reset flow with popover validation
 - ✅ Added email system with BYPASS_EMAIL mode
 - ✅ Completed task detail panel v1.0
 
 ### 2025-10-21
+
 - ✅ Completed Phase 2: API Migration (71 endpoints)
 - ✅ Completed all 3 project views (Board, Calendar, List)
 - ✅ Established optimistic update pattern
@@ -1192,12 +1233,14 @@ If you're a new Claude instance working on this project, start here:
 ## ⚠️ DEPLOYMENT CHECKLIST (Before Production)
 
 **Backend (100% Complete):** ✅
+
 - [x] 74 API endpoints implemented and tested
 - [x] Database schema complete (21 tables)
 - [x] Authentication & authorization system
 - [x] Permission system with 6 roles
 
 **Frontend (~50% Complete):** 🔄
+
 - [x] Core infrastructure (Layout, Theme, Auth)
 - [x] 3 Project views (Board, Calendar, List)
 - [x] Task detail panel
@@ -1207,10 +1250,12 @@ If you're a new Claude instance working on this project, start here:
 - [ ] 37+ additional components
 
 **Critical Bugs:** 🔴
+
 - [ ] **Workspace API Additional Roles** - MUST FIX before deployment
 - [ ] Test remaining 6 failed API tests (76.9% → 100%)
 
 **Deployment Infrastructure:** ❌
+
 - [ ] Production database setup
 - [ ] Environment variables configured
 - [ ] CI/CD pipeline

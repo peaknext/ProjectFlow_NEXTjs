@@ -101,8 +101,8 @@ export function AssigneePopover({
       avatarSize: 'sm' as const
     },
     md: {
-      button: 'h-10 px-3 py-2 text-sm gap-2',
-      placeholder: 'text-sm',
+      button: 'h-8 px-3 py-2 text-xs gap-2',
+      placeholder: 'text-xs',
       avatarSize: 'sm' as const
     },
     lg: {
@@ -176,14 +176,9 @@ export function AssigneePopover({
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <UserAvatar user={user} size="md" />
-                          <div className="flex flex-col items-start min-w-0">
-                            <span className="text-sm font-medium text-foreground truncate">
-                              {user.fullName}
-                            </span>
-                            <span className="text-xs text-muted-foreground truncate">
-                              {user.email}
-                            </span>
-                          </div>
+                          <span className="text-sm font-medium text-foreground truncate">
+                            {user.fullName}
+                          </span>
                         </div>
                         {isSelected && (
                           <Check className="h-4 w-4 text-primary flex-shrink-0" />
