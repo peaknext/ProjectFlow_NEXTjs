@@ -73,6 +73,7 @@ export function FieldGrid({
               selectedUserIds={field.value}
               onSave={(newIds) => field.onChange(newIds)}
               disabled={disabled}
+              size="lg"
             />
           )}
         />

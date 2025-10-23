@@ -5,14 +5,17 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { StatusColumn } from './status-column';
 import { useProject } from '@/hooks/use-projects';
 import { useUpdateTask } from '@/hooks/use-tasks';
 import { useUIStore } from '@/stores/use-ui-store';
+import { usePersistedFilters } from '@/hooks/use-persisted-filters';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { TaskFilterBar } from '@/components/views/common/task-filter-bar';
+import { filterTasks, getUniqueAssignees } from '@/components/views/common/filter-tasks';
 import type { Task } from '@/hooks/use-tasks';
 
 interface BoardViewProps {
@@ -28,12 +31,28 @@ export function BoardView({ projectId }: BoardViewProps) {
   // Local state for optimistic updates
   const [localTasks, setLocalTasks] = useState<Task[]>([]);
 
+  // Filter state with localStorage persistence
+  const [filters, setFilters] = usePersistedFilters();
+
   // Sync local tasks with server data
   useEffect(() => {
     if (data?.tasks) {
       setLocalTasks(data.tasks);
     }
   }, [data?.tasks]);
+
+  // Get unique statuses and assignees for filters
+  const uniqueStatuses = useMemo(() => data?.statuses || [], [data?.statuses]);
+  const uniqueAssignees = useMemo(
+    () => getUniqueAssignees(data?.tasks || []),
+    [data?.tasks]
+  );
+
+  // Apply filters to tasks
+  const filteredTasks = useMemo(
+    () => filterTasks(localTasks, filters),
+    [localTasks, filters]
+  );
 
   // Handle drag end
   const handleDragEnd = (result: DropResult) => {
@@ -130,25 +149,38 @@ export function BoardView({ projectId }: BoardViewProps) {
   const sortedStatuses = [...statuses].sort((a, b) => a.order - a.order);
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 overflow-x-auto p-6 h-full">
-        {sortedStatuses.map((status) => {
-          // Filter tasks for this status using local state
-          const statusTasks = localTasks.filter(
-            (task) => task.statusId === status.id
-          );
-
-          return (
-            <StatusColumn
-              key={status.id}
-              status={status}
-              tasks={statusTasks}
-              onTaskClick={handleTaskClick}
-              onAddTask={handleAddTask}
-            />
-          );
-        })}
+    <div className="flex flex-col h-full">
+      {/* Filter Bar */}
+      <div className="px-6 pt-4 pb-3">
+        <TaskFilterBar
+          filters={filters}
+          onFiltersChange={setFilters}
+          statuses={uniqueStatuses}
+          assignees={uniqueAssignees}
+        />
       </div>
-    </DragDropContext>
+
+      {/* Board */}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex gap-4 overflow-x-auto px-6 pb-6 flex-1">
+          {sortedStatuses.map((status) => {
+            // Filter tasks for this status using filtered tasks
+            const statusTasks = filteredTasks.filter(
+              (task) => task.statusId === status.id
+            );
+
+            return (
+              <StatusColumn
+                key={status.id}
+                status={status}
+                tasks={statusTasks}
+                onTaskClick={handleTaskClick}
+                onAddTask={handleAddTask}
+              />
+            );
+          })}
+        </div>
+      </DragDropContext>
+    </div>
   );
 }

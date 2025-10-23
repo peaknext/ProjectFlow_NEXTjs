@@ -6,9 +6,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useProject } from '@/hooks/use-projects';
-import { useUpdateTask, useDeleteTask, type Task } from '@/hooks/use-tasks';
+import { useQueryClient } from '@tanstack/react-query';
+import { useProject, projectKeys } from '@/hooks/use-projects';
+import { useUpdateTask, useDeleteTask, useCloseTask, useTogglePinTask, type Task } from '@/hooks/use-tasks';
 import { useUIStore } from '@/stores/use-ui-store';
+import { usePersistedFilters } from '@/hooks/use-persisted-filters';
+import { api } from '@/lib/api-client';
 import {
   Table,
   TableBody,
@@ -21,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -37,7 +42,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PriorityBadge, PriorityDot } from '@/components/common/priority-badge';
 import { UserAvatar } from '@/components/common/user-avatar';
+import { AssigneePopover } from '@/components/ui/assignee-popover';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DateInput } from '@/components/ui/date-picker-popover';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   ArrowUpDown,
   ArrowUp,
@@ -66,31 +83,26 @@ interface ListViewProps {
 type SortField = 'name' | 'priority' | 'dueDate' | 'assignee' | 'status' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
 
-interface Filters {
-  search: string;
-  statusId: string;
-  priorityId: string;
-  assigneeId: string;
-  showClosed: boolean;
-}
-
 export function ListView({ projectId }: ListViewProps) {
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useProject(projectId);
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
+  const closeTaskMutation = useCloseTask();
+  const togglePinMutation = useTogglePinTask();
   const openTaskPanel = useUIStore((state) => state.openTaskPanel);
 
   // State
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>('priority');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-  const [filters, setFilters] = useState<Filters>({
-    search: '',
-    statusId: '',
-    priorityId: '',
-    assigneeId: '',
-    showClosed: false,
-  });
+  // Filter state with localStorage persistence
+  const [filters, setFilters] = usePersistedFilters();
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTaskName, setEditingTaskName] = useState<string>('');
+  const [closeDialogTask, setCloseDialogTask] = useState<Task | null>(null);
+  const [closeType, setCloseType] = useState<'COMPLETED' | 'ABORTED'>('COMPLETED');
+  const [deleteDialogTask, setDeleteDialogTask] = useState<Task | null>(null);
 
   // Filter and sort tasks
   const filteredAndSortedTasks = useMemo(() => {
@@ -99,7 +111,7 @@ export function ListView({ projectId }: ListViewProps) {
     let tasks = [...data.tasks];
 
     // Apply filters
-    if (!filters.showClosed) {
+    if (filters.hideClosed) {
       tasks = tasks.filter((task) => !task.isClosed);
     }
 
@@ -121,11 +133,19 @@ export function ListView({ projectId }: ListViewProps) {
     }
 
     if (filters.assigneeId) {
-      tasks = tasks.filter((task) => task.assigneeUserId === filters.assigneeId);
+      tasks = tasks.filter((task) =>
+        task.assigneeUserIds?.includes(filters.assigneeId) ||
+        task.assigneeUserId === filters.assigneeId // Fallback for old data
+      );
     }
 
     // Apply sorting
     tasks.sort((a, b) => {
+      // Pinned tasks always come first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+
+      // If both pinned or both unpinned, sort by selected field
       let comparison = 0;
 
       switch (sortField) {
@@ -144,8 +164,9 @@ export function ListView({ projectId }: ListViewProps) {
           break;
 
         case 'assignee':
-          const nameA = a.assignee?.fullName || 'zzz';
-          const nameB = b.assignee?.fullName || 'zzz';
+          // Sort by first assignee's name
+          const nameA = a.assignees?.[0]?.fullName || a.assignee?.fullName || 'zzz';
+          const nameB = b.assignees?.[0]?.fullName || b.assignee?.fullName || 'zzz';
           comparison = nameA.localeCompare(nameB, 'th');
           break;
 
@@ -208,7 +229,24 @@ export function ListView({ projectId }: ListViewProps) {
   };
 
   const handleBulkStatusChange = async (statusId: string) => {
-    const promises = Array.from(selectedTasks).map((taskId) =>
+    // Filter out closed tasks from bulk status change
+    const tasksToUpdate = filteredAndSortedTasks
+      .filter(task => selectedTasks.has(task.id) && !task.isClosed)
+      .map(task => task.id);
+
+    if (tasksToUpdate.length === 0) {
+      alert('ไม่สามารถเปลี่ยนสถานะของงานที่ปิดแล้ว');
+      return;
+    }
+
+    if (tasksToUpdate.length < selectedTasks.size) {
+      const skipped = selectedTasks.size - tasksToUpdate.length;
+      if (!confirm(`จะเปลี่ยนสถานะ ${tasksToUpdate.length} งาน (ข้าม ${skipped} งานที่ปิดแล้ว)`)) {
+        return;
+      }
+    }
+
+    const promises = tasksToUpdate.map((taskId) =>
       updateTaskMutation.mutateAsync({ taskId, data: { statusId } })
     );
 
@@ -216,16 +254,237 @@ export function ListView({ projectId }: ListViewProps) {
     setSelectedTasks(new Set());
   };
 
-  // Quick actions
-  const handleTogglePin = async (task: Task) => {
-    // This would call a pin/unpin API
-    console.log('Toggle pin:', task.id);
-  };
+  // Quick actions - WITH OPTIMISTIC UI
+  const handleQuickStatusChange = (taskId: string, statusId: string) => {
+    // Get the status object for optimistic update
+    const status = uniqueStatuses.find(s => s.id === statusId);
 
-  const handleQuickStatusChange = async (taskId: string, statusId: string) => {
-    await updateTaskMutation.mutateAsync({
+    // Optimistically update local cache IMMEDIATELY
+    const boardKey = projectKeys.board(projectId);
+
+    queryClient.setQueryData(boardKey, (old: any) => {
+      if (!old?.tasks) return old;
+      return {
+        ...old,
+        tasks: old.tasks.map((task: Task) =>
+          task.id === taskId ? { ...task, statusId, status } : task
+        ),
+      };
+    });
+
+    // Then trigger server mutation (with its own optimistic update)
+    updateTaskMutation.mutate({
       taskId,
       data: { statusId },
+    });
+  };
+
+  // Quick priority change handler - WITH OPTIMISTIC UI
+  const handleQuickPriorityChange = (taskId: string, priority: number) => {
+    // Optimistically update local cache IMMEDIATELY
+    const boardKey = projectKeys.board(projectId);
+
+    queryClient.setQueryData(boardKey, (old: any) => {
+      if (!old?.tasks) return old;
+      return {
+        ...old,
+        tasks: old.tasks.map((task: Task) =>
+          task.id === taskId ? { ...task, priority } : task
+        ),
+      };
+    });
+
+    // Then trigger server mutation
+    updateTaskMutation.mutate({
+      taskId,
+      data: { priority },
+    });
+  };
+
+  // Quick due date change handler - WITH OPTIMISTIC UI
+  const handleQuickDueDateChange = (taskId: string, dueDate: string | null) => {
+    // Optimistically update local cache IMMEDIATELY
+    const boardKey = projectKeys.board(projectId);
+
+    queryClient.setQueryData(boardKey, (old: any) => {
+      if (!old?.tasks) return old;
+      return {
+        ...old,
+        tasks: old.tasks.map((task: Task) =>
+          task.id === taskId ? { ...task, dueDate } : task
+        ),
+      };
+    });
+
+    // Then trigger server mutation
+    updateTaskMutation.mutate({
+      taskId,
+      data: { dueDate },
+    });
+  };
+
+  // Quick assignee change handler - WITH OPTIMISTIC UI
+  const handleQuickAssigneeChange = (taskId: string, assigneeUserIds: string[]) => {
+    // Get assignee objects for optimistic update
+    const assignees = assigneeUserIds
+      .map(id => uniqueAssignees.find(a => a.id === id))
+      .filter(Boolean) as Array<{ id: string; fullName: string; email: string; profileImageUrl?: string | null }>;
+
+    // Optimistically update local cache IMMEDIATELY
+    const boardKey = projectKeys.board(projectId);
+
+    queryClient.setQueryData(boardKey, (old: any) => {
+      if (!old?.tasks) return old;
+      return {
+        ...old,
+        tasks: old.tasks.map((task: Task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                assigneeUserIds,
+                assignees,
+                // Keep legacy field for backward compatibility
+                assigneeUserId: assigneeUserIds[0] || null,
+                assignee: assignees[0] || null,
+              }
+            : task
+        ),
+      };
+    });
+
+    // Then trigger server mutation
+    updateTaskMutation.mutate({
+      taskId,
+      data: { assigneeUserIds },
+    });
+  };
+
+  // Task name editing handlers
+  const startEditingTaskName = (taskId: string, currentName: string) => {
+    setEditingTaskId(taskId);
+    setEditingTaskName(currentName);
+  };
+
+  const cancelEditingTaskName = () => {
+    setEditingTaskId(null);
+    setEditingTaskName('');
+  };
+
+  const saveTaskName = (taskId: string) => {
+    if (!editingTaskName.trim()) {
+      cancelEditingTaskName();
+      return;
+    }
+
+    const newName = editingTaskName.trim();
+    if (newName !== data?.tasks.find(t => t.id === taskId)?.name) {
+      // Optimistically update local cache IMMEDIATELY
+      const boardKey = projectKeys.board(projectId);
+
+      queryClient.setQueryData(boardKey, (old: any) => {
+        if (!old?.tasks) return old;
+        return {
+          ...old,
+          tasks: old.tasks.map((task: Task) =>
+            task.id === taskId ? { ...task, name: newName } : task
+          ),
+        };
+      });
+
+      // Then trigger server mutation
+      updateTaskMutation.mutate({
+        taskId,
+        data: { name: newName },
+      });
+    }
+
+    cancelEditingTaskName();
+  };
+
+  // Close task handlers
+  const handleOpenCloseDialog = (task: Task) => {
+    if (!data?.statuses) return;
+
+    const currentStatus = data.statuses.find((s) => s.id === task.statusId);
+    if (!currentStatus) return;
+
+    // Auto-select close type based on status type
+    // DONE → COMPLETED, NOT_STARTED/IN_PROGRESS → ABORTED
+    setCloseType(currentStatus.type === 'DONE' ? 'COMPLETED' : 'ABORTED');
+    setCloseDialogTask(task);
+  };
+
+  const handleCloseTask = () => {
+    if (!closeDialogTask) return;
+
+    closeTaskMutation.mutate(
+      { taskId: closeDialogTask.id, closeType },
+      {
+        onSuccess: () => {
+          setCloseDialogTask(null);
+        },
+      }
+    );
+  };
+
+  // Get close button properties based on task status
+  const getCloseButtonProps = (task: Task) => {
+    if (!data?.statuses) {
+      return { label: 'ปิดงาน', isDone: false, icon: XCircle };
+    }
+
+    const currentStatus = data.statuses.find((s) => s.id === task.statusId);
+    if (!currentStatus) {
+      return { label: 'ปิดงาน', isDone: false, icon: XCircle };
+    }
+
+    // Check if status type is DONE
+    if (currentStatus.type === 'DONE') {
+      return {
+        label: 'แล้วเสร็จ',
+        isDone: true,
+        icon: CheckCircle2,
+      };
+    }
+
+    // Status is NOT_STARTED or IN_PROGRESS
+    return {
+      label: 'ยกเลิกงาน',
+      isDone: false,
+      icon: XCircle,
+    };
+  };
+
+  // Toggle pin task - WITH OPTIMISTIC UPDATE
+  const handleTogglePin = (task: Task) => {
+    // Optimistically update board cache IMMEDIATELY
+    const boardKey = projectKeys.board(projectId);
+
+    queryClient.setQueryData(boardKey, (old: any) => {
+      if (!old?.tasks) return old;
+      return {
+        ...old,
+        tasks: old.tasks.map((t: Task) =>
+          t.id === task.id ? { ...t, isPinned: !task.isPinned } : t
+        ),
+      };
+    });
+
+    // Then trigger mutation with optimistic update
+    togglePinMutation.mutate({
+      taskId: task.id,
+      isPinned: task.isPinned || false,
+    });
+  };
+
+  // Delete task handler
+  const handleDeleteTask = () => {
+    if (!deleteDialogTask) return;
+
+    deleteTaskMutation.mutate(deleteDialogTask.id, {
+      onSuccess: () => {
+        setDeleteDialogTask(null);
+      },
     });
   };
 
@@ -247,11 +506,23 @@ export function ListView({ projectId }: ListViewProps) {
     [data?.statuses]
   );
 
+  // Use all department users for assignee dropdown (not just assigned users)
+  const availableUsers = useMemo(
+    () => data?.users || [],
+    [data?.users]
+  );
+
+  // Get unique assignees for filter dropdown (only users who are assigned)
   const uniqueAssignees = useMemo(() => {
     if (!data?.tasks) return [];
     const assignees = new Map();
     data.tasks.forEach((task) => {
-      if (task.assignee) {
+      // Support both new multi-assignee and legacy single assignee
+      if (task.assignees) {
+        task.assignees.forEach((assignee) => {
+          assignees.set(assignee.id, assignee);
+        });
+      } else if (task.assignee) {
         assignees.set(task.assignee.id, task.assignee);
       }
     });
@@ -291,9 +562,12 @@ export function ListView({ projectId }: ListViewProps) {
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, search: e.target.value }))
             }
-            className="max-w-sm"
+            className="max-w-sm bg-white dark:bg-gray-800"
           />
         </div>
+
+        {/* Filter Label */}
+        <span className="text-sm text-muted-foreground font-medium">ตัวกรอง:</span>
 
         {/* Status Filter */}
         <Select
@@ -302,7 +576,7 @@ export function ListView({ projectId }: ListViewProps) {
             setFilters((prev) => ({ ...prev, statusId: value === 'ALL' ? '' : value }))
           }
         >
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-[150px] bg-white dark:bg-gray-800">
             <SelectValue placeholder="สถานะทั้งหมด" />
           </SelectTrigger>
           <SelectContent>
@@ -322,7 +596,7 @@ export function ListView({ projectId }: ListViewProps) {
             setFilters((prev) => ({ ...prev, priorityId: value === 'ALL' ? '' : value }))
           }
         >
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-[150px] bg-white dark:bg-gray-800">
             <SelectValue placeholder="ความสำคัญทั้งหมด" />
           </SelectTrigger>
           <SelectContent>
@@ -341,7 +615,7 @@ export function ListView({ projectId }: ListViewProps) {
             setFilters((prev) => ({ ...prev, assigneeId: value === 'ALL' ? '' : value }))
           }
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800">
             <SelectValue placeholder="ผู้รับผิดชอบทั้งหมด" />
           </SelectTrigger>
           <SelectContent>
@@ -354,16 +628,19 @@ export function ListView({ projectId }: ListViewProps) {
           </SelectContent>
         </Select>
 
-        {/* Show Closed Toggle */}
-        <Button
-          variant={filters.showClosed ? 'default' : 'outline'}
-          size="sm"
-          onClick={() =>
-            setFilters((prev) => ({ ...prev, showClosed: !prev.showClosed }))
-          }
-        >
-          {filters.showClosed ? 'แสดงทั้งหมด' : 'เฉพาะที่เปิด'}
-        </Button>
+        {/* Hide Closed Tasks Toggle */}
+        <div className="flex items-center gap-2 ml-auto">
+          <Label htmlFor="hide-closed" className="cursor-pointer text-sm">
+            ซ่อนงานที่ปิดแล้ว
+          </Label>
+          <Switch
+            id="hide-closed"
+            checked={filters.hideClosed}
+            onCheckedChange={(checked) =>
+              setFilters((prev) => ({ ...prev, hideClosed: checked }))
+            }
+          />
+        </div>
 
         {/* Bulk Actions */}
         {selectedTasks.size > 0 && (
@@ -402,11 +679,6 @@ export function ListView({ projectId }: ListViewProps) {
             </Button>
           </>
         )}
-      </div>
-
-      {/* Task Count */}
-      <div className="text-sm text-muted-foreground">
-        แสดง {filteredAndSortedTasks.length} จากทั้งหมด {data?.tasks?.length || 0} รายการ
       </div>
 
       {/* Table */}
@@ -461,7 +733,7 @@ export function ListView({ projectId }: ListViewProps) {
                 </div>
               </TableHead>
               <TableHead
-                className="cursor-pointer select-none w-[120px]"
+                className="cursor-pointer select-none w-[165px]"
                 onClick={() => handleSort('dueDate')}
               >
                 <div className="flex items-center">
@@ -469,14 +741,13 @@ export function ListView({ projectId }: ListViewProps) {
                   <SortIcon field="dueDate" />
                 </div>
               </TableHead>
-              <TableHead className="w-[100px] text-center">Progress</TableHead>
               <TableHead className="w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedTasks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   <div className="text-muted-foreground">
                     {filters.search || filters.statusId || filters.priorityId || filters.assigneeId
                       ? 'ไม่พบงานที่ตรงกับเงื่อนไข'
@@ -513,17 +784,58 @@ export function ListView({ projectId }: ListViewProps) {
                   </TableCell>
 
                   {/* Pin Icon */}
-                  <TableCell>
-                    {task.isPinned && (
-                      <Pin className="h-4 w-4 text-amber-500 fill-amber-500" />
-                    )}
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleTogglePin(task)}
+                      disabled={task.isClosed}
+                      className={cn(
+                        "transition-transform",
+                        !task.isClosed && "hover:scale-110"
+                      )}
+                      title={task.isClosed ? 'ไม่สามารถปักหมุดงานที่ปิดแล้ว' : (task.isPinned ? 'ยกเลิกปักหมุด' : 'ปักหมุด')}
+                    >
+                      <Pin
+                        className={cn(
+                          'h-4 w-4 transition-colors',
+                          task.isPinned
+                            ? 'text-amber-500 fill-amber-500'
+                            : 'text-gray-300 dark:text-gray-600',
+                          task.isClosed && 'opacity-30 cursor-not-allowed'
+                        )}
+                      />
+                    </button>
                   </TableCell>
 
-                  {/* Task Name */}
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <PriorityDot priority={task.priority} />
-                      <div>
+                  {/* Task Name - Inline Editor */}
+                  <TableCell
+                    className="font-medium text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (editingTaskId !== task.id && !task.isClosed) {
+                        startEditingTaskName(task.id, task.name);
+                      }
+                    }}
+                  >
+                    {editingTaskId === task.id ? (
+                      <Input
+                        value={editingTaskName}
+                        onChange={(e) => setEditingTaskName(e.target.value)}
+                        onBlur={() => saveTaskName(task.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            saveTaskName(task.id);
+                          } else if (e.key === 'Escape') {
+                            cancelEditingTaskName();
+                          }
+                        }}
+                        autoFocus
+                        className="h-8 text-sm"
+                      />
+                    ) : (
+                      <div className={cn(
+                        "rounded px-2 py-1 -mx-2 -my-1 transition-colors",
+                        !task.isClosed && "cursor-text hover:bg-accent/50"
+                      )}>
                         <div className={cn(task.isClosed && 'line-through')}>
                           {task.name}
                         </div>
@@ -533,12 +845,36 @@ export function ListView({ projectId }: ListViewProps) {
                           </div>
                         )}
                       </div>
-                    </div>
+                    )}
                   </TableCell>
 
-                  {/* Priority */}
-                  <TableCell>
-                    <PriorityBadge priority={task.priority} size="sm" showIcon={false} />
+                  {/* Priority - Inline Editor */}
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      value={task.priority.toString()}
+                      onValueChange={(value) => handleQuickPriorityChange(task.id, parseInt(value))}
+                      disabled={task.isClosed}
+                    >
+                      <SelectTrigger className="h-8 w-full text-xs">
+                        <SelectValue>
+                          <PriorityBadge priority={task.priority} size="sm" showIcon={false} />
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">
+                          <PriorityBadge priority={1} size="sm" />
+                        </SelectItem>
+                        <SelectItem value="2">
+                          <PriorityBadge priority={2} size="sm" />
+                        </SelectItem>
+                        <SelectItem value="3">
+                          <PriorityBadge priority={3} size="sm" />
+                        </SelectItem>
+                        <SelectItem value="4">
+                          <PriorityBadge priority={4} size="sm" />
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </TableCell>
 
                   {/* Status */}
@@ -546,6 +882,7 @@ export function ListView({ projectId }: ListViewProps) {
                     <Select
                       value={task.statusId}
                       onValueChange={(value) => handleQuickStatusChange(task.id, value)}
+                      disabled={task.isClosed}
                     >
                       <SelectTrigger className="h-8 w-full">
                         <SelectValue>
@@ -581,53 +918,26 @@ export function ListView({ projectId }: ListViewProps) {
                     </Select>
                   </TableCell>
 
-                  {/* Assignee */}
-                  <TableCell>
-                    {task.assignee ? (
-                      <div className="flex items-center gap-2">
-                        <UserAvatar user={task.assignee} size="xs" />
-                        <span className="text-sm truncate">
-                          {task.assignee.fullName}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">ไม่ระบุ</span>
-                    )}
+                  {/* Assignee - Multi-select popover */}
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <AssigneePopover
+                      users={availableUsers}
+                      selectedUserIds={task.assigneeUserIds || []}
+                      onSave={(newIds) => handleQuickAssigneeChange(task.id, newIds)}
+                      disabled={task.isClosed}
+                      maxVisible={3}
+                    />
                   </TableCell>
 
-                  {/* Due Date */}
-                  <TableCell>
-                    {task.dueDate ? (
-                      <div className="flex items-center gap-1 text-sm">
-                        <Calendar className="h-3 w-3 text-muted-foreground" />
-                        <span
-                          className={cn(
-                            new Date(task.dueDate) < new Date() &&
-                              !task.isClosed &&
-                              'text-red-600 font-medium'
-                          )}
-                        >
-                          {format(new Date(task.dueDate), 'd MMM', { locale: th })}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-
-                  {/* Progress */}
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary transition-all"
-                          style={{ width: `${task.progress || 0}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground w-8 text-right">
-                        {task.progress || 0}%
-                      </span>
-                    </div>
+                  {/* Due Date - Editable */}
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <DateInput
+                      value={task.dueDate}
+                      onChange={(newDate) => handleQuickDueDateChange(task.id, newDate)}
+                      placeholder="เลือกวันที่"
+                      className="text-xs h-8 w-full"
+                      disabled={task.isClosed}
+                    />
                   </TableCell>
 
                   {/* Actions */}
@@ -660,22 +970,25 @@ export function ListView({ projectId }: ListViewProps) {
                         {task.isClosed ? (
                           <DropdownMenuItem disabled>
                             <CheckCircle2 className="mr-2 h-4 w-4" />
-                            ปิดแล้ว
+                            {task.closeType === 'COMPLETED' ? 'ปิดแล้ว (สำเร็จ)' : 'ปิดแล้ว (ยกเลิก)'}
                           </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem>
-                            <XCircle className="mr-2 h-4 w-4" />
-                            ปิดงาน
-                          </DropdownMenuItem>
-                        )}
+                        ) : (() => {
+                          const closeProps = getCloseButtonProps(task);
+                          const CloseIcon = closeProps.icon;
+                          return (
+                            <DropdownMenuItem
+                              onClick={() => handleOpenCloseDialog(task)}
+                              className={closeProps.isDone ? 'text-green-600' : ''}
+                            >
+                              <CloseIcon className="mr-2 h-4 w-4" />
+                              {closeProps.label}
+                            </DropdownMenuItem>
+                          );
+                        })()}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => {
-                            if (confirm('ต้องการลบงานนี้?')) {
-                              deleteTaskMutation.mutate(task.id);
-                            }
-                          }}
+                          onClick={() => setDeleteDialogTask(task)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           ลบ
@@ -689,6 +1002,58 @@ export function ListView({ projectId }: ListViewProps) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Task Count - Moved below table */}
+      <div className="text-sm text-muted-foreground text-center">
+        แสดง {filteredAndSortedTasks.length} จากทั้งหมด {data?.tasks?.length || 0} รายการ
+      </div>
+
+      {/* Close Task Dialog */}
+      <AlertDialog open={!!closeDialogTask} onOpenChange={(open) => !open && setCloseDialogTask(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {closeType === 'COMPLETED' ? 'ปิดงาน' : 'ยกเลิกงาน'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {closeType === 'COMPLETED'
+                ? 'ปิดงานและบันทึกว่างานนี้สำเร็จแล้ว และจะไม่สามารถแก้ไขได้อีก'
+                : 'ยกเลิกงานนี้ และจะไม่สามารถแก้ไขได้อีก คุณยืนยันหรือไม่?'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCloseTask}
+              className={closeType === 'COMPLETED' ? 'bg-green-600 hover:bg-green-700' : ''}
+            >
+              ยืนยัน{closeType === 'COMPLETED' ? 'ปิดงาน' : 'ยกเลิกงาน'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Task Dialog */}
+      <AlertDialog open={!!deleteDialogTask} onOpenChange={(open) => !open && setDeleteDialogTask(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ลบงาน</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบงาน "{deleteDialogTask?.name}"
+              การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTask}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              ยืนยันลบงาน
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

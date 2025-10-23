@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -16,9 +16,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useProject } from '@/hooks/use-projects';
 import { useUpdateTask } from '@/hooks/use-tasks';
 import { useUIStore } from '@/stores/use-ui-store';
+import { usePersistedFilters } from '@/hooks/use-persisted-filters';
 import { getCalendarColor, getCalendarTextColor } from '@/lib/calendar-colors';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { TaskFilterBar } from '@/components/views/common/task-filter-bar';
+import { filterTasks, getUniqueAssignees } from '@/components/views/common/filter-tasks';
 import type { Task } from '@/hooks/use-tasks';
 import { projectKeys } from '@/hooks/use-projects';
 
@@ -36,15 +39,28 @@ export function CalendarView({ projectId }: CalendarViewProps) {
 
   const isDarkMode = theme === 'dark';
 
+  // Filter state with localStorage persistence
+  const [filters, setFilters] = usePersistedFilters();
+
+  // Get unique statuses and assignees for filters
+  const uniqueStatuses = useMemo(() => data?.statuses || [], [data?.statuses]);
+  const uniqueAssignees = useMemo(
+    () => getUniqueAssignees(data?.tasks || []),
+    [data?.tasks]
+  );
+
   // Use server data directly (no local state to avoid race conditions)
   const tasks = data?.tasks || [];
 
-  // Transform tasks to calendar events
-  const events = tasks
-    .filter((task) => {
-      // Filter out closed tasks
-      if (task.isClosed) return false;
+  // Apply filters to tasks
+  const filteredTasks = useMemo(
+    () => filterTasks(tasks, filters),
+    [tasks, filters]
+  );
 
+  // Transform tasks to calendar events
+  const events = filteredTasks
+    .filter((task) => {
       // Only show tasks with due date (unless creating/closing)
       if (!task.isCreating && !task.isClosing && !task.dueDate) {
         return false;
@@ -235,47 +251,48 @@ export function CalendarView({ projectId }: CalendarViewProps) {
     );
   }
 
-  // Empty state
-  if (events.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center py-16 px-4 bg-card rounded-lg">
-          <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <h3 className="text-xl font-semibold">ไม่พบงาน</h3>
-          <p className="text-muted-foreground mt-2">ไม่มีงานที่มีวันครบกำหนด</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="h-full p-6">
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        locale="th"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay',
-        }}
-        events={events}
-        editable={true}
-        eventDrop={handleEventDrop}
-        eventClick={handleEventClick}
-        eventDidMount={handleEventDidMount}
-        dayCellContent={(arg) => {
-          // Remove " วัน" suffix from Thai locale
-          return arg.dayNumberText.replace(' วัน', '');
-        }}
-        height="100%"
-        eventTimeFormat={{
-          hour: '2-digit',
-          minute: '2-digit',
-          meridiem: false,
-        }}
-      />
+    <div className="flex flex-col h-full">
+      {/* Filter Bar */}
+      <div className="px-6 pt-4 pb-3">
+        <TaskFilterBar
+          filters={filters}
+          onFiltersChange={setFilters}
+          statuses={uniqueStatuses}
+          assignees={uniqueAssignees}
+        />
+      </div>
+
+      {/* Calendar */}
+      <div className="flex-1 px-6 pb-6">
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          locale="th"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          }}
+          events={events}
+          editable={true}
+          eventDrop={handleEventDrop}
+          eventClick={handleEventClick}
+          eventDidMount={handleEventDidMount}
+          dayCellContent={(arg) => {
+            // Remove " วัน" suffix from Thai locale
+            return arg.dayNumberText.replace(' วัน', '');
+          }}
+          height="100%"
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false,
+          }}
+        />
+      </div>
     </div>
   );
 }

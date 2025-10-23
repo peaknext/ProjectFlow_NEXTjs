@@ -22,6 +22,7 @@ interface AssigneePopoverProps {
   onCancel?: () => void;
   disabled?: boolean;
   maxVisible?: number;
+  size?: 'sm' | 'md' | 'lg'; // sm=8px, md=10px (default), lg=11px (h-11 = 44px like other inputs)
   className?: string;
 }
 
@@ -52,6 +53,7 @@ export function AssigneePopover({
   onCancel,
   disabled = false,
   maxVisible = 3,
+  size = 'md', // Default to medium size
   className
 }: AssigneePopoverProps) {
   const [open, setOpen] = useState(false);
@@ -91,6 +93,27 @@ export function AssigneePopover({
     setOpen(isOpen);
   };
 
+  // Size-specific classes
+  const sizeClasses = {
+    sm: {
+      button: 'h-8 px-2 py-1 text-xs gap-1.5',
+      placeholder: 'text-xs',
+      avatarSize: 'sm' as const
+    },
+    md: {
+      button: 'h-10 px-3 py-2 text-sm gap-2',
+      placeholder: 'text-sm',
+      avatarSize: 'sm' as const
+    },
+    lg: {
+      button: 'h-11 px-3 py-2 text-sm gap-2',
+      placeholder: 'text-sm',
+      avatarSize: 'md' as const
+    }
+  };
+
+  const sizeConfig = sizeClasses[size];
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -98,20 +121,21 @@ export function AssigneePopover({
           type="button"
           disabled={disabled}
           className={cn(
-            'flex items-center justify-start gap-2 h-[46px] w-full px-3 py-2 text-base text-left',
-            'bg-white dark:bg-background border border-input rounded-lg',
+            'flex items-center justify-start w-full text-left',
+            'bg-white dark:bg-background border border-input rounded-md',
             'text-foreground',
             'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'hover:bg-accent hover:text-accent-foreground',
             'transition-colors',
+            sizeConfig.button,
             className
           )}
         >
           {selectedUsers.length === 0 ? (
-            <span className="text-muted-foreground">มอบหมายผู้รับผิดชอบ</span>
+            <span className={cn('text-muted-foreground', sizeConfig.placeholder)}>เลือกผู้รับผิดชอบ</span>
           ) : (
-            <StackedAvatars users={selectedUsers} maxVisible={maxVisible} />
+            <StackedAvatars users={selectedUsers} maxVisible={maxVisible} size={sizeConfig.avatarSize} />
           )}
         </button>
       </PopoverTrigger>
@@ -186,36 +210,52 @@ export function AssigneePopover({
 interface StackedAvatarsProps {
   users: User[];
   maxVisible?: number;
+  size?: 'sm' | 'md';
   className?: string;
 }
 
 export function StackedAvatars({
   users,
   maxVisible = 3,
+  size = 'md',
   className
 }: StackedAvatarsProps) {
   const visibleUsers = users.slice(0, maxVisible);
   const remainingCount = users.length - maxVisible;
+
+  // Size configurations
+  const sizeClasses = {
+    sm: { avatar: 'h-5 w-5', badge: 'h-5 w-5 text-[10px]', overlap: '-ml-1.5', border: 'border' },
+    md: { avatar: 'h-8 w-8', badge: 'h-8 w-8 text-xs', overlap: '-ml-2', border: 'border-2' }
+  };
+
+  const config = sizeClasses[size];
 
   return (
     <div className={cn('flex items-center', className)}>
       {visibleUsers.map((user, index) => (
         <div
           key={user.id}
-          className={cn(index > 0 && '-ml-2')}
+          className={cn(index > 0 && config.overlap)}
           style={{ zIndex: visibleUsers.length - index }}
         >
           <UserAvatar
             user={user}
-            size="md"
-            className="border-2 border-white dark:border-background"
+            size={size}
+            className={cn(config.border, 'border-white dark:border-background')}
           />
         </div>
       ))}
 
       {remainingCount > 0 && (
         <div
-          className="flex items-center justify-center h-8 w-8 rounded-full border-2 border-white dark:border-background bg-muted text-xs font-semibold text-muted-foreground -ml-2"
+          className={cn(
+            'flex items-center justify-center rounded-full bg-muted font-semibold text-muted-foreground',
+            config.badge,
+            config.border,
+            'border-white dark:border-background',
+            config.overlap
+          )}
           style={{ zIndex: 0 }}
         >
           +{remainingCount}
