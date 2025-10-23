@@ -13,7 +13,7 @@ const sarabun = Sarabun({
 });
 
 export const metadata: Metadata = {
-  title: 'ProjectFlow - Project Management System',
+  title: 'ProjectFlows - Project Management System',
   description: 'Next.js Project Management System for Hospital IT Department',
 };
 

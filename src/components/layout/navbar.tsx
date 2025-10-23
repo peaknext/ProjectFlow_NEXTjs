@@ -43,12 +43,12 @@ export function Navbar() {
         >
           <Image
             src="/ProjectFlowLogo.svg"
-            alt="ProjectFlow"
+            alt="ProjectFlows"
             width={24}
             height={24}
             className="h-6 w-6"
           />
-          <span className="text-lg">ProjectFlow</span>
+          <span className="text-lg">ProjectFlows</span>
         </Link>
 
         {/* Center - Search & Quick Filters */}

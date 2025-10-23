@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useAuth } from '@/hooks/use-auth';
-import { Logo } from '@/components/common/logo';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useAuth } from "@/hooks/use-auth";
+import { Logo } from "@/components/common/logo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().email('รูปแบบอีเมลไม่ถูกต้อง'),
-  password: z.string().min(1, 'กรุณากรอกรหัสผ่าน'),
+  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
+  password: z.string().min(1, "กรุณากรอกรหัสผ่าน"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -44,7 +44,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-center mb-4">
             <Logo size={16} marginRight={3} />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              ProjectFlow
+              ProjectFlows
             </h1>
           </div>
           <p className="text-gray-600 dark:text-gray-400 text-sm">
@@ -52,16 +52,20 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="login-email">อีเมล</Label>
             <Input
               id="login-email"
               type="email"
-              placeholder="your.email@hospital.test"
+              placeholder="E-mail address"
               autoComplete="email"
-              {...register('email')}
+              {...register("email")}
               className="h-[50px] text-base"
             />
             {errors.email && (
@@ -77,7 +81,7 @@ export default function LoginPage() {
               type="password"
               placeholder="••••••••"
               autoComplete="current-password"
-              {...register('password')}
+              {...register("password")}
               className="h-[50px] text-base"
             />
             {errors.password && (
@@ -101,16 +105,14 @@ export default function LoginPage() {
             disabled={isLoggingIn}
             className="w-full h-[50px] text-base"
           >
-            {isLoggingIn && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
+            {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             เข้าสู่ระบบ
           </Button>
         </form>
 
         {/* Register Link */}
         <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-          ยังไม่มีบัญชี?{' '}
+          ยังไม่มีบัญชี?{" "}
           <Link
             href="/register"
             className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
