@@ -39,6 +39,7 @@ async function getHandler(req: AuthenticatedRequest) {
   const status = searchParams.get('status') || undefined;
   const actionPlanId = searchParams.get('actionPlanId') || undefined;
   const includeDeleted = searchParams.get('includeDeleted') === 'true';
+  const includeDetails = searchParams.get('includeDetails') === 'true';
 
   const skip = (page - 1) * limit;
 
@@ -77,10 +78,18 @@ async function getHandler(req: AuthenticatedRequest) {
         select: {
           id: true,
           name: true,
+          divisionId: true,
           division: {
             select: {
               id: true,
               name: true,
+              missionGroupId: true,
+              missionGroup: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           },
         },
@@ -115,6 +124,40 @@ async function getHandler(req: AuthenticatedRequest) {
           phases: true,
         },
       },
+      // Include full details if requested (for project management page)
+      ...(includeDetails && {
+        tasks: {
+          select: {
+            id: true,
+            isClosed: true,
+            statusId: true,
+            status: {
+              select: {
+                type: true,
+              },
+            },
+          },
+        },
+        statuses: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+          },
+        },
+        phases: {
+          select: {
+            id: true,
+            name: true,
+            phaseOrder: true,
+            startDate: true,
+            endDate: true,
+          },
+          orderBy: {
+            phaseOrder: 'asc' as const,
+          },
+        },
+      }),
     },
     orderBy: {
       createdAt: 'desc',

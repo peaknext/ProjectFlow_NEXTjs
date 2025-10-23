@@ -7,13 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **DO NOT REVERT ANYTHING IF I DON'T REQUEST**
 **ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system migrated from Google Apps Script to Next.js 15 + PostgreSQL. It's designed for healthcare organizations with hierarchical role-based access control and real-time collaboration features.
 
-**Current Status**: Phase 2 Complete (API 100%), Phase 3 In Progress (Frontend ~50%)
+**Current Status**: Phase 2 Complete (API 100%), Phase 3 In Progress (Frontend ~55%)
 **Tech Stack**: Next.js 15 (App Router), TypeScript, PostgreSQL, Prisma ORM, React Query, Zustand, Tailwind CSS, shadcn/ui
 **Previous GAS Project Codebase**: Stored in old_project folder for reference
-**Port**: Dev server typically runs on port 3010 (default 3000 often conflicts)
-**Last Updated**: 2025-10-23
+**Port**: Dev server typically runs on port 3000 or 3010 (may vary due to port conflicts)
+**Last Updated**: 2025-10-24
 
-⚠️ **DEPLOYMENT STATUS**: **NOT PRODUCTION-READY** - Active development in progress (Frontend ~50% complete, estimated completion: 2025-12-15)
+⚠️ **DEPLOYMENT STATUS**: **NOT PRODUCTION-READY** - Active development in progress (Frontend ~55% complete, estimated completion: 2025-12-15)
 
 ---
 
@@ -50,17 +50,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-**Recent Completions (2025-10-23):**
-✅ **Authentication Complete**: All authentication pages implemented with email verification and password reset flow via Resend API. See `AUTHENTICATION_IMPLEMENTATION_COMPLETE.md` for details.
-✅ **Password Reset Complete**: Full password reset flow with popover validation, strength meter, and real-time matching. See `PASSWORD_RESET_IMPLEMENTATION.md` for details.
-✅ **Multi-Assignee System**: Tasks now support multiple assignees via `task_assignees` many-to-many table. API accepts `assigneeUserIds` array. Backward compatible with legacy `assigneeUserId` field. See `MULTI_ASSIGNEE_IMPLEMENTATION.md` for details.
-✅ **Workspace API Complete**: Role-based hierarchical navigation API with **additionalRoles support**. See `src/app/api/workspace/route.ts` and `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md` for details.
-✅ **Breadcrumb Navigation Complete**: Multi-level interactive breadcrumb with popover selectors for navigation. See "Navigation Components" section below.
-✅ **Workspace Navigation Complete**: Collapsible cards design with text wrapping and direct department navigation. See `WORKSPACE_NAVIGATION_REDESIGN.md` for details.
-✅ **Department Tasks View Complete**: Full department-level task management with optimistic updates, project grouping, pinned tasks section, and consistent UI sizing (h-8 for all selectors). See "Department Tasks View" section below.
-✅ **ADMIN Role Authentication Fix**: BYPASS_AUTH mode now fetches real user data from database. Use `BYPASS_USER_ID=admin001` for ADMIN testing. Created admin001 user via script.
-✅ **Department Navigation Fix**: Department tasks view now uses URL query parameter (`?departmentId=`) for navigation. Breadcrumb and project selector update correctly when navigating between departments.
-✅ **CreateTaskModal Project Selector Fix**: Modal now receives pre-filtered projects from parent component (simple pass-through pattern). Projects match breadcrumb selector.
+**Recent Completions:**
+✅ **Project Management Page Complete** (2025-10-24): Full project list/management interface with hierarchical filters, sorting, pagination, and fixed header scrolling. Phases 1-4 complete. See `PROJECT_MANAGEMENT_PAGE_COMPLETE.md` for details.
+✅ **Authentication Complete** (2025-10-23): All authentication pages implemented with email verification and password reset flow via Resend API. See `AUTHENTICATION_IMPLEMENTATION_COMPLETE.md` for details.
+✅ **Password Reset Complete** (2025-10-23): Full password reset flow with popover validation, strength meter, and real-time matching. See `PASSWORD_RESET_IMPLEMENTATION.md` for details.
+✅ **Multi-Assignee System** (2025-10-23): Tasks now support multiple assignees via `task_assignees` many-to-many table. API accepts `assigneeUserIds` array. Backward compatible with legacy `assigneeUserId` field. See `MULTI_ASSIGNEE_IMPLEMENTATION.md` for details.
+✅ **Workspace API Complete** (2025-10-23): Role-based hierarchical navigation API with **additionalRoles support**. See `src/app/api/workspace/route.ts` and `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md` for details.
+✅ **Breadcrumb Navigation Complete** (2025-10-23): Multi-level interactive breadcrumb with popover selectors for navigation. See "Navigation Components" section below.
+✅ **Workspace Navigation Complete** (2025-10-23): Collapsible cards design with text wrapping and direct department navigation. See `WORKSPACE_NAVIGATION_REDESIGN.md` for details.
+✅ **Department Tasks View Complete** (2025-10-23): Full department-level task management with optimistic updates, project grouping, pinned tasks section, and consistent UI sizing (h-8 for all selectors). See "Department Tasks View" section below.
+✅ **ADMIN Role Authentication Fix** (2025-10-23): BYPASS_AUTH mode now fetches real user data from database. Use `BYPASS_USER_ID=admin001` for ADMIN testing. Created admin001 user via script.
+✅ **Department Navigation Fix** (2025-10-23): Department tasks view now uses URL query parameter (`?departmentId=`) for navigation. Breadcrumb and project selector update correctly when navigating between departments.
+✅ **CreateTaskModal Project Selector Fix** (2025-10-23): Modal now receives pre-filtered projects from parent component (simple pass-through pattern). Projects match breadcrumb selector.
 
 ## Commands
 
@@ -198,9 +199,9 @@ export const GET = withAuth(handler);
 
 ### Frontend Architecture
 
-**Current Implementation Status: (~50% Complete)**
+**Current Implementation Status: (~55% Complete)**
 
-**✅ Complete (15 major components):**
+**✅ Complete (16 major components):**
 
 **Core Infrastructure (3):**
 
@@ -222,14 +223,18 @@ export const GET = withAuth(handler);
 - ✅ Calendar View (FullCalendar v6)
 - ✅ List View (Table with sorting/filtering)
 
+**Management Pages (1):** ✨ **NEW 2025-10-24**
+
+- ✅ Project Management Page (List view with filters, sorting, pagination, fixed header scrolling)
+
 **Advanced Features (7):**
 
 - ✅ Task Detail Panel (Full CRUD with 11 optimistic mutations)
 - ✅ Workspace API (Hierarchical navigation by role)
 - ✅ Workspace Navigation (Collapsible cards with icons, text wrapping, direct department navigation)
-- ✅ Interactive Breadcrumb Navigation (Popover selectors for all hierarchy levels) ✨ **NEW 2025-10-23**
-- ✅ Navigation Store (Zustand store for breadcrumb state management) ✨ **NEW 2025-10-23**
-- ✅ Department Toolbar (Breadcrumb + Create Task button) ✨ **NEW 2025-10-23**
+- ✅ Interactive Breadcrumb Navigation (Popover selectors for all hierarchy levels)
+- ✅ Navigation Store (Zustand store for breadcrumb state management)
+- ✅ Department Toolbar (Breadcrumb + Create Task button)
 - ✅ Project Toolbar (Reusable toolbar for project views)
 
 **⚠️ Partially Complete:**
@@ -334,15 +339,18 @@ export const GET = withAuth(handler);
    ├── app/
    │   ├── (dashboard)/              # Protected routes with dashboard layout
    │   │   ├── dashboard/page.tsx    # Dashboard (mock data)
-   │   │   └── projects/[projectId]/ # Project views
-   │   │       ├── board/page.tsx    # Kanban board
-   │   │       ├── calendar/page.tsx # Calendar view
-   │   │       └── list/page.tsx     # List/table view
+   │   │   ├── projects/             # Project management
+   │   │   │   ├── page.tsx          # Project list/management (NEW 2025-10-24)
+   │   │   │   └── [projectId]/      # Project views
+   │   │   │       ├── board/page.tsx    # Kanban board
+   │   │   │       ├── calendar/page.tsx # Calendar view
+   │   │   │       └── list/page.tsx     # List/table view
    │   ├── (auth)/                   # Authentication pages (login, register, verify-email, etc.)
-   │   └── api/                      # API routes (71 endpoints)
+   │   └── api/                      # API routes (74 endpoints)
    ├── components/
    │   ├── layout/                   # Navbar, Sidebar, ProjectToolbar, Footer
-   │   ├── navigation/               # WorkspaceNavigation, Breadcrumb (NEW 2025-10-23)
+   │   ├── navigation/               # WorkspaceNavigation, Breadcrumb
+   │   ├── projects/                 # Project management components (NEW 2025-10-24)
    │   ├── views/                    # BoardView, CalendarView, ListView
    │   ├── task-panel/               # TaskPanel component (v1.0 complete)
    │   ├── common/                   # Reusable components (TaskCard, UserAvatar)
@@ -1212,7 +1220,35 @@ If you're a new Claude instance working on this project, start here:
 
 ## 📝 Recent Changes (Changelog)
 
-### 2025-10-23 (Latest - Part 4) ✨ **NEW**
+### 2025-10-24 (Latest) ✨ **NEW**
+
+- ✅ **Project Management Page Complete (Phases 1-4)** - Full project list/management interface
+  - Route: `/projects` (enabled in sidebar)
+  - Hierarchical cascade filters (Mission Group → Division → Department)
+  - Real-time search with 300ms debounce
+  - Client-side sorting by Name/Owner/Phase (asc/desc)
+  - Client-side pagination (10/25/50/100 items per page)
+  - **Fixed table header** - Stays visible while scrolling (NEW ✨)
+  - **Scrollable content area** - Proper overflow handling for large datasets
+  - Permission-based access (ADMIN/CHIEF/LEADER/HEAD only)
+  - Permission-based actions (Edit for all, Delete for ADMIN/CHIEF only)
+  - Dark mode support with proper color schemes
+  - Phase badges with color coding (blue/yellow/orange/green)
+  - Progress bars with percentage display
+  - Responsive layout with proper flex sizing
+  - Clean code (no console.log in production)
+  - 13 new files created:
+    - `src/app/(dashboard)/projects/` - Page, loading, error
+    - `src/components/projects/` - 5 components (view, filter, table, row, pagination)
+    - `src/hooks/use-projects-list.ts` - React Query hook
+    - `src/lib/project-utils.ts` - 9 utility functions
+    - `src/types/project.ts` - TypeScript interfaces
+  - Updated `src/components/layout/sidebar.tsx` - Enabled "โปรเจค" menu
+  - Updated `src/app/api/projects/route.ts` - Added `includeDetails` param
+  - Documentation: `PROJECT_MANAGEMENT_PAGE_COMPLETE.md` (430+ lines)
+  - **Next steps**: Phases 5-6 (Create/Edit/Delete modals), Phase 7 (Optimistic UI)
+
+### 2025-10-23 (Part 4)
 
 - ✅ **ADMIN Role Authentication Fix** - BYPASS_AUTH now fetches real user data from database
   - Modified `src/lib/api-middleware.ts` to use `BYPASS_USER_ID` env variable
@@ -1283,15 +1319,17 @@ If you're a new Claude instance working on this project, start here:
 - [x] Authentication & authorization system
 - [x] Permission system with 6 roles
 
-**Frontend (~50% Complete):** 🔄
+**Frontend (~55% Complete):** 🔄
 
 - [x] Core infrastructure (Layout, Theme, Auth)
 - [x] 3 Project views (Board, Calendar, List)
 - [x] Task detail panel
+- [x] Project Management page (Phases 1-4 complete)
 - [ ] Create Task Modal ⚠️ **BLOCKER**
+- [ ] Project Management modals (Create/Edit/Delete) - Phases 5-6
 - [ ] User Management pages
 - [ ] Dashboard widgets (8 remaining)
-- [ ] 37+ additional components
+- [ ] 35+ additional components
 
 **Critical Bugs:** 🔴
 

@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -9,159 +8,95 @@ import {
   FolderKanban,
   BarChart3,
   Users,
-  ChevronDown,
-  ChevronRight,
-  Building2,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { SyncStatusFooter } from "@/components/layout/sync-status-footer"
+import { WorkspaceNavigation } from "@/components/navigation/workspace-navigation"
 
 const mainNavigation = [
   {
     name: "แดชบอร์ด",
     href: "/dashboard",
     icon: LayoutDashboard,
+    enabled: true,
   },
   {
     name: "งาน",
-    href: "/tasks",
+    href: "/department/tasks", // Department Tasks View as default
     icon: CheckSquare,
+    enabled: true,
   },
   {
     name: "โปรเจค",
-    href: "/projects",
+    href: "/projects", // Project management page
     icon: FolderKanban,
+    enabled: true,
   },
   {
     name: "รายงาน",
-    href: "/reports",
+    href: "/dashboard", // Temporary redirect to dashboard
     icon: BarChart3,
+    enabled: false, // Not implemented yet
   },
   {
     name: "บุคลากร",
-    href: "/personnel",
+    href: "/dashboard", // Temporary redirect to dashboard
     icon: Users,
-  },
-]
-
-// Mock workspace data - จะเชื่อมกับ API ภายหลัง
-const workspaces = [
-  {
-    id: 1,
-    name: "กลุ่มภารกิจด้านพัฒนาการ",
-    icon: Building2,
-    children: [
-      { id: 11, name: "โครงการพัฒนาระบบสารสนเทศโรงพยาบาล" },
-      { id: 12, name: "โครงการปรับปรุงโครงสร้างพื้นฐานไอที" },
-      { id: 13, name: "โครงการอบรมเจ้าหน้าที่" },
-    ],
-  },
-  {
-    id: 2,
-    name: "กลุ่มภารกิจด้านบริการระบบเภสัชกรรม",
-    icon: Building2,
-    children: [
-      { id: 21, name: "โครงการระบบจัดการคลังยา" },
-      { id: 22, name: "โครงการตรวจสอบปฏิสัมพันธ์ยา" },
-      { id: 23, name: "โครงการควบคุมยาเสพติด" },
-      { id: 24, name: "โครงการติดตามการใช้ยา" },
-    ],
-  },
-  {
-    id: 3,
-    name: "กลุ่มภารกิจด้านระบบฐานข้อมูลและโครงการพิเศษ",
-    icon: Building2,
-    children: [
-      { id: 31, name: "โครงการฐานข้อมูลผู้ป่วย" },
-      { id: 32, name: "โครงการ Data Warehouse" },
-      { id: 33, name: "โครงการ Business Intelligence" },
-    ],
-  },
-  {
-    id: 4,
-    name: "กลุ่มภารกิจด้านเทคโนโลยีสารสนเทศ",
-    icon: Building2,
-    children: [
-      { id: 41, name: "โครงการ Cloud Migration" },
-      { id: 42, name: "โครงการ Security Enhancement" },
-      { id: 43, name: "โครงการ Network Infrastructure" },
-      { id: 44, name: "โครงการ Backup & Recovery" },
-    ],
-  },
-  {
-    id: 5,
-    name: "กลุ่มภารกิจด้านบริการและสนับสนุน",
-    icon: Building2,
-    children: [
-      { id: 51, name: "โครงการ Help Desk System" },
-      { id: 52, name: "โครงการ IT Asset Management" },
-    ],
-  },
-  {
-    id: 6,
-    name: "กลุ่มภารกิจด้านวิจัยและพัฒนา",
-    icon: Building2,
-    children: [
-      { id: 61, name: "โครงการ AI สำหรับการวินิจฉัยโรค" },
-      { id: 62, name: "โครงการ Telemedicine" },
-      { id: 63, name: "โครงการ IoT ในโรงพยาบาล" },
-    ],
-  },
-  {
-    id: 7,
-    name: "กลุ่มภารกิจด้านคุณภาพและมาตรฐาน",
-    icon: Building2,
-    children: [
-      { id: 71, name: "โครงการ ISO Certification" },
-      { id: 72, name: "โครงการ Quality Improvement" },
-    ],
-  },
-  {
-    id: 8,
-    name: "กลุ่มภารกิจด้านการเงินและบัญชี",
-    icon: Building2,
-    children: [
-      { id: 81, name: "โครงการระบบการเงิน" },
-      { id: 82, name: "โครงการระบบบัญชี" },
-      { id: 83, name: "โครงการจัดซื้อจัดจ้าง" },
-    ],
+    enabled: false, // Not implemented yet
   },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [expandedWorkspaces, setExpandedWorkspaces] = useState<number[]>([1])
-
-  const toggleWorkspace = (id: number) => {
-    setExpandedWorkspaces((prev) =>
-      prev.includes(id) ? prev.filter((wid) => wid !== id) : [...prev, id]
-    )
-  }
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card">
       {/* Main Navigation - Fixed */}
       <nav className="flex flex-col gap-2 px-4 pt-4 pb-4">
         {mainNavigation.map((item) => {
-          const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
+          // Special logic for "งาน" (Tasks) - should be active for all task-related views
+          let isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
+
+          if (item.name === "งาน") {
+            // Highlight "งาน" for all task-related paths:
+            // - /department/tasks
+            // - /projects/[projectId]/board
+            // - /projects/[projectId]/calendar
+            // - /projects/[projectId]/list
+            isActive = isActive ||
+              pathname?.includes('/projects/') && (
+                pathname?.endsWith('/board') ||
+                pathname?.endsWith('/calendar') ||
+                pathname?.endsWith('/list')
+              )
+          }
 
           return (
-            <Link key={item.href} href={item.href}>
+            <Link
+              key={item.name}
+              href={item.enabled ? item.href : "#"}
+              className={cn(!item.enabled && "cursor-not-allowed")}
+            >
               <Button
                 variant="ghost"
                 size="lg"
+                disabled={!item.enabled}
                 className={cn(
                   "w-full justify-start gap-3 h-12",
-                  isActive
+                  isActive && item.enabled
                     ? "bg-primary text-white hover:bg-primary/90 hover:text-white"
-                    : "hover:bg-primary/10"
+                    : "hover:bg-primary/10",
+                  !item.enabled && "opacity-50 cursor-not-allowed"
                 )}
               >
                 <item.icon className="h-5 w-5" />
                 <span className="font-medium text-base">{item.name}</span>
+                {!item.enabled && (
+                  <span className="ml-auto text-xs text-muted-foreground">(เร็วๆ นี้)</span>
+                )}
               </Button>
             </Link>
           )
@@ -175,48 +110,9 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Workspace List - Scrollable */}
+      {/* Workspace Navigation - Scrollable */}
       <ScrollArea className="flex-1">
-        <div className="px-4 py-2 space-y-1">
-          {workspaces.map((workspace) => (
-            <div key={workspace.id}>
-              <button
-                className="w-full flex items-start gap-2 h-auto py-2 px-3 text-left hover:bg-accent rounded-md transition-colors"
-                onClick={() => toggleWorkspace(workspace.id)}
-              >
-                {expandedWorkspaces.includes(workspace.id) ? (
-                  <ChevronDown className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                )}
-                <workspace.icon className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                <span className="text-sm break-words flex-1 min-w-0">
-                  {workspace.name}
-                </span>
-              </button>
-
-              {/* Children projects */}
-              {expandedWorkspaces.includes(workspace.id) &&
-                workspace.children.length > 0 && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    {workspace.children.map((child) => (
-                      <Link key={child.id} href={`/projects/${child.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start h-auto py-2 whitespace-normal"
-                        >
-                          <span className="text-sm break-words text-left w-full">
-                            {child.name}
-                          </span>
-                        </Button>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-            </div>
-          ))}
-        </div>
+        <WorkspaceNavigation />
       </ScrollArea>
 
       {/* Footer - Fixed with Sync Status */}
