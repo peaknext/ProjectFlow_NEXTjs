@@ -38,7 +38,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Integration with Board/Calendar/List views
    - Estimated: 1-2 days
 
-4. ~~**User Management Pages**~~ ✅ **CREATE USER COMPLETE, EDIT/DELETE PENDING**   - ✅ User list view with filters and pagination (Phase 1)   - ✅ Create User Modal with ADMIN-only access + UI improvements (Phase 2) - See `USER_CREATION_ADMIN_ONLY_COMPLETE.md` and `CREATE_USER_MODAL_UI_IMPROVEMENTS.md`   - ✅ JobTitle table integration fixed (Prisma schema mapping)   - ❌ Edit User Modal (Phase 3) - Not yet implemented   - ❌ Delete User functionality (Phase 4) - Not yet implemented   - Estimated remaining: 2-3 days
+4. ~~**User Management Pages**~~ ✅ **CREATE/EDIT USER COMPLETE, DELETE PENDING**
+   - ✅ User list view with filters and pagination (Phase 1)
+   - ✅ Create User Modal with ADMIN-only access + UI improvements (Phase 2) - See `USER_CREATION_ADMIN_ONLY_COMPLETE.md` and `CREATE_USER_MODAL_UI_IMPROVEMENTS.md`
+   - ✅ JobTitle table integration fixed (Prisma schema mapping)
+   - ✅ Edit User Modal (Phase 3) - Complete with all fields (2025-10-24)
+   - ✅ API /api/users updated to include titlePrefix, firstName, lastName, workLocation, internalPhone
+   - ❌ Delete User functionality (Phase 4) - Not yet implemented
+   - Estimated remaining: 1 day
 
 ### ⚠️ Important: Thai Terminology
 
@@ -54,6 +61,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 **Recent Completions:**
+✅ **Edit User Modal Complete** (2025-10-24): Fixed Edit User Modal to properly display and edit all user fields including titlePrefix, firstName, lastName. Updated GET /api/users to include missing fields (titlePrefix, firstName, lastName, workLocation, internalPhone). Modal now pre-populates all form fields correctly with existing user data. File: `src/components/modals/edit-user-modal.tsx` (709 lines).
 ✅ **Create User Modal UI Improvements** (2025-10-24): Complete layout redesign with 3-column name fields, searchable Combobox for title prefix and job title (94 titles), standardized job level dropdown (12 Thai levels), 2-column layouts for department/role and job title/level. Improved space utilization and user experience. See `CREATE_USER_MODAL_UI_IMPROVEMENTS.md` for details.
 ✅ **JobTitle Table Integration Fix** (2025-10-24): Fixed Prisma schema mapping for jobtitle table - added @map() directives for lowercase column names (jobtitleth, jobtitleen). Resolved "column does not exist" error in /api/users endpoint.
 ✅ **ADMIN-Only User Creation Complete** (2025-10-24): Complete redesign of user creation system with ADMIN-only access, auto-verification, auto-password generation, and password reset email. Added new fields: workLocation (สถานที่ปฏิบัติงาน) and internalPhone (เบอร์โทรภายใน). New API endpoint `/api/admin/users` (POST), rewritten Create User Modal (445 lines), updated Prisma schema. See `USER_CREATION_ADMIN_ONLY_COMPLETE.md` for full implementation details.
@@ -1350,6 +1358,15 @@ If you're a new Claude instance working on this project, start here:
 ## 📝 Recent Changes (Changelog)
 
 ### 2025-10-24 (Latest) ✨ **NEW**
+
+- ✅ **Edit User Modal Complete** - Fixed modal to properly display and edit all user fields
+  - **Issue**: Modal opened with empty titlePrefix, firstName, lastName fields
+  - **Root Cause**: GET /api/users only returned fullName, missing individual name fields
+  - **Fix**: Added titlePrefix, firstName, lastName, workLocation, internalPhone to API select query
+  - **Files Modified**:
+    - `src/app/api/users/route.ts` - Updated select to include missing fields (lines 88-119)
+  - **Result**: Modal now pre-populates all form fields correctly with existing user data
+  - **Testing**: Verified Edit User Modal displays all fields properly
 
 - ✅ **Permission System Complete (Priority 1, 2, 3)** - Full permission system migration from GAS to Next.js
   - **Priority 1: Additional Roles Support** (3 hours) - `getUserAccessibleScope()` function with multi-role support
