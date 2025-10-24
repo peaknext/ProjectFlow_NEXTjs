@@ -8,23 +8,30 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { withAuth, withPermission } from '@/lib/api-middleware';
+import { withAuth, AuthenticatedRequest } from '@/lib/api-middleware';
 import {
   successResponse,
   errorResponse,
   handleApiError,
 } from '@/lib/api-response';
 import { hashPassword, generateSecureToken } from '@/lib/auth';
+import { canManageTargetUser } from '@/lib/permissions';
 
 const updateUserSchema = z.object({
   fullName: z.string().min(1).optional(),
+  titlePrefix: z.string().nullable().optional(), // Added for name parts
+  firstName: z.string().min(1).optional(), // Added for name parts
+  lastName: z.string().min(1).optional(), // Added for name parts
   departmentId: z.string().nullable().optional(),
   role: z
     .enum(['ADMIN', 'CHIEF', 'LEADER', 'HEAD', 'MEMBER', 'USER'])
     .optional(),
   profileImageUrl: z.string().url().nullable().optional(),
-  jobTitle: z.string().nullable().optional(),
+  jobTitleId: z.string().nullable().optional(),
   jobLevel: z.string().nullable().optional(),
+  workLocation: z.string().nullable().optional(),
+  internalPhone: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
   additionalRoles: z.record(z.string()).nullable().optional(),
   password: z.string().min(8).optional(), // Allow password change
 });
@@ -68,8 +75,18 @@ async function getHandler(
       },
       userStatus: true,
       isVerified: true,
-      jobTitle: true,
+      jobTitleId: true,
+      jobTitle: {
+        select: {
+          id: true,
+          jobTitleTh: true,
+          jobTitleEn: true,
+        },
+      },
       jobLevel: true,
+      workLocation: true,
+      internalPhone: true,
+      notes: true,
       additionalRoles: true,
       pinnedTasks: true,
       createdAt: true,
@@ -87,13 +104,15 @@ async function getHandler(
 /**
  * PATCH /api/users/:userId
  * Update user details
+ * Requires management scope permission
  */
 async function patchHandler(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
+  req: AuthenticatedRequest,
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
+    const currentUserId = req.session.userId;
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -104,6 +123,16 @@ async function patchHandler(
       return errorResponse('USER_NOT_FOUND', 'User not found', 404);
     }
 
+    // Check if current user can manage target user (scope-based permission)
+    const canManage = await canManageTargetUser(currentUserId, userId);
+    if (!canManage) {
+      return errorResponse(
+        'FORBIDDEN',
+        'You do not have permission to edit this user',
+        403
+      );
+    }
+
     // Parse and validate request body
     const body = await req.json();
     const updates = updateUserSchema.parse(body);
@@ -111,14 +140,33 @@ async function patchHandler(
     // Prepare update data
     const updateData: any = {};
 
+    // Name parts (new - supports individual field updates)
+    if (updates.titlePrefix !== undefined) updateData.titlePrefix = updates.titlePrefix;
+    if (updates.firstName !== undefined) updateData.firstName = updates.firstName;
+    if (updates.lastName !== undefined) updateData.lastName = updates.lastName;
+
+    // Auto-generate fullName if name parts are provided
+    if (updates.firstName || updates.lastName) {
+      const titlePrefix = updates.titlePrefix !== undefined ? updates.titlePrefix : existingUser.titlePrefix;
+      const firstName = updates.firstName || existingUser.firstName;
+      const lastName = updates.lastName || existingUser.lastName;
+
+      updateData.fullName = titlePrefix
+        ? `${titlePrefix} ${firstName} ${lastName}`
+        : `${firstName} ${lastName}`;
+    }
+
     if (updates.fullName !== undefined) updateData.fullName = updates.fullName;
     if (updates.departmentId !== undefined)
       updateData.departmentId = updates.departmentId;
     if (updates.role !== undefined) updateData.role = updates.role;
     if (updates.profileImageUrl !== undefined)
       updateData.profileImageUrl = updates.profileImageUrl;
-    if (updates.jobTitle !== undefined) updateData.jobTitle = updates.jobTitle;
+    if (updates.jobTitleId !== undefined) updateData.jobTitleId = updates.jobTitleId;
     if (updates.jobLevel !== undefined) updateData.jobLevel = updates.jobLevel;
+    if (updates.workLocation !== undefined) updateData.workLocation = updates.workLocation;
+    if (updates.internalPhone !== undefined) updateData.internalPhone = updates.internalPhone;
+    if (updates.notes !== undefined) updateData.notes = updates.notes;
     if (updates.additionalRoles !== undefined)
       updateData.additionalRoles = updates.additionalRoles;
 
@@ -147,8 +195,18 @@ async function patchHandler(
           },
         },
         userStatus: true,
-        jobTitle: true,
+        jobTitleId: true,
+        jobTitle: {
+          select: {
+            id: true,
+            jobTitleTh: true,
+            jobTitleEn: true,
+          },
+        },
         jobLevel: true,
+        workLocation: true,
+        internalPhone: true,
+        notes: true,
         updatedAt: true,
       },
     });
@@ -165,12 +223,14 @@ async function patchHandler(
 /**
  * DELETE /api/users/:userId
  * Soft delete user
+ * Requires management scope permission
  */
 async function deleteHandler(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
+  req: AuthenticatedRequest,
+  { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { userId } = params;
+  const { userId } = await params;
+  const currentUserId = req.session.userId;
 
   // Check if user exists
   const existingUser = await prisma.user.findUnique({
@@ -179,6 +239,16 @@ async function deleteHandler(
 
   if (!existingUser) {
     return errorResponse('USER_NOT_FOUND', 'User not found', 404);
+  }
+
+  // Check if current user can manage target user (scope-based permission)
+  const canManage = await canManageTargetUser(currentUserId, userId);
+  if (!canManage) {
+    return errorResponse(
+      'FORBIDDEN',
+      'You do not have permission to delete this user',
+      403
+    );
   }
 
   // Soft delete user
@@ -201,7 +271,7 @@ async function deleteHandler(
   });
 }
 
-// Export with appropriate permissions
+// Export with authentication (permission checks done in handlers)
 export const GET = withAuth(getHandler);
-export const PATCH = withPermission('edit_users', patchHandler);
-export const DELETE = withPermission('delete_users', deleteHandler);
+export const PATCH = withAuth(patchHandler);
+export const DELETE = withAuth(deleteHandler);
