@@ -38,14 +38,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Integration with Board/Calendar/List views
    - Estimated: 1-2 days
 
-4. ~~**User Management Pages**~~ ✅ **CREATE/EDIT USER COMPLETE, DELETE PENDING**
+4. ~~**User Management Pages**~~ ✅ **COMPLETE (All Phases)** 🎉
    - ✅ User list view with filters and pagination (Phase 1)
-   - ✅ Create User Modal with ADMIN-only access + UI improvements (Phase 2) - See `USER_CREATION_ADMIN_ONLY_COMPLETE.md` and `CREATE_USER_MODAL_UI_IMPROVEMENTS.md`
-   - ✅ JobTitle table integration fixed (Prisma schema mapping)
+   - ✅ Create User Modal with ADMIN-only access + UI improvements (Phase 2) - See `USER_CREATION_ADMIN_ONLY_COMPLETE.md`
    - ✅ Edit User Modal (Phase 3) - Complete with all fields (2025-10-24)
-   - ✅ API /api/users updated to include titlePrefix, firstName, lastName, workLocation, internalPhone
-   - ❌ Delete User functionality (Phase 4) - Not yet implemented
-   - Estimated remaining: 1 day
+   - ✅ Delete User (Phase 4) - AlertDialog confirmation, ADMIN/CHIEF only (2025-10-24)
+   - ✅ Full CRUD operations with optimistic updates
+   - ✅ Permission-based access control (scope filtering)
+   - **Next**: Bulk operations (optional enhancement)
 
 ### ⚠️ Important: Thai Terminology
 
@@ -61,6 +61,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 **Recent Completions:**
+✅ **User Management Complete (Phase 4: Delete User)** (2025-10-24): Completed full CRUD operations for user management with AlertDialog confirmation for delete. Features: ADMIN/CHIEF permission check, soft delete with session invalidation, loading states, toast notifications, optimistic cache updates. Updated `src/components/users/user-row.tsx` (256 lines) with AlertDialog pattern matching Project deletion. **User Management is now 100% complete** (Phases 1-4).
 ✅ **Edit User Modal Complete** (2025-10-24): Fixed Edit User Modal to properly display and edit all user fields including titlePrefix, firstName, lastName. Updated GET /api/users to include missing fields (titlePrefix, firstName, lastName, workLocation, internalPhone). Modal now pre-populates all form fields correctly with existing user data. File: `src/components/modals/edit-user-modal.tsx` (709 lines).
 ✅ **Create User Modal UI Improvements** (2025-10-24): Complete layout redesign with 3-column name fields, searchable Combobox for title prefix and job title (94 titles), standardized job level dropdown (12 Thai levels), 2-column layouts for department/role and job title/level. Improved space utilization and user experience. See `CREATE_USER_MODAL_UI_IMPROVEMENTS.md` for details.
 ✅ **JobTitle Table Integration Fix** (2025-10-24): Fixed Prisma schema mapping for jobtitle table - added @map() directives for lowercase column names (jobtitleth, jobtitleen). Resolved "column does not exist" error in /api/users endpoint.
@@ -227,9 +228,9 @@ export const GET = withAuth(handler);
 
 ### Frontend Architecture
 
-**Current Implementation Status: (~59% Complete)**
+**Current Implementation Status: (~62% Complete)**
 
-**✅ Complete (19 major components):**
+**✅ Complete (23 major components):**
 
 **Core Infrastructure (3):**
 
@@ -268,14 +269,19 @@ export const GET = withAuth(handler);
 - ✅ Department Toolbar (Breadcrumb + Create Task button)
 - ✅ Project Toolbar (Reusable toolbar for project views)
 
+**User Management (4 phases):** ✨ **COMPLETE 2025-10-24**
+
+- ✅ User List View (filters, pagination, sorting)
+- ✅ Create User Modal (ADMIN-only, 445 lines)
+- ✅ Edit User Modal (709 lines)
+- ✅ Delete User (AlertDialog, ADMIN/CHIEF only)
+
 **⚠️ Partially Complete:**
 
 - ⚠️ Dashboard Page (Layout only, mock data)
 - ⚠️ Create Task Modal (Component structure complete, needs integration testing)
 
-**❌ Not Yet Implemented (~32+ components):**
-
-- ❌ User Management Pages (list, search, filter, CRUD)
+**❌ Not Yet Implemented (~28+ components):**
 - ❌ Reports/Analytics Dashboard (charts, analytics, export)
 - ❌ Dashboard Widgets (8 widgets: stats cards, recent activities, etc.)
 - ❌ Modals & Dialogs (3 remaining: Create Task, Close Task, Bulk Actions)
@@ -1358,6 +1364,21 @@ If you're a new Claude instance working on this project, start here:
 ## 📝 Recent Changes (Changelog)
 
 ### 2025-10-24 (Latest) ✨ **NEW**
+
+- ✅ **User Management Complete (Phase 4: Delete User)** - Full CRUD operations complete
+  - **Implementation**: AlertDialog confirmation for delete action (matches Project deletion pattern)
+  - **Permission Check**: ADMIN/CHIEF only (enforced in API + UI)
+  - **Features**:
+    - Soft delete with session invalidation
+    - AlertDialog with detailed consequences list
+    - Loading state with spinner during deletion
+    - Toast notifications (success/error)
+    - Optimistic cache updates (removes from list immediately)
+  - **Files Modified**:
+    - `src/components/users/user-row.tsx` - Added AlertDialog, permission check, improved UX (256 lines)
+  - **API**: DELETE /api/users/:userId (already existed with `canManageTargetUser()` check)
+  - **Hook**: useDeleteUser() (already existed with optimistic updates)
+  - **Result**: User Management now 100% complete (Phases 1-4: List, Create, Edit, Delete)
 
 - ✅ **Edit User Modal Complete** - Fixed modal to properly display and edit all user fields
   - **Issue**: Modal opened with empty titlePrefix, firstName, lastName fields
