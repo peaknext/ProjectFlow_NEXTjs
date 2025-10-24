@@ -20,7 +20,10 @@ datasource db {
 model User {
   id                String    @id @default(cuid())
   email             String    @unique
-  fullName          String
+  titlePrefix       String?   // คำนำหน้าชื่อ (นาย, นาง, นางสาว, ดร., ฯพณฯ, etc.)
+  firstName         String    // ชื่อ
+  lastName          String    // นามสกุล
+  fullName          String    // Auto-generated from titlePrefix + firstName + lastName (kept for backward compatibility)
   passwordHash      String
   salt              String
   role              UserRole  @default(USER)
@@ -31,8 +34,10 @@ model User {
   resetToken        String?   @unique
   resetTokenExpiry  DateTime?
   userStatus        UserStatus @default(ACTIVE)
-  jobTitle          String?
+  jobTitleId        String?   // Foreign key to JobTitle table
   jobLevel          String?
+  workLocation      String?   // สถานที่ปฏิบัติงาน
+  internalPhone     String?   // เบอร์โทรภายใน
   pinnedTasks       Json?     // Array of task IDs
   additionalRoles   Json?     // {"Role1": "BranchId1"}
   createdAt         DateTime  @default(now())
@@ -41,9 +46,12 @@ model User {
 
   // Relations
   department            Department?         @relation("UserDepartment", fields: [departmentId], references: [id])
+  jobTitle              JobTitle?           @relation("UserJobTitle", fields: [jobTitleId], references: [id])
   sessions              Session[]
   createdTasks          Task[]              @relation("TaskCreator")
   assignedTasks         Task[]              @relation("TaskAssignee")
+  taskAssignments       TaskAssignee[]      @relation("UserTaskAssignments") // New: Many-to-many relation
+  assignedTasksByMe     TaskAssignee[]      @relation("UserAssignedTasks")   // New: Tasks I assigned to others
   closedTasks           Task[]              @relation("TaskCloser")
   comments              Comment[]
   notifications         Notification[]      @relation("NotificationUser")
@@ -59,6 +67,7 @@ model User {
 
   @@index([email])
   @@index([departmentId])
+  @@index([jobTitleId])
   @@index([role])
   @@index([userStatus])
   @@map("users")
@@ -77,6 +86,20 @@ enum UserStatus {
   ACTIVE
   SUSPENDED
   INACTIVE
+}
+
+// ============================================
+// JOB TITLES (ตำแหน่งงาน)
+// ============================================
+
+model JobTitle {
+  id         String @id  // Primary Key (text)
+  jobTitleTh String @map("jobtitleth") // ชื่อตำแหน่งภาษาไทย
+  jobTitleEn String @map("jobtitleen") // ชื่อตำแหน่งภาษาอังกฤษ
+
+  users User[] @relation("UserJobTitle")
+
+  @@map("jobtitle")
 }
 
 model Session {
@@ -219,7 +242,7 @@ model Task {
   name            String
   projectId       String
   description     String?
-  assigneeUserId  String?
+  assigneeUserId  String?   // @deprecated - Keep for backward compatibility, use assignees relation instead
   statusId        String
   priority        Int       @default(3) // 1-4
   startDate       DateTime?
@@ -235,13 +258,14 @@ model Task {
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
 
-  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assignee      User?       @relation("TaskAssignee", fields: [assigneeUserId], references: [id])
-  status        Status      @relation(fields: [statusId], references: [id])
-  creator       User        @relation("TaskCreator", fields: [creatorUserId], references: [id])
-  closedBy      User?       @relation("TaskCloser", fields: [userClosedId], references: [id])
-  parentTask    Task?       @relation("SubTasks", fields: [parentTaskId], references: [id])
-  subtasks      Task[]      @relation("SubTasks")
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee      User?          @relation("TaskAssignee", fields: [assigneeUserId], references: [id])
+  assignees     TaskAssignee[] @relation("TaskAssignees") // New: Many-to-many relation
+  status        Status         @relation(fields: [statusId], references: [id])
+  creator       User           @relation("TaskCreator", fields: [creatorUserId], references: [id])
+  closedBy      User?          @relation("TaskCloser", fields: [userClosedId], references: [id])
+  parentTask    Task?          @relation("SubTasks", fields: [parentTaskId], references: [id])
+  subtasks      Task[]         @relation("SubTasks")
   comments      Comment[]
   checklists    Checklist[]
   histories     History[]
@@ -315,6 +339,26 @@ model History {
   @@index([userId])
   @@index([historyDate])
   @@map("histories")
+}
+
+model TaskAssignee {
+  id         String   @id @default(cuid())
+  taskId     String
+  userId     String
+  assignedAt DateTime @default(now())
+  assignedBy String   // User ID who assigned this task
+  createdAt  DateTime @default(now())
+
+  task       Task @relation("TaskAssignees", fields: [taskId], references: [id], onDelete: Cascade)
+  user       User @relation("UserTaskAssignments", fields: [userId], references: [id], onDelete: Cascade)
+  assignedByUser User @relation("UserAssignedTasks", fields: [assignedBy], references: [id])
+
+  @@unique([taskId, userId]) // Prevent duplicate assignments
+  @@index([taskId])
+  @@index([userId])
+  @@index([assignedBy])
+  @@index([assignedAt])
+  @@map("task_assignees")
 }
 
 // ============================================
