@@ -129,7 +129,7 @@ export function UserRow({ user }: UserRowProps) {
               {user.jobTitle && (
                 <div className="text-xs text-muted-foreground">
                   {user.jobTitle.jobTitleTh}
-                  {user.jobLevel && ` (${user.jobLevel})`}
+                  {user.jobLevel && ` ${user.jobLevel}`}
                 </div>
               )}
             </div>
