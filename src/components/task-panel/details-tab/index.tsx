@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { useUpdateTask } from '@/hooks/use-tasks';
 import { useTaskPanelTab } from '../task-panel-tabs';
 import { useTaskPermissions, getPermissionNotice } from '@/hooks/use-task-permissions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Info, AlertCircle } from 'lucide-react';
 import { ParentTaskBanner } from './parent-task-banner';
 import { TaskNameInput } from './task-name-input';
 import { DescriptionTextarea } from './description-textarea';
@@ -22,16 +24,22 @@ interface Task {
   id: string;
   name: string;
   description: string | null;
+  projectId: string;
   statusId: string;
   priority: number;
   difficulty: number | null;
   startDate: string | null;
   dueDate: string | null;
-  assigneeUserId: string | null;
+  assigneeUserId: string | null; // @deprecated
+  assigneeUserIds?: string[]; // New: Array of assignee IDs
   parentTaskId: string | null;
   isClosed?: boolean;
-  creatorId?: string;
-  dateCreated?: string;
+  creator?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  createdAt?: string;
 }
 
 interface User {
@@ -57,6 +65,29 @@ interface DetailsTabProps {
   updateFormState?: (updates: { isDirty?: boolean; isSubmitting?: boolean; currentStatusId?: string }) => void;
   registerSubmitHandler?: (handler: () => Promise<void>) => void;
 }
+
+// Validation schema
+const taskFormSchema = z.object({
+  name: z.string().min(1, 'กรุณาระบุชื่องาน'),
+  description: z.string(),
+  statusId: z.string(),
+  priority: z.string(),
+  difficulty: z.string(),
+  startDate: z.string().nullable(),
+  dueDate: z.string().nullable(),
+  assigneeUserIds: z.array(z.string()),
+}).refine((data) => {
+  // ตรวจสอบว่า startDate ไม่มากกว่า dueDate
+  if (data.startDate && data.dueDate) {
+    const start = new Date(data.startDate);
+    const due = new Date(data.dueDate);
+    return start <= due;
+  }
+  return true;
+}, {
+  message: 'วันเริ่มงานต้องไม่มากกว่าวันสิ้นสุด',
+  path: ['startDate'], // แสดง error ที่ startDate field
+});
 
 export interface TaskFormData {
   name: string;
@@ -122,8 +153,9 @@ export function DetailsTab({
     setValue,
     reset,
     handleSubmit,
-    formState: { isDirty, isSubmitting }
+    formState: { isDirty, isSubmitting, errors }
   } = useForm<TaskFormData>({
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       name: '',
       description: '',
@@ -149,7 +181,7 @@ export function DetailsTab({
       difficulty: parseInt(data.difficulty, 10),
       startDate: data.startDate,
       dueDate: data.dueDate,
-      assigneeUserId: data.assigneeUserIds[0] || null, // Take first assignee (API supports single assignee)
+      assigneeUserIds: data.assigneeUserIds, // ✅ Send array of assignee IDs
     };
 
     return new Promise<void>((resolve, reject) => {
@@ -167,7 +199,7 @@ export function DetailsTab({
                 difficulty: response.task.difficulty?.toString() || '2',
                 startDate: response.task.startDate,
                 dueDate: response.task.dueDate,
-                assigneeUserIds: response.task.assigneeUserId ? [response.task.assigneeUserId] : []
+                assigneeUserIds: response.task.assigneeUserIds || [] // ✅ Use array from response
               });
             }
             resolve();
@@ -181,9 +213,9 @@ export function DetailsTab({
     });
   };
 
-  // Reset form when task changes (but not while submitting)
+  // Reset form when task ID changes (not the entire task object to avoid unnecessary resets)
   useEffect(() => {
-    if (!task || isSubmitting) return;
+    if (!task) return;
 
     reset({
       name: task.name,
@@ -193,9 +225,9 @@ export function DetailsTab({
       difficulty: task.difficulty?.toString() || '2',
       startDate: task.startDate,
       dueDate: task.dueDate,
-      assigneeUserIds: task.assigneeUserId ? [task.assigneeUserId] : []
+      assigneeUserIds: task.assigneeUserIds || [] // ✅ Use array if available, fallback to empty
     });
-  }, [task, reset, isSubmitting]);
+  }, [task?.id, reset]); // ✅ Only re-run when task ID changes, not when task object changes
 
   // Watch statusId changes
   const currentStatusId = watch('statusId');
@@ -265,6 +297,7 @@ export function DetailsTab({
         control={control}
         setValue={setValue}
         watch={watch}
+        errors={errors}
         disabled={!canEdit}
         users={users}
       />
@@ -277,13 +310,14 @@ export function DetailsTab({
 
       {/* Task Metadata */}
       <TaskMetadata
-        creatorId={task.creatorId}
-        dateCreated={task.dateCreated}
+        creator={task.creator}
+        createdAt={task.createdAt}
       />
 
       {/* Subtasks Section */}
       <SubtasksSection
         taskId={task.id}
+        projectId={task.projectId}
         task={task}
         users={users}
         statuses={statuses}
