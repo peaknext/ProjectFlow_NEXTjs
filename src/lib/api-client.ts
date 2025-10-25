@@ -102,6 +102,12 @@ class ApiClient {
     const response = await this.instance.post<ApiResponse<T>>(url, data, config);
 
     if (!response.data.success) {
+      console.error('[API Client] POST request failed:', {
+        url,
+        data,
+        error: response.data.error,
+        fullResponse: response.data
+      });
       throw new Error(response.data.error?.message || 'Request failed');
     }
 

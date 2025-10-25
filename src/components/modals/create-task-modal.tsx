@@ -3,28 +3,34 @@
  * Matches GAS CreateTaskModal design with existing components
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { useQueryClient } from '@tanstack/react-query';
-import { CornerDownRight, Loader2, Calendar as CalendarIcon, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { AssigneePopover } from '@/components/ui/assignee-popover';
-import { StatusSlider } from '@/components/ui/status-slider';
-import { PriorityPopover } from '@/components/ui/priority-popover';
-import { DifficultyPopover } from '@/components/ui/difficulty-popover';
-import { DateInput } from '@/components/ui/date-picker-popover';
-import { ProjectPopover } from '@/components/ui/project-popover';
-import { ParentTaskPopover } from '@/components/ui/parent-task-popover';
-import { useUIStore } from '@/stores/use-ui-store';
-import { useCreateTask } from '@/hooks/use-tasks';
-import { api } from '@/lib/api-client';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  CornerDownRight,
+  Loader2,
+  Calendar as CalendarIcon,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { AssigneePopover } from "@/components/ui/assignee-popover";
+import { StatusSlider } from "@/components/ui/status-slider";
+import { PriorityPopover } from "@/components/ui/priority-popover";
+import { DifficultyPopover } from "@/components/ui/difficulty-popover";
+import { DateInput } from "@/components/ui/date-picker-popover";
+import { ProjectPopover } from "@/components/ui/project-popover";
+import { ParentTaskPopover } from "@/components/ui/parent-task-popover";
+import { useUIStore } from "@/stores/use-ui-store";
+import { useCreateTask } from "@/hooks/use-tasks";
+import { useProjects } from "@/hooks/use-projects";
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface Status {
   id: string;
@@ -67,8 +73,16 @@ interface TaskFormData {
 export function CreateTaskModal() {
   const queryClient = useQueryClient();
   const createTaskModal = useUIStore((state) => state.modals.createTask);
-  const closeCreateTaskModal = useUIStore((state) => state.closeCreateTaskModal);
+  const closeCreateTaskModal = useUIStore(
+    (state) => state.closeCreateTaskModal
+  );
   const createTask = useCreateTask();
+
+  // Fetch all accessible projects (with permission check)
+  const { data: projectsData, isLoading: isLoadingProjects } = useProjects({
+    limit: 1000, // Get all accessible projects
+    status: 'ACTIVE', // Only active projects
+  });
 
   // Animation state (same as TaskPanel)
   const [isVisible, setIsVisible] = useState(false);
@@ -90,22 +104,22 @@ export function CreateTaskModal() {
     setValue,
     reset,
     handleSubmit: handleFormSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<TaskFormData>({
     defaultValues: {
-      name: '',
-      description: '',
-      statusId: '',
-      priority: '3',
-      difficulty: '2',
+      name: "",
+      description: "",
+      statusId: "",
+      priority: "3",
+      difficulty: "2",
       startDate: null,
       dueDate: null,
       assigneeUserIds: [],
-      projectId: ''
-    }
+      projectId: "",
+    },
   });
 
-  const watchProjectId = watch('projectId');
+  const watchProjectId = watch("projectId");
 
   // Handle open/close animations (SAME AS TASKPANEL)
   useEffect(() => {
@@ -132,6 +146,13 @@ export function CreateTaskModal() {
     }
   }, [createTaskModal.isOpen]);
 
+  // Reload projects when projectsData changes
+  useEffect(() => {
+    if (createTaskModal.isOpen && projectsData?.projects) {
+      loadInitialData();
+    }
+  }, [projectsData?.projects]);
+
   // Load project data when project is selected
   useEffect(() => {
     if (watchProjectId) {
@@ -140,37 +161,76 @@ export function CreateTaskModal() {
   }, [watchProjectId]);
 
   async function loadInitialData() {
-    console.log('[CreateTaskModal] loadInitialData called', {
+    console.log("[CreateTaskModal] loadInitialData called", {
       departmentId: createTaskModal.departmentId,
       projectId: createTaskModal.projectId,
       availableProjects: createTaskModal.availableProjects?.length,
+      projectsFromHook: projectsData?.projects?.length,
     });
 
     // Reset form first (but keep default values)
     reset({
-      name: '',
-      description: '',
-      statusId: '',
-      priority: '3',
-      difficulty: '2',
+      name: "",
+      description: "",
+      statusId: "",
+      priority: "3",
+      difficulty: "2",
       startDate: createTaskModal.defaultStartDate || null,
       dueDate: createTaskModal.defaultDueDate || null,
       assigneeUserIds: [],
-      projectId: createTaskModal.projectId || '' // Keep projectId if provided
+      projectId: createTaskModal.projectId || "", // Keep projectId if provided
     });
 
     // Load available projects for selector
     let projects: Project[] = [];
 
-    // Use pre-filtered projects if provided (from DepartmentToolbar)
-    if (createTaskModal.availableProjects && createTaskModal.availableProjects.length > 0) {
-      console.log('[CreateTaskModal] Using pre-filtered projects:', createTaskModal.availableProjects.length);
+    // PRIORITY 1: Use projects from useProjects hook (with permission check)
+    if (projectsData?.projects && projectsData.projects.length > 0) {
+      console.log(
+        "[CreateTaskModal] Using projects from useProjects hook:",
+        projectsData.projects.length
+      );
+
+      // Map to expected Project interface (keep departmentId for filtering)
+      projects = projectsData.projects.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        status: p.status,
+        departmentId: p.departmentId, // Keep for filtering
+      }));
+
+      // Filter by departmentId if provided (additional client-side filter)
+      if (createTaskModal.departmentId) {
+        const filteredProjects = projects.filter(
+          (p: any) => p.departmentId === createTaskModal.departmentId
+        );
+        console.log(
+          "[CreateTaskModal] Filtered by departmentId:",
+          filteredProjects.length,
+          "from",
+          projects.length
+        );
+        projects = filteredProjects;
+      }
+    }
+    // PRIORITY 2: Fallback to pre-filtered projects (for backward compatibility)
+    else if (
+      createTaskModal.availableProjects &&
+      createTaskModal.availableProjects.length > 0
+    ) {
+      console.log(
+        "[CreateTaskModal] Fallback: Using pre-filtered projects:",
+        createTaskModal.availableProjects.length
+      );
       projects = createTaskModal.availableProjects;
-    } else {
-      // Fallback to workspace cache if no pre-filtered projects
-      console.log('[CreateTaskModal] No pre-filtered projects, trying workspace cache');
+    }
+    // PRIORITY 3: Fallback to workspace cache (last resort)
+    else {
+      console.log(
+        "[CreateTaskModal] Fallback: Trying workspace cache"
+      );
       try {
-        const cachedWorkspace = queryClient.getQueryData(['workspace']) as any;
+        const cachedWorkspace = queryClient.getQueryData(["workspace"]) as any;
 
         if (cachedWorkspace?.workspace) {
           // If departmentId is provided, filter projects by department
@@ -182,10 +242,13 @@ export function CreateTaskModal() {
           } else {
             projects = extractProjectsFromWorkspace(cachedWorkspace.workspace);
           }
-          console.log('[CreateTaskModal] Loaded projects from workspace cache:', projects.length);
+          console.log(
+            "[CreateTaskModal] Loaded projects from workspace cache:",
+            projects.length
+          );
         }
       } catch (error) {
-        console.error('Failed to load projects from workspace cache:', error);
+        console.error("Failed to load projects from workspace cache:", error);
       }
     }
 
@@ -198,13 +261,24 @@ export function CreateTaskModal() {
       setSelectedProject(project);
 
       // Make sure current project is in availableProjects
-      if (!projects.find(p => p.id === createTaskModal.projectId)) {
+      if (!projects.find((p) => p.id === createTaskModal.projectId)) {
         projects = [project, ...projects];
       }
 
       // Load project data immediately (don't wait for useEffect)
       await loadProjectData(createTaskModal.projectId);
-    } else {
+    }
+    // Auto-select if only 1 project available
+    else if (projects.length === 1) {
+      console.log("[CreateTaskModal] Auto-selecting single available project:", projects[0].name);
+      const project = projects[0];
+      setSelectedProject(project);
+      setValue("projectId", project.id);
+
+      // Load project data immediately
+      await loadProjectData(project.id);
+    }
+    else {
       setSelectedProject(null);
       // Clear project data
       setProjectUsers([]);
@@ -215,28 +289,47 @@ export function CreateTaskModal() {
     setAvailableProjects(projects);
   }
 
-  function extractProjectsFromWorkspace(workspace: any, filterDepartmentId?: string): Project[] {
+  function extractProjectsFromWorkspace(
+    workspace: any,
+    filterDepartmentId?: string
+  ): Project[] {
     const projects: Project[] = [];
 
-    console.log('[extractProjectsFromWorkspace]', {
+    console.log("[extractProjectsFromWorkspace]", {
       viewType: workspace.viewType,
       hasHierarchical: !!workspace.hierarchical,
       filterDepartmentId,
     });
 
-    if (workspace.viewType === 'hierarchical' && workspace.hierarchical) {
-      console.log('[extractProjectsFromWorkspace] Using hierarchical view, MGs:', workspace.hierarchical.length);
+    if (workspace.viewType === "hierarchical" && workspace.hierarchical) {
+      console.log(
+        "[extractProjectsFromWorkspace] Using hierarchical view, MGs:",
+        workspace.hierarchical.length
+      );
       workspace.hierarchical.forEach((mg: any) => {
         mg.divisions?.forEach((div: any) => {
           div.departments?.forEach((dept: any) => {
-            console.log('[extractProjectsFromWorkspace] Checking dept:', dept.id, 'filter:', filterDepartmentId);
+            console.log(
+              "[extractProjectsFromWorkspace] Checking dept:",
+              dept.id,
+              "filter:",
+              filterDepartmentId
+            );
             // If filterDepartmentId is provided, only include projects from that department
             if (filterDepartmentId && dept.id !== filterDepartmentId) {
-              console.log('[extractProjectsFromWorkspace] Skipping dept:', dept.id);
+              console.log(
+                "[extractProjectsFromWorkspace] Skipping dept:",
+                dept.id
+              );
               return; // Skip this department
             }
 
-            console.log('[extractProjectsFromWorkspace] Including dept:', dept.id, 'projects:', dept.projects?.length);
+            console.log(
+              "[extractProjectsFromWorkspace] Including dept:",
+              dept.id,
+              "projects:",
+              dept.projects?.length
+            );
             dept.projects?.forEach((proj: any) => {
               projects.push({
                 id: proj.id,
@@ -247,9 +340,9 @@ export function CreateTaskModal() {
           });
         });
       });
-    } else if (workspace.viewType === 'flat' && workspace.flat) {
+    } else if (workspace.viewType === "flat" && workspace.flat) {
       workspace.flat.forEach((item: any) => {
-        if (item.type === 'project') {
+        if (item.type === "project") {
           projects.push({
             id: item.id,
             name: item.name,
@@ -266,7 +359,10 @@ export function CreateTaskModal() {
     setIsLoadingProjectData(true);
     try {
       // Try cache first
-      const cachedData = queryClient.getQueryData(['project-board', projectId]) as any;
+      const cachedData = queryClient.getQueryData([
+        "project-board",
+        projectId,
+      ]) as any;
 
       if (cachedData) {
         setProjectUsers(cachedData.users || []);
@@ -277,7 +373,7 @@ export function CreateTaskModal() {
 
         // Set default status
         if (cachedData.statuses && cachedData.statuses.length > 0) {
-          setValue('statusId', cachedData.statuses[0].id);
+          setValue("statusId", cachedData.statuses[0].id);
         }
       } else {
         // Fetch from API
@@ -289,15 +385,15 @@ export function CreateTaskModal() {
         );
 
         if (response.statuses && response.statuses.length > 0) {
-          setValue('statusId', response.statuses[0].id);
+          setValue("statusId", response.statuses[0].id);
         }
       }
 
       // Reset assignees when project changes
-      setValue('assigneeUserIds', []);
+      setValue("assigneeUserIds", []);
     } catch (error) {
-      console.error('Failed to load project data:', error);
-      toast.error('ไม่สามารถโหลดข้อมูลโปรเจคได้');
+      console.error("Failed to load project data:", error);
+      toast.error("ไม่สามารถโหลดข้อมูลโปรเจคได้");
     } finally {
       setIsLoadingProjectData(false);
     }
@@ -306,15 +402,15 @@ export function CreateTaskModal() {
   function resetForm() {
     // Clear all form state
     reset({
-      name: '',
-      description: '',
-      statusId: '',
-      priority: '3',
-      difficulty: '2',
+      name: "",
+      description: "",
+      statusId: "",
+      priority: "3",
+      difficulty: "2",
       startDate: null,
       dueDate: null,
       assigneeUserIds: [],
-      projectId: ''
+      projectId: "",
     });
     setSelectedProject(null);
     setProjectUsers([]);
@@ -326,7 +422,7 @@ export function CreateTaskModal() {
   const onSubmit = async (data: TaskFormData) => {
     // Validate project selection
     if (!data.projectId) {
-      toast.error('กรุณาเลือกโปรเจค');
+      toast.error("กรุณาเลือกโปรเจค");
       return;
     }
 
@@ -350,7 +446,7 @@ export function CreateTaskModal() {
     // Create task with optimistic update
     createTask.mutate(formData, {
       onSuccess: () => {
-        toast.success('สร้างงานสำเร็จ');
+        toast.success("สร้างงานสำเร็จ");
         resetForm();
       },
       onError: (error: any) => {
@@ -366,13 +462,13 @@ export function CreateTaskModal() {
   // Prevent body scroll when panel is open (SAME AS TASKPANEL)
   useEffect(() => {
     if (shouldRender) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [shouldRender]);
 
@@ -394,7 +490,7 @@ export function CreateTaskModal() {
       <div
         className={cn(
           "fixed top-0 right-0 h-full w-full max-w-3xl",
-          "bg-white/85 dark:bg-slate-900/85 backdrop-blur-sm",
+          "bg-background/90 backdrop-blur-sm",
           "rounded-l-xl shadow-2xl z-[101]",
           "flex flex-col",
           "transform transition-transform duration-300 ease-in-out",
@@ -402,7 +498,7 @@ export function CreateTaskModal() {
         )}
       >
         {/* Header */}
-        <header className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+        <header className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl flex-shrink-0">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             สร้างงานใหม่
           </h2>
@@ -436,15 +532,17 @@ export function CreateTaskModal() {
               </Label>
               <Input
                 id="task-name"
-                {...register('name', { required: 'กรุณากรอกชื่องาน' })}
+                {...register("name", { required: "กรุณากรอกชื่องาน" })}
                 placeholder="ชื่องานของคุณ..."
                 className={cn(
-                  'h-[46px] text-base font-normal mt-1 bg-white dark:bg-slate-800',
-                  errors.name && 'border-red-500'
+                  "h-[46px] text-base font-normal mt-1 bg-white dark:bg-slate-800",
+                  errors.name && "border-red-500"
                 )}
               />
               {errors.name && (
-                <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
@@ -574,24 +672,36 @@ export function CreateTaskModal() {
                 <Controller
                   name="projectId"
                   control={control}
-                  rules={{ required: 'กรุณาเลือกโปรเจค' }}
+                  rules={{ required: "กรุณาเลือกโปรเจค" }}
                   render={({ field }) => (
                     <ProjectPopover
                       projects={availableProjects}
                       value={field.value}
                       onChange={(projectId) => {
                         field.onChange(projectId);
-                        const proj = availableProjects.find(p => p.id === projectId);
+                        const proj = availableProjects.find(
+                          (p) => p.id === projectId
+                        );
                         setSelectedProject(proj || null);
                       }}
-                      disabled={!!createTaskModal.projectId || isLoadingProjectData}
-                      placeholder="เลือกโปรเจค"
+                      disabled={
+                        !!createTaskModal.projectId ||
+                        isLoadingProjectData ||
+                        isLoadingProjects
+                      }
+                      placeholder={
+                        isLoadingProjects
+                          ? "กำลังโหลดโปรเจค..."
+                          : "เลือกโปรเจค"
+                      }
                       required
                     />
                   )}
                 />
                 {errors.projectId && (
-                  <p className="text-red-500 text-xs mt-1">{errors.projectId.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.projectId.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -624,7 +734,7 @@ export function CreateTaskModal() {
               <Label htmlFor="description">คำอธิบาย</Label>
               <Textarea
                 id="description"
-                {...register('description')}
+                {...register("description")}
                 placeholder="เพิ่มรายละเอียดเกี่ยวกับงานนี้..."
                 rows={4}
                 className="mt-1 bg-white dark:bg-slate-800"
@@ -634,7 +744,7 @@ export function CreateTaskModal() {
         </div>
 
         {/* Footer */}
-        <footer className="flex justify-end gap-3 p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
+        <footer className="flex justify-end gap-3 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 rounded-bl-xl flex-shrink-0">
           <Button
             onClick={handleFormSubmit(onSubmit)}
             disabled={createTask.isPending || isLoadingProjectData}
