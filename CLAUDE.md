@@ -5,49 +5,62 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 **DO NOT REVERT ANYTHING IF I DON'T REQUEST**
+**Never use any emoji in this project except in .md files**
 **ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system migrated from Google Apps Script to Next.js 15 + PostgreSQL. It's designed for healthcare organizations with hierarchical role-based access control and real-time collaboration features.
 
-**Current Status**: Phase 2 Complete (API 100%), Phase 3 In Progress (Frontend ~60%)
+**Current Status**: Phase 2 Complete (API 100%), Phase 3 In Progress (Frontend ~55%)
 **Tech Stack**: Next.js 15 (App Router), TypeScript, PostgreSQL, Prisma ORM, React Query, Zustand, Tailwind CSS, shadcn/ui
 **Previous GAS Project Codebase**: Stored in old_project folder for reference
 **Port**: Dev server typically runs on port 3000 or 3010 (may vary due to port conflicts)
-**Last Updated**: 2025-10-24
+**Last Updated**: 2025-10-26
 
-⚠️ **DEPLOYMENT STATUS**: **NOT PRODUCTION-READY** - Active development in progress (Frontend ~60% complete, estimated completion: 2025-12-15)
+⚠️ **DEPLOYMENT STATUS**: **NOT PRODUCTION-READY** - Active development in progress (Frontend ~55% complete, estimated completion: 2025-12-15)
 
 ---
 
-## 🎯 Next Steps
+## ✅ Recently Completed Major Features
 
-### Immediate Priorities
+### Completed Priorities (2025-10-23 to 2025-10-25)
 
-1. ~~**Department Tasks View**~~ ✅ **COMPLETE 2025-10-23**
+1. **Department Tasks View** ✅ **COMPLETE 2025-10-23**
    - Full implementation with optimistic updates and project grouping
    - See "Department Tasks View" section below for details
 
-2. ~~**Project Management Page & Modals**~~ ✅ **COMPLETE 2025-10-24**
+2. **Project Management Page & Modals** ✅ **COMPLETE 2025-10-24**
    - Project Management Page with filters, sorting, pagination (Phases 1-4)
    - Create Project Modal (772 lines, fully functional)
    - Edit Project Modal (508 lines, fully functional)
    - Delete Confirmation Dialog (Complete with AlertDialog, toast notifications, error handling)
    - See "Project Management Components" section below for details
 
-3. ~~**Create Task Modal**~~ ✅ **COMPLETE** 🎉
-   - ✅ Slide panel modal with validation (React Hook Form)
-   - ✅ 10 form fields (name, description, status, priority, difficulty, assignee, dates, project, parent task)
-   - ✅ Integration with Board/Calendar/List views
-   - ✅ Optimistic updates and toast notifications
-   - ✅ Supports subtask creation and pre-filtered projects
+3. **Create Task Modal** ✅ **COMPLETE 2025-10-24**
+   - Slide panel modal with validation (React Hook Form)
+   - 10 form fields (name, description, status, priority, difficulty, assignee, dates, project, parent task)
+   - Integration with Board/Calendar/List views
+   - Optimistic updates and toast notifications
+   - Supports subtask creation and pre-filtered projects
    - File: `src/components/modals/create-task-modal.tsx` (654 lines)
 
-4. ~~**User Management Pages**~~ ✅ **COMPLETE (All Phases)** 🎉
-   - ✅ User list view with filters and pagination (Phase 1)
-   - ✅ Create User Modal with ADMIN-only access + UI improvements (Phase 2) - See `USER_CREATION_ADMIN_ONLY_COMPLETE.md`
-   - ✅ Edit User Modal (Phase 3) - Complete with all fields (2025-10-24)
-   - ✅ Delete User (Phase 4) - AlertDialog confirmation, ADMIN/CHIEF only (2025-10-24)
-   - ✅ Full CRUD operations with optimistic updates
-   - ✅ Permission-based access control (scope filtering)
-   - **Next**: Bulk operations (optional enhancement)
+4. **User Management Pages** ✅ **COMPLETE 2025-10-25 (All Phases)**
+   - User list view with filters and pagination (Phase 1)
+   - Create User Modal with ADMIN-only access + UI improvements (Phase 2)
+   - Edit User Modal (Phase 3) - Complete with all fields
+   - Delete User (Phase 4) - AlertDialog confirmation, ADMIN/CHIEF only
+   - User Management Permissions - Complete role-based permission system
+   - Full CRUD operations with optimistic updates
+   - Permission-based access control (scope filtering)
+
+5. **Reports Dashboard** ✅ **COMPLETE 2025-10-26**
+   - Full reports/analytics page with permission-based access (all roles except USER)
+   - 4 statistics cards (ยังไม่มอบหมาย, กำลังดำเนินการ, เสร็จสิ้น, เกินกำหนด)
+   - 3 Chart.js visualizations (pie, bar, doughnut charts with dark mode support)
+   - Sortable table with profile pictures and workload breakdown
+   - Advanced filters (date range, Mission Group → Division → Department cascade)
+   - Thai Buddhist Era date pickers (Calendar popover)
+   - Status type grouping (uses STATUS.TYPE: NOT_STARTED/IN_PROGRESS/DONE for cross-project comparison)
+   - Fiscal year calculation (Thai: Oct 1 - Sep 30)
+   - ADMIN access to all tasks across entire system (not filtered by department)
+   - See "Reports Dashboard" section below for details
 
 ### ⚠️ Important: Thai Terminology
 
@@ -63,6 +76,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 **Recent Completions:**
+✅ **Reports Dashboard Bug Fixes Complete** (2025-10-26): Fixed 8 critical bugs in Reports Dashboard after initial implementation. **Bug Fixes**: (1) Task count issue - Fixed Prisma NOT operator excluding null values (5 tasks → 21 tasks correct), (2) Scroll bar duplication - Removed inner overflow-auto, (3) Toolbar styling - Updated to match Department Tasks page (h-16 → py-4, text-xl → text-2xl), (4) Chart data display - Fixed tooltips showing "[object Object]" with proper value extraction, (5) Organization filter field name errors - Fixed dateDeleted → deletedAt for mission_groups and divisions tables, (6) Mission Group filter ADMIN bypass - Added permission check skip for ADMIN users, (7) Organization filters not working - Fixed ADMIN department filtering logic to apply filters correctly, (8) Filter dropdown size standardization - All filters now 200px × 40px matching User Management page. **Files Modified**: `src/app/api/reports/tasks/route.ts` (7 fixes), `src/app/(dashboard)/reports/page.tsx` (overflow), `src/components/reports/report-toolbar.tsx` (styling + sizes), `src/components/reports/reports-charts.tsx` (chart data). **Testing**: All filters verified working (21 tasks total, 11 in DEPT-059, 3 in DIV-037). **Documentation**: `REPORTS_DASHBOARD_BUG_FIXES_2025-10-26.md` (comprehensive bug fix guide). **Result**: Reports Dashboard now production-ready with accurate filtering, consistent UI, and proper ADMIN access.
+✅ **Reports Dashboard Complete** (2025-10-26): Full analytics/reporting page with comprehensive task statistics and visualizations. **Features**: (1) 4 statistics cards with icons and dark mode support, (2) 3 Chart.js visualizations (pie, bar, doughnut) with 14px legend font, (3) Sortable table with profile pictures and workload breakdown, (4) Advanced filters (date range with Thai Buddhist Era calendar, Mission Group → Division → Department cascade), (5) Thai fiscal year calculation (Oct 1 - Sep 30), (6) Permission-based access (all roles except USER). **Key Implementation**: (1) API endpoint `GET /api/reports/tasks` (358 lines) with permission-based filtering, (2) ADMIN users see ALL tasks across entire system with working organization filters, (3) Status type grouping queries ALL statuses in projects (not just used ones) to ensure IN_PROGRESS types are included, (4) Client-side statistics calculation via `calculateReportStatistics()`, (5) Multi-assignee support. **Components created**: 5 new files (ReportToolbar, StatisticsCards, ReportsCharts, ReportsTable, Reports Page). **Files modified**: `src/hooks/use-organization.ts` (added useMissionGroups, useDivisions, useDepartments), `src/components/ui/date-picker-popover.tsx` (enhanced DateInput), `package.json` (Chart.js 4.5.1). **Documentation**: See "Reports Dashboard" section below. **Result**: Production-ready analytics page with accurate statistics and working filters for all user roles.
+✅ **User Management Permissions Complete** (2025-10-25): Complete role-based permission system for user management with frontend and backend protection. **Changes**: (1) ADMIN can VIEW all users including other ADMINs but cannot EDIT/DELETE other ADMINs, (2) HEAD/LEADER/CHIEF can only toggle status (no Actions column, no Edit Modal access), (3) MEMBER/USER cannot access Users page (sidebar hidden, access denied screen), (4) Sidebar navigation filtering by role (requiredRoles array), (5) Row-level permission checks (canEdit, canDelete, showActions), (6) Table header conditionally renders Actions column. **Files modified**: `src/components/users/user-row.tsx` (permission checks), `src/components/users/users-table.tsx` (header conditional), `src/components/users/users-view.tsx` (page guard), `src/components/layout/sidebar.tsx` (menu filtering). **Documentation**: `USER_MANAGEMENT_PERMISSIONS_COMPLETE.md` (comprehensive guide with test cases). **Result**: Production-ready permission system with multi-layer protection and clean UX for all roles.
+✅ **Modal/Panel Style Standardization Complete** (2025-10-25): Standardized styling across all 6 modal/panel components for consistent UI/UX. **Changes**: (1) Panel opacity: `bg-background/90` (reduced from 95 for better backdrop visibility), (2) Dark mode backgrounds: unified to `dark:bg-slate-900` (from inconsistent slate-950/background), (3) Borders: standardized to `dark:border-slate-700` (from slate-600/slate-800), (4) Header/Footer: all use `bg-white dark:bg-slate-900`. **Components updated**: Create Project Modal, Edit Project Modal, Create User Modal, Edit User Modal, Create Task Modal, Task Panel (main + header + footer). **Result**: All modals now share identical backdrop blur, opacity, colors, and spacing for professional, cohesive design system.
+✅ **fullName Split Migration Complete** (2025-10-25): Complete migration from single `fullName` field to structured name fields (`titlePrefix`, `firstName`, `lastName`). **10 files modified** (5 backend + 5 frontend), including Prisma schema, migration script (7/7 users migrated), API endpoints, TypeScript interfaces, and all user forms. Features: Auto-generated `fullName` for backward compatibility, 14 Thai title prefixes support (นาย, นาง, ดร., etc.), complete form validation. **Fixed critical bug** in `/api/auth/register` (department relation). See `FULLNAME_SPLIT_MIGRATION_CONTEXT.md` for full details. **User registration now fully functional** with structured name support.
 ✅ **Create Task Modal Complete** (2025-10-24): Complete task creation modal with slide panel animation. Features: 10 form fields (name, description, status, priority, difficulty, assignee, dates, project, parent task), React Hook Form validation, optimistic updates, toast notifications, subtask creation support, pre-filtered projects support from DepartmentToolbar. Integrated with Board/Calendar/List views and Department Tasks view. File: `src/components/modals/create-task-modal.tsx` (654 lines). **Critical blocker now resolved** - complete user flow enabled.
 ✅ **User Management Complete (Phase 4: Delete User)** (2025-10-24): Completed full CRUD operations for user management with AlertDialog confirmation for delete. Features: ADMIN/CHIEF permission check, soft delete with session invalidation, loading states, toast notifications, optimistic cache updates. Updated `src/components/users/user-row.tsx` (256 lines) with AlertDialog pattern matching Project deletion. **User Management is now 100% complete** (Phases 1-4).
 ✅ **Edit User Modal Complete** (2025-10-24): Fixed Edit User Modal to properly display and edit all user fields including titlePrefix, firstName, lastName. Updated GET /api/users to include missing fields (titlePrefix, firstName, lastName, workLocation, internalPhone). Modal now pre-populates all form fields correctly with existing user data. File: `src/components/modals/edit-user-modal.tsx` (709 lines).
@@ -160,21 +178,23 @@ Beyond the original 71 documented endpoints, these have been added:
 **⚠️ Known Issues:**
 
 ~~1. **Workspace API - Additional Roles Support**~~ ✅ **FIXED 2025-10-24**
-   - **Issue**: Users with `additionalRoles` field only see data from their primary role
-   - **Impact**: Multi-role users (e.g., Chief in MG A + Member in MG B) cannot access all authorized data
-   - **Status**: ✅ **COMPLETE** - Full permission system implemented (Priority 1, 2, 3)
-   - **Implementation**: **18 functions** (15 public + 3 helpers), 1,014 lines of code, 5 security vulnerabilities fixed
-   - **Testing**: 8/8 core tests passing, verified with real data (user001 has additional roles)
-   - **Documentation**: See `TESTING_COMPLETE_2025-10-24.md` for test report, `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` for security audit
-   - **Details**: See `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md` (historical context)
+
+- **Issue**: Users with `additionalRoles` field only see data from their primary role
+- **Impact**: Multi-role users (e.g., Chief in MG A + Member in MG B) cannot access all authorized data
+- **Status**: ✅ **COMPLETE** - Full permission system implemented (Priority 1, 2, 3)
+- **Implementation**: **18 functions** (15 public + 3 helpers), 1,014 lines of code, 5 security vulnerabilities fixed
+- **Testing**: 8/8 core tests passing, verified with real data (user001 has additional roles)
+- **Documentation**: See `TESTING_COMPLETE_2025-10-24.md` for test report, `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` for security audit
+- **Details**: See `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md` (historical context)
 
 ~~2. **Task GET Endpoint Security**~~ ✅ **FIXED 2025-10-24**
-   - **Issue**: GET /api/tasks/[taskId] had no permission check, allowing any authenticated user to view any task
-   - **Impact**: Information disclosure vulnerability - bypassed all department/project/assignee access controls
-   - **Status**: ✅ **FIXED** - Added canUserViewTask() permission check
-   - **Fix**: Added permission validation in `src/app/api/tasks/[taskId]/route.ts` (lines 143-147)
-   - **Security Level**: 🔴 **CRITICAL** (now patched)
-   - **Documentation**: See `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` Stage 2 findings
+
+- **Issue**: GET /api/tasks/[taskId] had no permission check, allowing any authenticated user to view any task
+- **Impact**: Information disclosure vulnerability - bypassed all department/project/assignee access controls
+- **Status**: ✅ **FIXED** - Added canUserViewTask() permission check
+- **Fix**: Added permission validation in `src/app/api/tasks/[taskId]/route.ts` (lines 143-147)
+- **Security Level**: 🔴 **CRITICAL** (now patched)
+- **Documentation**: See `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` Stage 2 findings
 
 **Core Schema Patterns:**
 
@@ -231,9 +251,9 @@ export const GET = withAuth(handler);
 
 ### Frontend Architecture
 
-**Current Implementation Status: (~65% Complete)**
+**Current Implementation Status: (~55% Complete)**
 
-**✅ Complete (24 major components):**
+**✅ Complete (30+ major components):**
 
 **Core Infrastructure (3):**
 
@@ -293,6 +313,7 @@ export const GET = withAuth(handler);
 - ⚠️ Dashboard Page (Layout only, mock data)
 
 **❌ Not Yet Implemented (~25+ components):**
+
 - ❌ Reports/Analytics Dashboard (charts, analytics, export)
 - ❌ Dashboard Widgets (8 widgets: stats cards, recent activities, etc.)
 - ❌ Modals & Dialogs (2 remaining: Close Task, Bulk Actions)
@@ -563,6 +584,130 @@ export const GET = withAuth(handler);
     - `src/components/layout/department-toolbar.tsx` - Toolbar with project filtering
     - `src/hooks/use-department-tasks.ts` - Data fetching hook
 
+**Reports Dashboard:** ✨ **COMPLETE 2025-10-26**
+
+- **Route**: `/reports` (accessible to all roles except USER)
+- **Purpose**: Analytics and reporting page with comprehensive task statistics and visualizations
+- **Status**: ✅ Complete with permission-based access, fiscal year calculation, and ADMIN global access
+
+**Key Features**:
+
+1. **Statistics Cards** (4 cards):
+   - ยังไม่มอบหมาย (Unassigned): Tasks with no assignees
+   - กำลังดำเนินการ (In Progress): Tasks with IN_PROGRESS status type
+   - เสร็จสิ้น (Completed): Tasks with DONE status type
+   - เกินกำหนด (Overdue): Tasks past due date (excluding completed)
+   - Each card has icon, color scheme, and dark mode support
+
+2. **Charts** (3 Chart.js visualizations):
+   - **Pie Chart**: Distribution by status type (Not Started / In Progress / Done)
+   - **Bar Chart**: Workload by assignee (vertical bars, sortable)
+   - **Doughnut Chart**: Task distribution by assignee
+   - All charts support dark mode with proper color schemes
+   - Legend font size: 14px (increased from default)
+
+3. **Sortable Table**:
+   - Columns: Assignee (with profile picture), Not Started, In Progress, Done, Total, Overdue
+   - Profile pictures with Avatar component (fallback initials)
+   - Thai locale string comparison for sorting
+   - Unassigned tasks shown in separate row
+   - Click column headers to sort
+
+4. **Advanced Filters**:
+   - **Date Range**: Start/End date with Thai Buddhist Era calendar popover
+   - **Fiscal Year Default**: Oct 1 - Sep 30 (Thai fiscal year)
+   - **Organization Cascade**: Mission Group → Division → Department
+   - **Real-time Filtering**: 300ms debounce on filter changes
+   - Filter toolbar background matches navbar (bg-card)
+
+**Technical Implementation**:
+
+- **API Endpoint**: `GET /api/reports/tasks` (345 lines)
+  - **Permission-based filtering**: Uses `getUserAccessibleScope()` to filter data by role
+  - **ADMIN access**: ADMIN users see ALL tasks across entire system (no department filtering)
+  - **Status type grouping**: Queries all statuses in projects (not just used statuses) to ensure IN_PROGRESS types are included
+  - **Date range validation**: Ensures startDate <= endDate
+  - **Soft delete aware**: Excludes deleted departments, projects, tasks (uses `deletedAt`/`dateDeleted`)
+  - **Aborted tasks excluded**: Filters out tasks with `closeType: 'ABORTED'`
+  - **Multi-assignee support**: Handles tasks with multiple assignees via `task_assignees` table
+
+- **React Query Hooks**: `src/hooks/use-reports.ts` (277 lines)
+  - `useReportData(filters)`: Fetches report data with 5-minute stale time
+  - `calculateReportStatistics(tasks, users)`: Client-side statistics calculation
+  - `getFiscalYearStartDate()`: Thai fiscal year calculation (Oct 1 - Sep 30)
+  - `formatDateForAPI(date)`: YYYY-MM-DD formatting
+
+- **Organization Hooks**: Extended `src/hooks/use-organization.ts`
+  - `useMissionGroups()`: Fetch all mission groups
+  - `useDivisions(missionGroupId?)`: Fetch divisions (optionally filtered)
+  - `useDepartments(divisionId?)`: Fetch departments (optionally filtered)
+
+**Components Created** (5 new files):
+
+1. **ReportToolbar** (`src/components/reports/report-toolbar.tsx` - 181 lines):
+   - Title, date pickers (DateInput with Calendar popover), cascade filters
+   - Background color matches navbar for consistency
+   - Thai Buddhist Era dates display (e.g., "21 ตุลาคม 2568")
+
+2. **StatisticsCards** (`src/components/reports/statistics-cards.tsx` - 75 lines):
+   - 4 summary cards with icons and colors
+   - Responsive grid layout (1/2/4 columns)
+
+3. **ReportsCharts** (`src/components/reports/reports-charts.tsx` - 220 lines):
+   - 3 Chart.js charts with Chart.js 4.5.1 + react-chartjs-2 5.3.0
+   - Dark mode detection and color adaptation
+   - Vertical bar chart (indexAxis: "x")
+   - Legend font size: 14px
+
+4. **ReportsTable** (`src/components/reports/reports-table.tsx` - 195 lines):
+   - Sortable table with profile pictures
+   - Avatar component with fallback initials
+   - User lookup map for O(1) access
+
+5. **Reports Page** (`src/app/(dashboard)/reports/page.tsx` - 175 lines):
+   - Main page with permission guard
+   - Filter state management
+   - Loading/error states
+   - Responsive layout
+
+**Files Modified**:
+
+- `src/components/layout/sidebar.tsx`: Enabled "รายงาน" menu (line 144-148)
+- `src/components/ui/date-picker-popover.tsx`: Enhanced DateInput to support custom height/text-size via className override
+- `package.json`: Added Chart.js dependencies (chart.js 4.5.1, react-chartjs-2 5.3.0)
+
+**Key Technical Decisions**:
+
+1. **Status Type Grouping**: Uses `STATUS.TYPE` (NOT_STARTED/IN_PROGRESS/DONE) instead of status names for cross-project comparison
+2. **ADMIN Global Access**: ADMIN users bypass department filtering to see all system data
+3. **All Statuses Included**: Query fetches ALL statuses in projects (not just used ones) to ensure type counts are accurate
+4. **Fiscal Year**: Thai fiscal year Oct 1 - Sep 30 (not calendar year)
+5. **Client-side Statistics**: Calculated on client to reduce server load (data already fetched)
+6. **Dark Mode Support**: All charts and components adapt to theme changes
+
+**Permission Matrix**:
+
+| Role | Access |
+|------|--------|
+| ADMIN | ✅ All tasks across entire system |
+| CHIEF | ✅ Tasks in their mission groups |
+| LEADER | ✅ Tasks in their divisions |
+| HEAD | ✅ Tasks in their departments |
+| MEMBER | ✅ Tasks in their departments |
+| USER | ❌ No access (sidebar hidden) |
+
+**Bug Fixes Applied**:
+
+1. ✅ Fixed field name errors (`dateDeleted` vs `deletedAt`, `dateCreated` vs `createdAt`)
+2. ✅ Fixed status query to include ALL statuses in projects (not just used ones)
+3. ✅ Fixed ADMIN access to bypass department filtering
+
+**Integration Points**:
+
+- Uses existing `getUserAccessibleScope()` from `src/lib/permissions.ts`
+- Reuses DateInput component from Create Project Modal
+- Follows established pattern for permission-based page access
+
 ### Key Files to Know
 
 **Backend:**
@@ -580,6 +725,8 @@ export const GET = withAuth(handler);
 - `src/hooks/use-projects.ts`: Project data fetching and mutations
 - `src/hooks/use-tasks.ts`: Task data fetching and mutations (11 mutations)
 - `src/hooks/use-workspace.ts`: Workspace hierarchy data fetching (hierarchical/flat views)
+- `src/hooks/use-reports.ts`: Reports data fetching and statistics calculation ✨ **NEW 2025-10-26**
+- `src/hooks/use-organization.ts`: Organization hierarchy hooks (mission groups, divisions, departments) ✨ **EXTENDED 2025-10-26**
 - `src/hooks/use-persisted-filters.ts`: Filter state persistence with localStorage ✨ **NEW**
 - `src/stores/use-sync-store.ts`: Controls sync animation in footer
 - `src/stores/use-ui-store.ts`: Controls task panel and modals
@@ -622,6 +769,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for email links (change 
 ```
 
 ⚠️ **PRODUCTION WARNING**:
+
 - **CRITICAL**: Ensure `BYPASS_AUTH=false` in production! Never deploy with auth bypass enabled.
 - **CRITICAL**: Ensure `BYPASS_EMAIL=false` in production! Always use real email service.
 - Never commit real API keys or database credentials to version control
@@ -1230,8 +1378,13 @@ Comprehensive documentation is available:
 - `PROGRESS_PHASE2.2_CALENDAR_VIEW.md`: Calendar view implementation details
 - `PROGRESS_PHASE2.3_LIST_VIEW.md`: List view implementation details
 - `TASK_PANEL_V1.0_COMPLETE.md`: Task panel completion summary
-- `PROJECT_MANAGEMENT_PAGE_COMPLETE.md`: Project management page implementation (NEW)
-- `PROJECT_MANAGEMENT_IMPLEMENTATION_SUMMARY.md`: Project management summary (NEW)
+- `PROJECT_MANAGEMENT_PAGE_COMPLETE.md`: Project management page implementation
+- `PROJECT_MANAGEMENT_IMPLEMENTATION_SUMMARY.md`: Project management summary
+- `CREATE_TASK_MODAL_IMPLEMENTATION_COMPLETE.md`: Create task modal implementation
+- `USER_MANAGEMENT_PERMISSIONS_COMPLETE.md`: Complete user management permissions guide (NEW)
+- `FULLNAME_SPLIT_MIGRATION_CONTEXT.md`: User name field migration guide (442 lines, NEW)
+- `CREATE_USER_MODAL_UI_IMPROVEMENTS.md`: User modal UI improvements
+- `USER_CREATION_ADMIN_ONLY_COMPLETE.md`: Admin-only user creation implementation
 - `TASK_PANEL_DEVELOPMENT_PLAN.md`: Original development plan
 - `TASK_PANEL_PROGRESS_PHASE1-3.md`: Development progress tracking
 - `TASK_PANEL_INTEGRATION_COMPLETE.md`: Integration details
@@ -1244,7 +1397,7 @@ Comprehensive documentation is available:
 - `migration_plan/03_FRONTEND_MIGRATION_COMPLETE.md`: Full frontend component breakdown
 - `migration_plan/05_ROLLOUT_PLAN.md`: Deployment and rollout strategy
 
-**API Testing:**
+**API Testing & Security:**
 
 - `tests/api/phase1-test.md`: Authentication & User APIs
 - `tests/api/phase2-test.md`: Organization Structure APIs
@@ -1253,6 +1406,10 @@ Comprehensive documentation is available:
 - `tests/api/phase5-test.md`: Notifications & Activities APIs
 - `tests/api/phase6-test.md`: Batch Operations & Optimization
 - `TESTING_SUMMARY.md`: Overall testing status
+- `TESTING_COMPLETE_2025-10-24.md`: Complete permission system test report (1,200+ lines, NEW)
+- `PERMISSION_SYSTEM_REVIEW_2025-10-24.md`: Comprehensive security audit (NEW)
+- `PRIORITY_1_IMPLEMENTATION_COMPLETE.md`: Additional roles implementation (1,000+ lines)
+- `PRIORITY_2_3_IMPLEMENTATION_COMPLETE.md`: User management permissions (800+ lines)
 
 **Future Features (Planning):**
 
@@ -1285,7 +1442,7 @@ If you're a new Claude instance working on this project, start here:
 **PROJECT STATUS:**
 
 - ✅ Backend: 100% Complete (78+ API endpoints, database, auth)
-- 🔄 Frontend: ~59% Complete (19/50+ components done)
+- 🔄 Frontend: ~55% Complete (30+/55+ components done)
 - ❌ **NOT READY FOR DEPLOYMENT** - Still in active development
 - 🎯 Estimated completion: 2025-12-15 (6 weeks remaining)
 
@@ -1329,7 +1486,7 @@ If you're a new Claude instance working on this project, start here:
 
 ### Key Things to Remember
 
-1. **⚠️ NOT production-ready** - Frontend ~59% complete, don't attempt deployment
+1. **⚠️ NOT production-ready** - Frontend ~55% complete, don't attempt deployment
 2. ~~**🔴 Critical bug exists**~~ ✅ **Permission System COMPLETE** (2025-10-24) - additionalRoles fully implemented and tested
 3. **Port 3010** - Dev server runs here (not 3000)
 4. **BYPASS_AUTH=true** - Use this in `.env` for quick testing
@@ -1374,7 +1531,60 @@ If you're a new Claude instance working on this project, start here:
 
 ## 📝 Recent Changes (Changelog)
 
-### 2025-10-24 (Latest) ✨ **NEW**
+### 2025-10-25 (Latest) ✨ **NEW**
+
+- ✅ **User Management Permissions Complete** - Complete role-based permission system for user management
+  - **Permission Matrix**:
+    - **ADMIN**: Can VIEW all users (including other ADMINs), can EDIT/DELETE only non-ADMIN users
+    - **HEAD/LEADER/CHIEF**: Can only toggle status (no Actions column, no Edit Modal access)
+    - **MEMBER/USER**: No access to Users page (sidebar hidden, access denied screen)
+  - **Frontend Protection**:
+    - Page-level access guard (`src/components/users/users-view.tsx`)
+    - Sidebar navigation filtering by role (`src/components/layout/sidebar.tsx`)
+    - Row-level permission checks (`src/components/users/user-row.tsx`)
+    - Table header conditional rendering (`src/components/users/users-table.tsx`)
+  - **Features**:
+    - requiredRoles array for menu items
+    - canEdit, canDelete, showActions permission checks
+    - Access denied screen with ShieldAlert icon
+    - Actions column hidden for non-ADMIN roles
+  - **Files Modified**: 4 frontend files (users-view, user-row, users-table, sidebar)
+  - **Documentation**: `USER_MANAGEMENT_PERMISSIONS_COMPLETE.md` (comprehensive guide)
+  - **Testing**: Verified with all 6 role types (ADMIN, CHIEF, LEADER, HEAD, MEMBER, USER)
+  - **Result**: Production-ready permission system with multi-layer protection
+
+- ✅ **fullName Split Migration Complete** - Complete database restructuring for user names
+  - **Migration Scope**: 10 files modified (5 backend + 5 frontend)
+  - **Database Changes**:
+    - Added 3 new fields to User model: `titlePrefix` (optional), `firstName` (required), `lastName` (required)
+    - Kept `fullName` field for backward compatibility (auto-generated)
+    - Migration script successfully migrated 7/7 existing users
+  - **Backend Updates**:
+    - `prisma/schema.prisma` - Added new fields
+    - `scripts/migrate-fullname-to-parts.ts` - Migration script (NEW)
+    - `src/lib/user-utils.ts` - Helper functions: `formatFullName()`, `isValidTitlePrefix()`, `getCommonTitlePrefixes()` (NEW)
+    - `src/app/api/admin/users/route.ts` - Updated to use new fields + auto-generate fullName
+    - `src/app/api/auth/register/route.ts` - Updated to use new fields + **FIXED critical bug** (department relation)
+  - **Frontend Updates**:
+    - `src/types/user.ts` - Updated User interface
+    - `src/hooks/use-users.ts` - Updated `CreateUserInput` and `UpdateUserInput` interfaces
+    - `src/hooks/use-auth.ts` - Updated `RegisterRequest` interface
+    - `src/components/modals/create-user-modal.tsx` - Already using 3 fields (titlePrefix dropdown + firstName + lastName)
+    - `src/app/(auth)/register/page.tsx` - Updated schema, UI, and onSubmit function
+  - **Features**:
+    - 14 Thai title prefixes support (นาย, นาง, นางสาว, ดร., ศาสตราจารย์, etc.)
+    - Auto-generated fullName maintains backward compatibility
+    - 74+ display components work without modification
+    - Form validation with required field indicators
+    - Proper layout: titlePrefix full width, firstName+lastName 2-column
+  - **Bug Fix**:
+    - Fixed `/api/auth/register` using wrong Prisma syntax (`department: { connect }` → `departmentId`)
+    - Fixed jobTitle → jobTitleId consistency
+  - **Testing**: Verified with both Thai and English names, user registration fully functional
+  - **Documentation**: `FULLNAME_SPLIT_MIGRATION_CONTEXT.md` (442 lines) - Complete migration guide
+  - **Result**: **Production-ready user name management** with structured fields and full backward compatibility
+
+### 2025-10-24
 
 - ✅ **Create Task Modal Complete** - Critical blocker resolved, complete user flow enabled
   - **Implementation**: Slide panel modal with React Hook Form validation (654 lines)
@@ -1555,18 +1765,18 @@ If you're a new Claude instance working on this project, start here:
 - [x] Authentication & authorization system
 - [x] Permission system with 6 roles + additionalRoles support ✅ **COMPLETE 2025-10-24**
 
-**Frontend (~59% Complete):** 🔄
+**Frontend (~55% Complete):** 🔄
 
 - [x] Core infrastructure (Layout, Theme, Auth)
 - [x] 3 Project views (Board, Calendar, List)
 - [x] Task detail panel
 - [x] Project Management page (Phases 1-4 complete)
-- [x] Project Management modals (Create/Edit/Delete all complete) ✨ **NEW**
+- [x] Project Management modals (Create/Edit/Delete all complete)
 - [x] Department Tasks View (Complete with optimistic updates)
-- [ ] Create Task Modal ⚠️ **BLOCKER**
-- [ ] User Management pages
+- [x] Create Task Modal (Complete 2025-10-24) ✅
+- [x] User Management pages (All phases complete 2025-10-25) ✅
 - [ ] Dashboard widgets (8 remaining)
-- [ ] 32+ additional components
+- [ ] ~25+ additional components (Reports, Selectors, etc.)
 
 **Critical Bugs:** ✅
 
