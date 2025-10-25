@@ -839,11 +839,6 @@ export function ListView({ projectId }: ListViewProps) {
                         <div className={cn(task.isClosed && 'line-through')}>
                           {task.name}
                         </div>
-                        {task.description && (
-                          <div className="text-xs text-muted-foreground truncate max-w-[300px]">
-                            {task.description}
-                          </div>
-                        )}
                       </div>
                     )}
                   </TableCell>
