@@ -36,7 +36,7 @@ async function handler(
       name: true,
       description: true,
       createdAt: true,
-      creator: {
+      owner: {
         select: {
           id: true,
           fullName: true,
@@ -92,7 +92,7 @@ async function handler(
       name: project.name,
       description: project.description || '',
       createdAt: project.createdAt?.toISOString(),
-      creator: project.creator,
+      creator: project.owner, // owner is the creator
       departmentName: project.department?.name || 'N/A',
       divisionName: project.department?.division?.name || 'N/A',
       missionGroupName: project.department?.division?.missionGroup?.name || 'N/A',
