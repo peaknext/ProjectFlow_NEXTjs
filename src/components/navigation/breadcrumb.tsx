@@ -107,7 +107,7 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
       case "department":
         // Navigate to department view
         setDepartment(id, name);
-        router.push(`/department/tasks?id=${id}`);
+        router.push(`/department/tasks?departmentId=${id}`);
         break;
 
       case "project":
