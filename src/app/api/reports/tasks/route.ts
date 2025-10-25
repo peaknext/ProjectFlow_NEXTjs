@@ -40,15 +40,26 @@ function getFiscalYearStartDate(): Date {
 async function handler(req: AuthenticatedRequest) {
   const { searchParams } = new URL(req.url);
 
-  // Parse date filters (NO defaults - user must explicitly choose dates)
+  // Parse date filters with default to last 90 days (prevents unbounded queries)
   const startDateParam = searchParams.get('startDate');
   const endDateParam = searchParams.get('endDate');
 
-  const startDate = startDateParam ? new Date(startDateParam) : null;
-  const endDate = endDateParam ? new Date(endDateParam) : null;
+  let startDate: Date;
+  let endDate: Date;
 
-  // Validate date range (only if both dates are provided)
-  if (startDate && endDate && startDate > endDate) {
+  // OPTIMIZED: Default to last 90 days if dates not provided (prevents unbounded query)
+  if (!startDateParam || !endDateParam) {
+    endDate = new Date();
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - 90); // 90 days ago
+    console.log('📅 Using default date range (90 days):', { startDate, endDate });
+  } else {
+    startDate = new Date(startDateParam);
+    endDate = new Date(endDateParam);
+  }
+
+  // Validate date range
+  if (startDate > endDate) {
     return errorResponse(
       'INVALID_DATE_RANGE',
       'Start date must be before or equal to end date',
@@ -215,14 +226,11 @@ async function handler(req: AuthenticatedRequest) {
     ],
   };
 
-  // Apply date range filter ONLY if both startDate and endDate are provided
-  // This makes date filtering optional - without it, shows ALL tasks
-  if (startDate && endDate) {
-    taskFilter.createdAt = {
-      gte: startDate,
-      lte: endDate,
-    };
-  }
+  // Apply date range filter (now always present - defaults to 90 days)
+  taskFilter.createdAt = {
+    gte: startDate,
+    lte: endDate,
+  };
 
   // Apply department filter (for both ADMIN and non-ADMIN users)
   // The departmentIds array was already filtered based on organization selectors above
@@ -230,65 +238,82 @@ async function handler(req: AuthenticatedRequest) {
 
   console.log('🔍 Task filter:', JSON.stringify(taskFilter, null, 2));
   console.log('📊 AccessibleScope:', accessibleScope);
-  console.log('📅 Date filter active:', !!(startDate && endDate));
+  console.log('📅 Date range:', { start: startDate.toISOString(), end: endDate.toISOString() });
 
-  // Fetch tasks within date range
-  const tasks = await prisma.task.findMany({
-    where: taskFilter,
-    include: {
-      // Multi-assignee support
-      assignees: {
-        select: {
-          user: {
-            select: {
-              id: true,
-              fullName: true,
-              profileImageUrl: true,
+  // OPTIMIZED: Shared user select
+  const userSelect = {
+    id: true,
+    fullName: true,
+    profileImageUrl: true, // Needed for table avatars
+  };
+
+  // OPTIMIZED: Parallelize tasks + users queries (both depend only on departmentIds)
+  const [tasks, users] = await Promise.all([
+    // Query 1: Fetch tasks within date range
+    prisma.task.findMany({
+      where: taskFilter,
+      include: {
+        // Multi-assignee support
+        assignees: {
+          select: {
+            user: {
+              select: userSelect,
             },
           },
         },
-      },
-      // Legacy single assignee (for backward compatibility)
-      assignee: {
-        select: {
-          id: true,
-          fullName: true,
-          profileImageUrl: true,
+        // Legacy single assignee (for backward compatibility)
+        assignee: {
+          select: userSelect,
+        },
+        creator: {
+          select: userSelect,
+        },
+        status: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            order: true,
+            type: true, // CRITICAL: Must include TYPE for grouping
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            departmentId: true,
+          },
         },
       },
-      creator: {
-        select: {
-          id: true,
-          fullName: true,
-          profileImageUrl: true,
-        },
+      orderBy: {
+        createdAt: 'desc',
       },
-      status: {
-        select: {
-          id: true,
-          name: true,
-          color: true,
-          order: true,
-          type: true, // CRITICAL: Must include TYPE for grouping
-        },
-      },
-      project: {
-        select: {
-          id: true,
-          name: true,
-          departmentId: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+    }),
 
-  // Get all unique project IDs from tasks
+    // Query 2: Fetch all users in accessible departments (parallel with tasks)
+    prisma.user.findMany({
+      where: {
+        deletedAt: null,
+        // Only filter by department if NOT ADMIN
+        ...(accessibleScope.isAdmin ? {} : { departmentId: { in: departmentIds } }),
+      },
+      select: {
+        id: true,
+        fullName: true,
+        profileImageUrl: true,
+        departmentId: true,
+        role: true,
+      },
+      orderBy: {
+        fullName: 'asc',
+      },
+    }),
+  ]);
+
+  // Get all unique project IDs from tasks (needed for statuses query)
   const projectIds = [...new Set(tasks.map((t) => t.projectId))];
 
-  // Fetch ALL statuses in these projects (not just statuses used by tasks)
+  // Query 3: Fetch ALL statuses in these projects (depends on tasks results)
   // This ensures we see all status types even if no tasks use them yet
   const statuses = await prisma.status.findMany({
     where: {
@@ -303,30 +328,6 @@ async function handler(req: AuthenticatedRequest) {
       projectId: true,
     },
     orderBy: [{ projectId: 'asc' }, { order: 'asc' }],
-  });
-
-  // Fetch all users in accessible departments
-  const userFilter: any = {
-    deletedAt: null,
-  };
-
-  // Only filter by department if NOT ADMIN
-  if (!accessibleScope.isAdmin) {
-    userFilter.departmentId = { in: departmentIds };
-  }
-
-  const users = await prisma.user.findMany({
-    where: userFilter,
-    select: {
-      id: true,
-      fullName: true,
-      profileImageUrl: true,
-      departmentId: true,
-      role: true,
-    },
-    orderBy: {
-      fullName: 'asc',
-    },
   });
 
   // Transform tasks to match expected format
