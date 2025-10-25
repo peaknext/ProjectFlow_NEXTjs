@@ -71,12 +71,13 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
         labels: {
           color: isDark ? "#e2e8f0" : "#1e293b",
           font: {
-            family: "inherit",
-            size: 16, // Increased from 14 to 16 for better readability
+            family: "Sarabun, ui-sans-serif, system-ui, sans-serif",
+            size: 18, // Increased to 18 for better readability
+            weight: "500" as any, // Medium weight for better visibility
           },
-          padding: 12,
-          boxWidth: 20,
-          boxHeight: 20,
+          padding: 16,
+          boxWidth: 24,
+          boxHeight: 24,
         },
       },
       tooltip: {
@@ -87,6 +88,15 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
         borderWidth: 1,
         padding: 12,
         displayColors: true,
+        titleFont: {
+          family: "Sarabun, ui-sans-serif, system-ui, sans-serif",
+          size: 16,
+          weight: "600" as any,
+        },
+        bodyFont: {
+          family: "Sarabun, ui-sans-serif, system-ui, sans-serif",
+          size: 15,
+        },
         callbacks: {
           label: function (context: any) {
             const label = context.label || "";
@@ -213,7 +223,8 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
         ticks: {
           color: isDark ? "#94a3b8" : "#64748b",
           font: {
-            family: "inherit",
+            family: "Sarabun, ui-sans-serif, system-ui, sans-serif",
+            size: 14,
           },
         },
       },
@@ -225,7 +236,8 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
         ticks: {
           color: isDark ? "#94a3b8" : "#64748b",
           font: {
-            family: "inherit",
+            family: "Sarabun, ui-sans-serif, system-ui, sans-serif",
+            size: 14,
           },
         },
       },
