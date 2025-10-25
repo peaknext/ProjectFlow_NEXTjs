@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSyncMutation } from "@/lib/use-sync-mutation";
 import { api } from "@/lib/api-client";
 import { DashboardData, UseDashboardOptions } from "@/types/dashboard";
