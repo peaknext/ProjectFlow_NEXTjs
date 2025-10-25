@@ -240,7 +240,7 @@ export function DetailsTab({
   // Register submit handler with parent
   useEffect(() => {
     registerSubmitHandler?.(handleSubmit(onSubmit));
-  }, [handleSubmit, registerSubmitHandler]);
+  }, [handleSubmit, onSubmit, registerSubmitHandler]);
 
   // Don't render if not active tab
   if (!isActive) return null;
