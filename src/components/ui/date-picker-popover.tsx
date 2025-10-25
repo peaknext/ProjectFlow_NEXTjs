@@ -15,6 +15,11 @@ import { cn } from '@/lib/utils';
  * @returns Formatted string like "21 ตุลาคม 2568"
  */
 function formatThaiDate(date: Date): string {
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return 'Invalid Date';
+  }
+
   const day = date.getDate();
   const month = date.toLocaleString('th-TH', { month: 'long' });
   const year = date.getFullYear() + 543; // Convert to Buddhist Era
@@ -63,13 +68,24 @@ export function DatePickerPopover({
   const startYear = currentYear - 5;
   const endYear = currentYear + 5;
 
-  // Parse ISO string to Date object
-  const selectedDate = value ? new Date(value) : undefined;
+  // Parse ISO string to Date object (use local timezone to avoid offset issues)
+  const selectedDate = value
+    ? (() => {
+        // Extract date part only (YYYY-MM-DD) to avoid timezone issues
+        const datePart = value.split('T')[0];
+        // Append T00:00:00 to force local timezone interpretation
+        const date = new Date(datePart + 'T00:00:00');
+        return isNaN(date.getTime()) ? undefined : date;
+      })()
+    : undefined;
 
   const handleSelect = (date: Date | undefined) => {
     if (date) {
-      // Convert to ISO string (YYYY-MM-DD format)
-      const isoDate = date.toISOString().split('T')[0];
+      // Convert to ISO string (YYYY-MM-DD format) using local timezone
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const isoDate = `${year}-${month}-${day}`;
       onChange(isoDate);
       setOpen(false);
     }
@@ -82,7 +98,11 @@ export function DatePickerPopover({
 
   const handleToday = () => {
     const today = new Date();
-    const isoDate = today.toISOString().split('T')[0];
+    // Convert to ISO string using local timezone
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const isoDate = `${year}-${month}-${day}`;
     onChange(isoDate);
     setOpen(false);
   };
@@ -179,11 +199,24 @@ export function DateInput({
   const startYear = currentYear - 5;
   const endYear = currentYear + 5;
 
-  const selectedDate = value ? new Date(value) : undefined;
+  // Parse ISO string to Date object (use local timezone to avoid offset issues)
+  const selectedDate = value
+    ? (() => {
+        // Extract date part only (YYYY-MM-DD) to avoid timezone issues
+        const datePart = value.split('T')[0];
+        // Append T00:00:00 to force local timezone interpretation
+        const date = new Date(datePart + 'T00:00:00');
+        return isNaN(date.getTime()) ? undefined : date;
+      })()
+    : undefined;
 
   const handleSelect = (date: Date | undefined) => {
     if (date) {
-      const isoDate = date.toISOString().split('T')[0];
+      // Convert to ISO string (YYYY-MM-DD format) using local timezone
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const isoDate = `${year}-${month}-${day}`;
       onChange(isoDate);
       setOpen(false);
     }
@@ -196,7 +229,11 @@ export function DateInput({
 
   const handleToday = () => {
     const today = new Date();
-    const isoDate = today.toISOString().split('T')[0];
+    // Convert to ISO string using local timezone
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const isoDate = `${year}-${month}-${day}`;
     onChange(isoDate);
     setOpen(false);
   };
@@ -214,16 +251,18 @@ export function DateInput({
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              'w-full h-[46px] px-3 pl-10 py-2 text-base',
+              'w-full px-3 pl-10 py-2',
               'bg-white dark:bg-background border border-input rounded-lg',
               'text-foreground placeholder:text-muted-foreground',
               'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
               'disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
+              !className?.includes('h-') && 'h-[46px]', // Default height if not overridden
+              !className?.includes('text-') && 'text-sm', // Default text size if not overridden
               className
             )}
           />
         </PopoverTrigger>
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
           calendar_month
         </span>
       </div>
