@@ -2,70 +2,103 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Version**: 2.13.0 (2025-10-26)
+**Last Major Update**: Completed Phase 4 Performance Optimization (Project Board API) - All 4 optimization phases complete
+
+---
+
+## Quick Navigation
+
+- [Project Overview](#project-overview) - Status, tech stack, current priorities
+- [Commands](#commands) - Development, database, testing commands
+- [Architecture](#architecture) - Database, API, frontend structure
+- [Key Files to Know](#key-files-to-know) - Essential files for backend/frontend work
+- [Common Workflows](#common-workflows) - Adding views, endpoints, testing
+- [Troubleshooting](#troubleshooting) - Common issues and solutions
+- [Quick Start](#quick-start-for-new-claude-instances) - Onboarding guide
+- [Documentation Index](#documentation-index) - All project documentation
+
+---
+
+## 🚀 Quick Reference Card
+
+**Running the app**: `PORT=3010 npm run dev` (Windows: `set PORT=3010 && npm run dev`)
+**After schema changes**: `npm run prisma:generate` (ALWAYS!)
+**Import Prisma**: `import { prisma } from "@/lib/db"` (NOT from @prisma/client)
+**Soft deletes**: `update({ data: { deletedAt: new Date() } })` (NEVER use .delete())
+**Multi-assignee**: Use `assigneeUserIds` array (NOT `assigneeUserId`)
+**History table**: Use `prisma.history` (NOT `prisma.activityLog`)
+**Setup .env**: Copy `.env.example` to `.env` and edit with your values
+
+---
+
 ## Project Overview
 
 **DO NOT REVERT ANYTHING IF I DON'T REQUEST**
 **Never use any emoji in this project except in .md files**
-**ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system migrated from Google Apps Script to Next.js 15 + PostgreSQL. It's designed for healthcare organizations with hierarchical role-based access control and real-time collaboration features.
 
-**Current Status**: Phase 2 Complete (API 100%), Phase 3 In Progress (Frontend ~55%)
+**ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system migrated from Google Apps Script to Next.js 15 + PostgreSQL. Designed for healthcare organizations with hierarchical role-based access control.
+
 **Tech Stack**: Next.js 15 (App Router), TypeScript, PostgreSQL, Prisma ORM, React Query, Zustand, Tailwind CSS, shadcn/ui
-**Previous GAS Project Codebase**: Stored in old_project folder for reference
-**Port**: Dev server typically runs on port 3000 or 3010 (may vary due to port conflicts)
-**Last Updated**: 2025-10-26
 
-⚠️ **DEPLOYMENT STATUS**: **NOT PRODUCTION-READY** - Active development in progress (Frontend ~55% complete, estimated completion: 2025-12-15)
+**Current Status**:
+- Backend: 100% Complete (79+ API endpoints)
+- Frontend: ~68% Complete (44+/55+ major components)
+- **NOT PRODUCTION-READY** - Active development, testing phase
+- Estimated completion: 2025-12-05 (5 weeks remaining)
+
+**Port**: Dev server runs on 3000 or 3010 (may vary due to conflicts)
+**Previous GAS Codebase**: Stored in `old_project/` folder for reference
 
 ---
 
-## ✅ Recently Completed Major Features
+## 🎯 Current Priority
 
-### Completed Priorities (2025-10-23 to 2025-10-25)
+**What to work on next**: Dashboard Testing & Documentation
 
-1. **Department Tasks View** ✅ **COMPLETE 2025-10-23**
-   - Full implementation with optimistic updates and project grouping
-   - See "Department Tasks View" section below for details
+**Current Task**: Testing phase - validate all dashboard widgets functionality
 
-2. **Project Management Page & Modals** ✅ **COMPLETE 2025-10-24**
-   - Project Management Page with filters, sorting, pagination (Phases 1-4)
-   - Create Project Modal (772 lines, fully functional)
-   - Edit Project Modal (508 lines, fully functional)
-   - Delete Confirmation Dialog (Complete with AlertDialog, toast notifications, error handling)
-   - See "Project Management Components" section below for details
+**Dashboard Implementation Status**: ✅ **COMPLETE WITH UI/UX REFINEMENT** (7/7 widgets)
+- ✅ Stats Cards (4 cards) - permission-based, animated numbers
+- ✅ Overdue Tasks Alert - red theme, assignee avatars top-right, 5 tasks max
+- ✅ Pinned Tasks Widget - amber theme, assignee avatars top-right, expand/collapse
+- ✅ My Tasks Widget - filter tabs in header, hide closed tasks switch (localStorage), infinite scroll
+- ✅ Dashboard Calendar - tooltip on hover, legend right-aligned, Thai month/year
+- ✅ Recent Activities - avatar + activity text, show 10 with expand
+- ✅ My Checklist Widget - progress bar in header, task name as tooltip on hover
 
-3. **Create Task Modal** ✅ **COMPLETE 2025-10-24**
-   - Slide panel modal with validation (React Hook Form)
-   - 10 form fields (name, description, status, priority, difficulty, assignee, dates, project, parent task)
-   - Integration with Board/Calendar/List views
-   - Optimistic updates and toast notifications
-   - Supports subtask creation and pre-filtered projects
-   - File: `src/components/modals/create-task-modal.tsx` (654 lines)
+**UI/UX Refinements Completed** (2025-10-26):
+- Consistent padding (pl-6/pl-8) across all task list widgets
+- Assignee avatars repositioned to top-right with overlap style
+- **Profile images**: All avatars now display real profile photos from `profileImageUrl`
+- Amber color scheme for pinned tasks (matches department tasks view)
+- Filter tabs moved to header for better space utilization
+- Hide closed tasks switch with localStorage persistence
+- Calendar legend and progress bar right-aligned
+- Task names hidden, shown as tooltips to reduce clutter
+- Hover effects on Recent Activities widget rows
+- Fixed React Hooks order errors
+- Fixed sidebar active state (Tasks vs Projects menu)
 
-4. **User Management Pages** ✅ **COMPLETE 2025-10-25 (All Phases)**
-   - User list view with filters and pagination (Phase 1)
-   - Create User Modal with ADMIN-only access + UI improvements (Phase 2)
-   - Edit User Modal (Phase 3) - Complete with all fields
-   - Delete User (Phase 4) - AlertDialog confirmation, ADMIN/CHIEF only
-   - User Management Permissions - Complete role-based permission system
-   - Full CRUD operations with optimistic updates
-   - Permission-based access control (scope filtering)
+**Next Phase**: Comprehensive testing and documentation
 
-5. **Reports Dashboard** ✅ **COMPLETE 2025-10-26**
-   - Full reports/analytics page with permission-based access (all roles except USER)
-   - 4 statistics cards (ยังไม่มอบหมาย, กำลังดำเนินการ, เสร็จสิ้น, เกินกำหนด)
-   - 3 Chart.js visualizations (pie, bar, doughnut charts with dark mode support)
-   - Sortable table with profile pictures and workload breakdown
-   - Advanced filters (date range, Mission Group → Division → Department cascade)
-   - Thai Buddhist Era date pickers (Calendar popover)
-   - Status type grouping (uses STATUS.TYPE: NOT_STARTED/IN_PROGRESS/DONE for cross-project comparison)
-   - Fiscal year calculation (Thai: Oct 1 - Sep 30)
-   - ADMIN access to all tasks across entire system (not filtered by department)
-   - See "Reports Dashboard" section below for details
+**Remaining Components (~18)**:
+- Additional Modals (2: Close Task, Bulk Actions)
+- Selectors (9 types: various pickers and multi-selects)
+- Advanced Features (7: global search, inline editor, batch operations UI)
 
-### ⚠️ Important: Thai Terminology
+**Recently Completed** (Last 7 days):
+- ✅ **Phase 4: Project Board API Optimization (2025-10-26)** - Final optimization phase complete (3 parallel queries, 25% faster)
+- ✅ **Phase 3: Reports API Optimization (2025-10-26)** - 55% faster (3 parallel queries)
+- ✅ **Phase 2: Department Tasks API Optimization (2025-10-26)** - 65% faster (4 parallel queries)
+- ✅ **Phase 1: Dashboard API Optimization (2025-10-26)** - 72% faster (11 parallel queries)
+- ✅ Dashboard Avatar Images (2025-10-26) - Profile photos in all widgets
+- ✅ Dashboard UI/UX Refinement (2025-10-26) - 14 layout improvements, React Hooks fixes
+- ✅ User Dashboard (2025-10-26) - 7 widgets fully implemented
 
-**Use correct Thai terms in UI:**
+**Known Critical Issues**: None (all resolved as of 2025-10-26)
 
+**Thai Terminology** (Use correct terms):
 - ✅ **หน่วยงาน** (Department) - NOT "แผนก"
 - ✅ **กลุ่มงาน** (Division) - NOT "กอง"
 - ✅ **กลุ่มภารกิจ** (Mission Group)
@@ -75,39 +108,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-**Recent Completions:**
-✅ **Reports Dashboard Bug Fixes Complete** (2025-10-26): Fixed 8 critical bugs in Reports Dashboard after initial implementation. **Bug Fixes**: (1) Task count issue - Fixed Prisma NOT operator excluding null values (5 tasks → 21 tasks correct), (2) Scroll bar duplication - Removed inner overflow-auto, (3) Toolbar styling - Updated to match Department Tasks page (h-16 → py-4, text-xl → text-2xl), (4) Chart data display - Fixed tooltips showing "[object Object]" with proper value extraction, (5) Organization filter field name errors - Fixed dateDeleted → deletedAt for mission_groups and divisions tables, (6) Mission Group filter ADMIN bypass - Added permission check skip for ADMIN users, (7) Organization filters not working - Fixed ADMIN department filtering logic to apply filters correctly, (8) Filter dropdown size standardization - All filters now 200px × 40px matching User Management page. **Files Modified**: `src/app/api/reports/tasks/route.ts` (7 fixes), `src/app/(dashboard)/reports/page.tsx` (overflow), `src/components/reports/report-toolbar.tsx` (styling + sizes), `src/components/reports/reports-charts.tsx` (chart data). **Testing**: All filters verified working (21 tasks total, 11 in DEPT-059, 3 in DIV-037). **Documentation**: `REPORTS_DASHBOARD_BUG_FIXES_2025-10-26.md` (comprehensive bug fix guide). **Result**: Reports Dashboard now production-ready with accurate filtering, consistent UI, and proper ADMIN access.
-✅ **Reports Dashboard Complete** (2025-10-26): Full analytics/reporting page with comprehensive task statistics and visualizations. **Features**: (1) 4 statistics cards with icons and dark mode support, (2) 3 Chart.js visualizations (pie, bar, doughnut) with 14px legend font, (3) Sortable table with profile pictures and workload breakdown, (4) Advanced filters (date range with Thai Buddhist Era calendar, Mission Group → Division → Department cascade), (5) Thai fiscal year calculation (Oct 1 - Sep 30), (6) Permission-based access (all roles except USER). **Key Implementation**: (1) API endpoint `GET /api/reports/tasks` (358 lines) with permission-based filtering, (2) ADMIN users see ALL tasks across entire system with working organization filters, (3) Status type grouping queries ALL statuses in projects (not just used ones) to ensure IN_PROGRESS types are included, (4) Client-side statistics calculation via `calculateReportStatistics()`, (5) Multi-assignee support. **Components created**: 5 new files (ReportToolbar, StatisticsCards, ReportsCharts, ReportsTable, Reports Page). **Files modified**: `src/hooks/use-organization.ts` (added useMissionGroups, useDivisions, useDepartments), `src/components/ui/date-picker-popover.tsx` (enhanced DateInput), `package.json` (Chart.js 4.5.1). **Documentation**: See "Reports Dashboard" section below. **Result**: Production-ready analytics page with accurate statistics and working filters for all user roles.
-✅ **User Management Permissions Complete** (2025-10-25): Complete role-based permission system for user management with frontend and backend protection. **Changes**: (1) ADMIN can VIEW all users including other ADMINs but cannot EDIT/DELETE other ADMINs, (2) HEAD/LEADER/CHIEF can only toggle status (no Actions column, no Edit Modal access), (3) MEMBER/USER cannot access Users page (sidebar hidden, access denied screen), (4) Sidebar navigation filtering by role (requiredRoles array), (5) Row-level permission checks (canEdit, canDelete, showActions), (6) Table header conditionally renders Actions column. **Files modified**: `src/components/users/user-row.tsx` (permission checks), `src/components/users/users-table.tsx` (header conditional), `src/components/users/users-view.tsx` (page guard), `src/components/layout/sidebar.tsx` (menu filtering). **Documentation**: `USER_MANAGEMENT_PERMISSIONS_COMPLETE.md` (comprehensive guide with test cases). **Result**: Production-ready permission system with multi-layer protection and clean UX for all roles.
-✅ **Modal/Panel Style Standardization Complete** (2025-10-25): Standardized styling across all 6 modal/panel components for consistent UI/UX. **Changes**: (1) Panel opacity: `bg-background/90` (reduced from 95 for better backdrop visibility), (2) Dark mode backgrounds: unified to `dark:bg-slate-900` (from inconsistent slate-950/background), (3) Borders: standardized to `dark:border-slate-700` (from slate-600/slate-800), (4) Header/Footer: all use `bg-white dark:bg-slate-900`. **Components updated**: Create Project Modal, Edit Project Modal, Create User Modal, Edit User Modal, Create Task Modal, Task Panel (main + header + footer). **Result**: All modals now share identical backdrop blur, opacity, colors, and spacing for professional, cohesive design system.
-✅ **fullName Split Migration Complete** (2025-10-25): Complete migration from single `fullName` field to structured name fields (`titlePrefix`, `firstName`, `lastName`). **10 files modified** (5 backend + 5 frontend), including Prisma schema, migration script (7/7 users migrated), API endpoints, TypeScript interfaces, and all user forms. Features: Auto-generated `fullName` for backward compatibility, 14 Thai title prefixes support (นาย, นาง, ดร., etc.), complete form validation. **Fixed critical bug** in `/api/auth/register` (department relation). See `FULLNAME_SPLIT_MIGRATION_CONTEXT.md` for full details. **User registration now fully functional** with structured name support.
-✅ **Create Task Modal Complete** (2025-10-24): Complete task creation modal with slide panel animation. Features: 10 form fields (name, description, status, priority, difficulty, assignee, dates, project, parent task), React Hook Form validation, optimistic updates, toast notifications, subtask creation support, pre-filtered projects support from DepartmentToolbar. Integrated with Board/Calendar/List views and Department Tasks view. File: `src/components/modals/create-task-modal.tsx` (654 lines). **Critical blocker now resolved** - complete user flow enabled.
-✅ **User Management Complete (Phase 4: Delete User)** (2025-10-24): Completed full CRUD operations for user management with AlertDialog confirmation for delete. Features: ADMIN/CHIEF permission check, soft delete with session invalidation, loading states, toast notifications, optimistic cache updates. Updated `src/components/users/user-row.tsx` (256 lines) with AlertDialog pattern matching Project deletion. **User Management is now 100% complete** (Phases 1-4).
-✅ **Edit User Modal Complete** (2025-10-24): Fixed Edit User Modal to properly display and edit all user fields including titlePrefix, firstName, lastName. Updated GET /api/users to include missing fields (titlePrefix, firstName, lastName, workLocation, internalPhone). Modal now pre-populates all form fields correctly with existing user data. File: `src/components/modals/edit-user-modal.tsx` (709 lines).
-✅ **Create User Modal UI Improvements** (2025-10-24): Complete layout redesign with 3-column name fields, searchable Combobox for title prefix and job title (94 titles), standardized job level dropdown (12 Thai levels), 2-column layouts for department/role and job title/level. Improved space utilization and user experience. See `CREATE_USER_MODAL_UI_IMPROVEMENTS.md` for details.
-✅ **JobTitle Table Integration Fix** (2025-10-24): Fixed Prisma schema mapping for jobtitle table - added @map() directives for lowercase column names (jobtitleth, jobtitleen). Resolved "column does not exist" error in /api/users endpoint.
-✅ **ADMIN-Only User Creation Complete** (2025-10-24): Complete redesign of user creation system with ADMIN-only access, auto-verification, auto-password generation, and password reset email. Added new fields: workLocation (สถานที่ปฏิบัติงาน) and internalPhone (เบอร์โทรภายใน). New API endpoint `/api/admin/users` (POST), rewritten Create User Modal (445 lines), updated Prisma schema. See `USER_CREATION_ADMIN_ONLY_COMPLETE.md` for full implementation details.
-✅ **Task GET Security Fix** (2025-10-24): Fixed critical security vulnerability where GET /api/tasks/[taskId] had no permission check. Added canUserViewTask() validation. See `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` for security audit details.
-✅ **Permission System Complete** (2025-10-24): Full permission system migration from GAS to Next.js - additionalRoles support, user management permissions, project permissions. **18 functions implemented** (15 public + 3 helpers, 1,014 lines total), 5 security vulnerabilities fixed, 8/8 core tests passing. See `TESTING_COMPLETE_2025-10-24.md` for test report and `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` for comprehensive security audit.
-✅ **Project Management Page & Modals Complete** (2025-10-24): Full project list/management interface with hierarchical filters, sorting, pagination, and fixed header scrolling. All phases complete (1-6): Project page, Create/Edit modals, and Delete confirmation with AlertDialog. See `PROJECT_MANAGEMENT_PAGE_COMPLETE.md` and `PROJECT_MANAGEMENT_IMPLEMENTATION_SUMMARY.md` for details.
-✅ **Authentication Complete** (2025-10-23): All authentication pages implemented with email verification and password reset flow via Resend API. See `AUTHENTICATION_IMPLEMENTATION_COMPLETE.md` for details.
-✅ **Password Reset Complete** (2025-10-23): Full password reset flow with popover validation, strength meter, and real-time matching. See `PASSWORD_RESET_IMPLEMENTATION.md` for details.
-✅ **Multi-Assignee System** (2025-10-23): Tasks now support multiple assignees via `task_assignees` many-to-many table. API accepts `assigneeUserIds` array. Backward compatible with legacy `assigneeUserId` field. See `MULTI_ASSIGNEE_IMPLEMENTATION.md` for details.
-✅ **Workspace API Complete** (2025-10-23): Role-based hierarchical navigation API with **additionalRoles support**. See `src/app/api/workspace/route.ts` and `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md` for details.
-✅ **Breadcrumb Navigation Complete** (2025-10-23): Multi-level interactive breadcrumb with popover selectors for navigation. See "Navigation Components" section below.
-✅ **Workspace Navigation Complete** (2025-10-23): Collapsible cards design with text wrapping and direct department navigation. See `WORKSPACE_NAVIGATION_REDESIGN.md` for details.
-✅ **Department Tasks View Complete** (2025-10-23): Full department-level task management with optimistic updates, project grouping, pinned tasks section, and consistent UI sizing (h-8 for all selectors). See "Department Tasks View" section below.
-✅ **ADMIN Role Authentication Fix** (2025-10-23): BYPASS_AUTH mode now fetches real user data from database. Use `BYPASS_USER_ID=admin001` for ADMIN testing. Created admin001 user via script.
-✅ **Department Navigation Fix** (2025-10-23): Department tasks view now uses URL query parameter (`?departmentId=`) for navigation. Breadcrumb and project selector update correctly when navigating between departments.
-✅ **CreateTaskModal Project Selector Fix** (2025-10-23): Modal now receives pre-filtered projects from parent component (simple pass-through pattern). Projects match breadcrumb selector.
-
 ## Commands
 
 ### Development
 
 ```bash
 npm run dev              # Start dev server (default port 3000, may run on 3010)
-PORT=3010 npm run dev    # Start dev server on specific port (recommended for testing)
+PORT=3010 npm run dev    # Start dev server on specific port (recommended)
 npm run build            # Build for production
 npm start                # Start production server
 npm run lint             # Run ESLint
@@ -130,83 +137,46 @@ npm test                           # Run automated API test suite
 node tests/api/test-runner.js      # Run API tests directly
 ```
 
-**Test Environment:**
-
+**Test Environment**:
 - Dev server must be running on port 3010
 - Database must be seeded with test data from `prisma/seed.sql`
 - Test credentials: `admin@hospital.test` / `SecurePass123!`
 - For development: Set `BYPASS_AUTH=true` in `.env` to skip authentication
-- Use `BYPASS_USER_ID=admin001` to test as ADMIN role, or `BYPASS_USER_ID=user001` for LEADER role (default: user001)
+- Use `BYPASS_USER_ID=admin001` for ADMIN role, `user001` for LEADER role
 
-### Migration
-
-```bash
-npm run migrate          # Migrate data from old system (if needed)
-```
+---
 
 ## Architecture
 
 ### Database Schema (21 Tables)
 
-The database uses Prisma ORM with PostgreSQL. **Key architectural decisions:**
+The database uses Prisma ORM with PostgreSQL. **Key architectural decisions**:
 
 1. **Soft Deletes**: All major entities use `deletedAt` or `dateDeleted` fields instead of hard deletes
 2. **Hierarchical Organization**: MissionGroup → Division → Department → Users
 3. **Custom Prisma Output**: Generated client is in `src/generated/prisma` (not default location)
 4. **JSON Fields**: Used for flexible data (e.g., `pinnedTasks`, `additionalRoles`, `mentions`)
 
-**Import Prisma Client:**
-
+**Import Prisma Client**:
 ```typescript
 import { prisma } from "@/lib/db";
 ```
 
-**Additional API Endpoints:**
-
-Beyond the original 71 documented endpoints, these have been added:
-
-- **GET /api/workspace** - Returns workspace structure based on user role + additionalRoles
-- **GET /api/departments/[departmentId]/tasks** - Returns all tasks in a department with project grouping
-- **POST /api/tasks/bulk-update** - Batch update multiple tasks at once
-- **GET /api/health** - Health check endpoint for monitoring
-- **GET /api/organization/action-plans** - Action plans management
-- **GET /api/public/divisions** - Public endpoint for divisions (no auth required)
-- **GET /api/public/departments** - Public endpoint for departments (no auth required)
-
-**Current Total: 78+ API endpoints** (71 original + 7+ new)
-
-**⚠️ Known Issues:**
-
-~~1. **Workspace API - Additional Roles Support**~~ ✅ **FIXED 2025-10-24**
-
-- **Issue**: Users with `additionalRoles` field only see data from their primary role
-- **Impact**: Multi-role users (e.g., Chief in MG A + Member in MG B) cannot access all authorized data
-- **Status**: ✅ **COMPLETE** - Full permission system implemented (Priority 1, 2, 3)
-- **Implementation**: **18 functions** (15 public + 3 helpers), 1,014 lines of code, 5 security vulnerabilities fixed
-- **Testing**: 8/8 core tests passing, verified with real data (user001 has additional roles)
-- **Documentation**: See `TESTING_COMPLETE_2025-10-24.md` for test report, `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` for security audit
-- **Details**: See `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md` (historical context)
-
-~~2. **Task GET Endpoint Security**~~ ✅ **FIXED 2025-10-24**
-
-- **Issue**: GET /api/tasks/[taskId] had no permission check, allowing any authenticated user to view any task
-- **Impact**: Information disclosure vulnerability - bypassed all department/project/assignee access controls
-- **Status**: ✅ **FIXED** - Added canUserViewTask() permission check
-- **Fix**: Added permission validation in `src/app/api/tasks/[taskId]/route.ts` (lines 143-147)
-- **Security Level**: 🔴 **CRITICAL** (now patched)
-- **Documentation**: See `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` Stage 2 findings
-
-**Core Schema Patterns:**
-
+**Core Schema Patterns**:
 - **Users**: 6-level role hierarchy (ADMIN → CHIEF → LEADER → HEAD → MEMBER → USER)
 - **Projects**: Belong to departments, have custom workflow statuses
 - **Tasks**: Support subtasks, checklists, comments with @mentions, priority 1-4
-- **Task Assignees**: Many-to-many relationship (tasks can have multiple assignees) via `task_assignees` table
+- **Task Assignees**: ⭐ **IMPORTANT: Multi-assignee system** via `task_assignees` table
+  - Use `assigneeUserIds` array in mutations/queries (NOT singular `assigneeUserId`)
+  - Many-to-many relationship - tasks can have multiple assignees
+  - See `MULTI_ASSIGNEE_IMPLEMENTATION.md` for details
 - **Sessions**: Bearer token authentication with 7-day expiry
 - **Notifications**: Real-time system with typed events
-- **History**: Task activity logging (NOT ActivityLog - use `prisma.history`)
+- **History**: Task activity logging (use `prisma.history` NOT `prisma.activityLog`)
 
-### API Routes (71 Endpoints)
+**Full schema**: See `prisma/schema.prisma`
+
+### API Routes (78+ Endpoints)
 
 All API routes follow a **consistent pattern** using middleware wrappers:
 
@@ -231,99 +201,27 @@ async function handler(req: AuthenticatedRequest, { params }: { params: ParamsTy
 export const GET = withAuth(handler);
 ```
 
-**Critical Performance Endpoints:**
+**Critical Performance Endpoints**:
+- `/api/projects/[projectId]/board` - Single-query board view (no N+1 queries)
+- `/api/batch` - Batch operations (up to 100 operations)
+- `/api/projects/progress/batch` - Batch progress calculation (up to 50 projects)
 
-- **`/api/projects/[projectId]/board`**: Single-query board view (no N+1 queries) - used by Board, Calendar, and List views
-- **`/api/batch`**: Batch operations endpoint (up to 100 operations)
-- **`/api/projects/progress/batch`**: Batch progress calculation (up to 50 projects)
+**Authentication**:
+- All routes require Bearer token: `Authorization: Bearer {sessionToken}`
+- Use `withAuth()` middleware to attach `req.session` object
+- For testing: Set `BYPASS_AUTH=true` in `.env`
 
-**Authentication:**
-
-- All routes (except auth endpoints) require Bearer token: `Authorization: Bearer {sessionToken}`
-- Use `withAuth()` middleware to automatically attach `req.session` object
-- For testing: Set `BYPASS_AUTH=true` in `.env` to use mock session (auto-creates session for user001)
-
-**Permission System:**
-
-- Use `checkPermission(userId, permission, context)` for granular access control
-- Context includes: `projectId`, `taskId`, `departmentId`, `targetUserId`
-- Permissions cascade through organizational hierarchy (CHIEF can access entire Mission Group)
+**Permission System**:
+- Use `checkPermission(userId, permission, context)` for access control
+- Permissions cascade through organizational hierarchy
+- See `src/lib/permissions.ts` (621 lines, 11 functions)
 
 ### Frontend Architecture
 
-**Current Implementation Status: (~55% Complete)**
+**State Management Strategy**:
 
-**✅ Complete (30+ major components):**
-
-**Core Infrastructure (3):**
-
-- ✅ Layout System (Navbar, Sidebar, Footer with sync animation)
-- ✅ Theme System (Light/Dark mode with next-themes)
-- ✅ Session Management (AuthGuard, token storage, auto-redirect)
-
-**Authentication Pages (5):** ✅ **COMPLETE 2025-10-23**
-
-- ✅ Login Page (with "Remember Me" and validation)
-- ✅ Registration Page (with password strength indicator)
-- ✅ Email Verification Page (auto-verify + resend option)
-- ✅ Forgot Password Page (request reset link)
-- ✅ Reset Password Page (with popover validation, strength meter, real-time matching)
-
-**Project Views (3):**
-
-- ✅ Board View (Kanban with drag-and-drop)
-- ✅ Calendar View (FullCalendar v6)
-- ✅ List View (Table with sorting/filtering)
-
-**Management Pages (1):** ✨ **COMPLETE 2025-10-24**
-
-- ✅ Project Management Page (List view with filters, sorting, pagination, fixed header scrolling)
-- ✅ Create Project Modal (772 lines, full form validation, cascade selectors)
-- ✅ Edit Project Modal (508 lines, edit description/phases/statuses)
-- ✅ Delete Confirmation Dialog (AlertDialog with toast notifications, loading states, error handling)
-
-**Advanced Features (7):**
-
-- ✅ Task Detail Panel (Full CRUD with 11 optimistic mutations)
-- ✅ Workspace API (Hierarchical navigation by role)
-- ✅ Workspace Navigation (Collapsible cards with icons, text wrapping, direct department navigation)
-- ✅ Interactive Breadcrumb Navigation (Popover selectors for all hierarchy levels)
-- ✅ Navigation Store (Zustand store for breadcrumb state management)
-- ✅ Department Toolbar (Breadcrumb + Create Task button)
-- ✅ Project Toolbar (Reusable toolbar for project views)
-
-**User Management (4 phases):** ✨ **COMPLETE 2025-10-24**
-
-- ✅ User List View (filters, pagination, sorting)
-- ✅ Create User Modal (ADMIN-only, 445 lines)
-- ✅ Edit User Modal (709 lines)
-- ✅ Delete User (AlertDialog, ADMIN/CHIEF only)
-
-**Modals & Dialogs (4):** ✨ **UPDATED 2025-10-24**
-
-- ✅ Create Project Modal (772 lines)
-- ✅ Edit Project Modal (508 lines)
-- ✅ Create User Modal (445 lines)
-- ✅ Edit User Modal (709 lines)
-- ✅ Create Task Modal (654 lines) ✨ **NEW**
-- ✅ Delete Confirmation Dialogs (AlertDialog pattern)
-
-**⚠️ Partially Complete:**
-
-- ⚠️ Dashboard Page (Layout only, mock data)
-
-**❌ Not Yet Implemented (~25+ components):**
-
-- ❌ Reports/Analytics Dashboard (charts, analytics, export)
-- ❌ Dashboard Widgets (8 widgets: stats cards, recent activities, etc.)
-- ❌ Modals & Dialogs (2 remaining: Close Task, Bulk Actions)
-- ❌ Selectors (9 types: various pickers and multi-selects)
-- ❌ Advanced Features (10+ features: global search, inline editor, etc.)
-
-**State Management Strategy:**
-
-1. **Server State (React Query)**: All server data managed via `@tanstack/react-query`
-   - Query keys are organized hierarchically (see `src/hooks/use-*.ts`)
+1. **Server State (React Query)**: All server data via `@tanstack/react-query`
+   - Organized hierarchically (see `src/hooks/use-*.ts`)
    - Stale time: 2-5 minutes depending on data type
    - **Single source of truth**: Never duplicate server data in local state
 
@@ -334,7 +232,7 @@ export const GET = withAuth(handler);
 
 3. **URL State (Next.js Router)**: Route parameters and search params
 
-**Key Frontend Patterns:**
+**Key Frontend Patterns**:
 
 1. **Optimistic Updates** (Standard Pattern - See `OPTIMISTIC_UPDATE_PATTERN.md`):
 
@@ -344,38 +242,23 @@ export const GET = withAuth(handler);
    const mutation = useSyncMutation({
      mutationFn: ({ id, data }) => api.patch(`/api/resource/${id}`, data),
      onMutate: async ({ id, data }) => {
-       // Cancel outgoing refetches
        await queryClient.cancelQueries({ queryKey: keys.detail(id) });
-
-       // Save previous data
        const previousData = queryClient.getQueryData(keys.detail(id));
-
-       // Update cache immediately (instant UI update)
-       queryClient.setQueryData(keys.detail(id), (old: any) => ({
-         ...old,
-         ...data,
-       }));
-
+       queryClient.setQueryData(keys.detail(id), (old: any) => ({ ...old, ...data }));
        return { previousData };
      },
      onError: (error, { id }, context) => {
-       // Rollback on error
        if (context?.previousData) {
          queryClient.setQueryData(keys.detail(id), context.previousData);
        }
      },
      onSettled: (response) => {
-       // Sync with server
-       if (response?.resource) {
-         queryClient.invalidateQueries({
-           queryKey: keys.detail(response.resource.id),
-         });
-       }
+       queryClient.invalidateQueries({ queryKey: keys.detail(response.resource.id) });
      },
    });
    ```
 
-   **Use this pattern for ALL interactive UI updates** (drag-and-drop, toggle actions, form submissions).
+   **Use this pattern for ALL interactive UI updates**.
 
 2. **Query Keys Pattern**:
 
@@ -395,516 +278,569 @@ export const GET = withAuth(handler);
    import { api } from "@/lib/api-client";
 
    // Automatically handles:
-   // - Adding Bearer token from localStorage
-   // - Parsing JSON responses
-   // - Extracting .data field from { success: true, data: {...} }
+   // - Bearer token from localStorage
+   // - JSON parsing
+   // - Extracting .data from { success: true, data: {...} }
    const data = await api.get<{ resource: Resource }>("/api/resource");
    ```
 
-4. **Component Organization**:
-   ```
-   src/
-   ├── app/
-   │   ├── (dashboard)/              # Protected routes with dashboard layout
-   │   │   ├── dashboard/page.tsx    # Dashboard (mock data)
-   │   │   ├── projects/             # Project management
-   │   │   │   ├── page.tsx          # Project list/management (NEW 2025-10-24)
-   │   │   │   └── [projectId]/      # Project views
-   │   │   │       ├── board/page.tsx    # Kanban board
-   │   │   │       ├── calendar/page.tsx # Calendar view
-   │   │   │       └── list/page.tsx     # List/table view
-   │   ├── (auth)/                   # Authentication pages (login, register, verify-email, etc.)
-   │   └── api/                      # API routes (74 endpoints)
-   ├── components/
-   │   ├── layout/                   # Navbar, Sidebar, ProjectToolbar, Footer
-   │   ├── navigation/               # WorkspaceNavigation, Breadcrumb
-   │   ├── projects/                 # Project management components (NEW 2025-10-24)
-   │   ├── views/                    # BoardView, CalendarView, ListView
-   │   ├── task-panel/               # TaskPanel component (v1.0 complete)
-   │   ├── common/                   # Reusable components (TaskCard, UserAvatar)
-   │   └── ui/                       # shadcn/ui components
-   ├── hooks/                        # React Query hooks (use-projects.ts, use-tasks.ts)
-   ├── stores/                       # Zustand stores (app, ui, sync)
-   ├── lib/                          # Utilities (api-client, auth, permissions, etc.)
-   └── types/                        # TypeScript types
-   ```
+**Component Organization**:
+```
+src/
+├── app/
+│   ├── (dashboard)/              # Protected routes with dashboard layout
+│   │   ├── dashboard/page.tsx    # Dashboard (partial - widgets remaining)
+│   │   ├── projects/             # Project management
+│   │   ├── users/                # User management
+│   │   ├── reports/              # Reports dashboard
+│   │   └── department/tasks/     # Department tasks view
+│   ├── (auth)/                   # Auth pages (login, register, etc.)
+│   └── api/                      # API routes (78+ endpoints)
+├── components/
+│   ├── layout/                   # Navbar, Sidebar, Toolbars, Footer
+│   ├── navigation/               # Workspace, Breadcrumb
+│   ├── projects/                 # Project management components
+│   ├── users/                    # User management components
+│   ├── reports/                  # Reports components
+│   ├── views/                    # Board, Calendar, List views
+│   ├── task-panel/               # Task detail panel
+│   └── ui/                       # shadcn/ui components
+├── hooks/                        # React Query hooks
+├── stores/                       # Zustand stores
+├── lib/                          # Utilities
+└── types/                        # TypeScript types
+```
 
-**Theme System:**
-
+**Theme System**:
 - Uses `next-themes` with `ThemeProvider`
-- Access theme: `const { theme, setTheme } = useTheme();`
-- Dark mode colors defined in `src/lib/calendar-colors.ts` for calendar view
+- Access: `const { theme, setTheme } = useTheme();`
+- Dark mode colors in `src/lib/calendar-colors.ts`
 
-**View Components:**
+---
 
-- **Board View**: Kanban board with drag-and-drop (uses `@hello-pangea/dnd`)
-- **Calendar View**: FullCalendar v6 with Thai locale, priority-based colors, always-visible grid (no empty state)
-- **List View**: Table with sorting (6 fields), filtering (5 filters), bulk actions
-- **Task Panel**: Slide-out panel with 3 tabs (Details, Comments, History) and 11 optimistic mutations
-- All views share the same `ProjectToolbar` and `TaskFilterBar` components with optimistic updates
+## Key Files to Know
 
-**Shared Filter System:** ✨ **NEW 2025-10-23**
+### Backend
 
-- **TaskFilterBar**: Unified filter component across Board, Calendar, and List views
-  - **Features**: Search, Status filter, Priority filter, Assignee filter, Hide closed tasks switch
-  - **Persistence**: Hide closed tasks setting persists in localStorage across sessions
-  - **Filter Logic**: Centralized `filterTasks()` function in `src/components/views/common/filter-tasks.ts`
-  - **State Management**: `usePersistedFilters()` hook manages filter state with localStorage
-  - **Storage Key**: `projectflow_task_filters` (only `hideClosed` persists, other filters reset on refresh)
-  - **Files**:
-    - `src/components/views/common/task-filter-bar.tsx` - Filter bar UI component
-    - `src/components/views/common/filter-tasks.ts` - Filtering logic and helpers
-    - `src/hooks/use-persisted-filters.ts` - localStorage persistence hook
+- `src/lib/auth.ts` - Session management, password hashing (SHA256+salt), token generation
+- `src/lib/permissions.ts` - **Complete permission system (621 lines)** - 11 functions for RBAC, additionalRoles support
+- `src/lib/api-middleware.ts` - `withAuth()`, `withPermission()`, `withRole()` wrappers
+- `src/lib/api-response.ts` - Standard response format and error handling
+- `src/lib/db.ts` - Prisma client singleton
 
-**Navigation Components:** ✨ **UPDATED 2025-10-23**
+### Frontend
 
-- **WorkspaceNavigation**: Collapsible cards with icons for hierarchical navigation
-  - **Design**: Replaces old tree view with modern card-based UI
-  - **Hierarchy**: Mission Group (🎯) → Division (💼) → Department (🏢) → Project (📁)
-  - **Features**: Badge counters, direct department navigation, smooth animations
-  - **Text Handling**: Multi-line wrapping (no truncation) using `break-words` + proper flex layout
-  - **Views**: Hierarchical (ADMIN/CHIEF/LEADER) and flat (MEMBER/HEAD/USER)
-  - **File**: `src/components/navigation/workspace-navigation.tsx` (360 lines)
+- `src/lib/api-client.ts` - Axios-based API client with Bearer token injection
+- `src/lib/use-sync-mutation.ts` - Custom React Query mutation hook with sync animation
+- `src/hooks/use-projects.ts` - Project data fetching and mutations
+- `src/hooks/use-tasks.ts` - Task data fetching and mutations (13 mutations)
+- `src/hooks/use-workspace.ts` - Workspace hierarchy data fetching
+- `src/hooks/use-reports.ts` - Reports analytics data and statistics
+- `src/hooks/use-dashboard.ts` - Dashboard widgets data and checklist mutations
+- `src/hooks/use-users.ts` - User management CRUD operations
+- `src/hooks/use-organization.ts` - Organization hierarchy fetching
+- `src/hooks/use-notifications.ts` - Notification center data
+- `src/hooks/use-department-tasks.ts` - Department-wide task view data
+- `src/hooks/use-projects-list.ts` - Projects list with filters and pagination
+- `src/stores/use-sync-store.ts` - Sync animation control
+- `src/stores/use-ui-store.ts` - Modals and panels control
+- `src/stores/use-navigation-store.ts` - Navigation state management
 
-- **Breadcrumb**: Interactive multi-level breadcrumb with popover selectors
-  - **Displays**: Full path from Mission Group → Division → Department → Project
-  - **Interactive Navigation**: ChevronRight (`>`) buttons open popovers for:
-    - After Mission Group → Select Division
-    - After Division → Select Department
-    - After Department → Select Project
-  - **Features**:
-    - Clickable breadcrumb items for navigation back to parent levels
-    - Search functionality in all popover selectors
-    - Auto-populates from workspace data and navigation store
-    - Clean UI (text-only, no icons or status badges in popover)
-  - **Integration**: Uses `useNavigationStore` and `useWorkspace` hook
-  - **Files**:
-    - `src/components/navigation/breadcrumb.tsx` (340+ lines)
-    - `src/components/layout/department-toolbar.tsx` (passes workspace + projects)
-    - `src/components/layout/project-toolbar.tsx` (passes workspace + projects)
+### Configuration
 
-**Project Management Components:** ✨ **COMPLETE 2025-10-24**
+- `prisma/schema.prisma` - Database schema (21 tables)
+- `next.config.js` - Custom Prisma client path alias
+- `.env` - Environment variables (see below)
 
-- **Project Management Page**: Full project list/management interface
-  - **Route**: `/projects` (enabled in sidebar)
-  - **Status**: ✅ Complete (Phases 1-4 + Modals)
-  - **Features**:
-    - Hierarchical cascade filters (Mission Group → Division → Department)
-    - Real-time search with 300ms debounce
-    - Client-side sorting by Name/Owner/Phase (asc/desc)
-    - Client-side pagination (10/25/50/100 items per page)
-    - Fixed table header - stays visible while scrolling
-    - Scrollable content area for large datasets
-    - Permission-based access (ADMIN/CHIEF/LEADER/HEAD only)
-    - Permission-based actions (Edit for all, Delete for ADMIN/CHIEF)
-    - Dark mode support with proper color schemes
-    - Phase badges with color coding (blue/yellow/orange/green)
-    - Progress bars with percentage display
-    - Responsive layout with proper flex sizing
-  - **Files Created (13)**:
-    - `src/app/(dashboard)/projects/` - Page, loading, error
-    - `src/components/projects/` - 5 components (view, filter, table, row, pagination)
-    - `src/hooks/use-projects-list.ts` - React Query hook
-    - `src/lib/project-utils.ts` - 9 utility functions
-    - `src/types/project.ts` - TypeScript interfaces
-  - **Documentation**: `PROJECT_MANAGEMENT_PAGE_COMPLETE.md` (430+ lines)
-
-- **Create Project Modal**: Side panel for creating new projects
-  - **File**: `src/components/modals/create-project-modal.tsx` (772 lines)
-  - **Status**: ✅ Complete
-  - **Features**:
-    - Organization hierarchy selectors (MG → Div → Dept, 3-column cascade)
-    - Hospital Mission → Action Plan (2-column cascade)
-    - Dynamic Phases management (3 default: วางแผน, ดำเนินงาน, ประเมินผล)
-    - Dynamic Statuses management (3 default with exact GAS colors)
-    - Form validation with React Hook Form + Zod
-    - Color picker for status colors (20 presets)
-    - Side panel animation (same as TaskPanel)
-    - API integration with `POST /api/projects`
-  - **Integration**: Registered in UI store, imported in dashboard layout
-
-- **Edit Project Modal**: Side panel for editing project details
-  - **File**: `src/components/modals/edit-project-modal.tsx` (508 lines)
-  - **Status**: ✅ Complete
-  - **Features**:
-    - Edit description
-    - Edit phase dates (start/end)
-    - Edit status colors
-    - Read-only fields: name, department, division, mission group, phase names, status names
-    - Form validation with React Hook Form
-    - Color picker for status colors
-    - Side panel animation
-    - API integration with `PATCH /api/projects/:id/edit-details`
-  - **Integration**: Registered in UI store, imported in ProjectsView component
-
-- **Delete Project Confirmation**: Complete implementation
-  - **Hook**: `useDeleteProject()` in `src/hooks/use-projects.ts`
-  - **Status**: ✅ Complete
-  - **Features**:
-    - AlertDialog with confirmation message
-    - Shows what will be deleted (tasks count, statuses, phases, etc.)
-    - Warning message: "การกระทำนี้ไม่สามารถย้อนกลับได้"
-    - Loading state during deletion (spinner icon)
-    - Toast notifications (success/error)
-    - Specific error handling for projects with tasks
-    - Permission check (ADMIN/CHIEF only)
-  - **Implementation**: Updated `src/components/projects/project-row.tsx`
-
-**Department Tasks View:** ✨ **COMPLETE 2025-10-23**
-
-- **DepartmentToolbar**: Toolbar component for department tasks view
-  - **Layout**: Breadcrumb + Title + Create Task Button
-  - **Data Loading**: Uses `useWorkspace()` hook to fetch hierarchical data
-  - **Projects Extraction**: Flattens workspace hierarchy to get all projects for breadcrumb selector
-  - **Project Pass-through**: Filters projects by current department and passes to both Breadcrumb and CreateTaskButton (simple pattern)
-  - **File**: `src/components/layout/department-toolbar.tsx`
-
-- **Department Tasks View**: Full department-level task management interface
-  - **Route**: `/department/tasks?departmentId=DEPT-XXX` (uses URL query parameter)
-  - **Status**: ✅ Complete with optimistic updates and project grouping
-  - **Features**:
-    - Interactive breadcrumb navigation (Mission Group > Division > Department > Project)
-    - URL-based navigation (`?departmentId=`) for proper state management
-    - Project grouping with expandable cards (collapsible sections)
-    - Pinned tasks section at top
-    - Task filtering and sorting (6 fields)
-    - Bulk actions support
-    - Task counts and statistics per project
-    - Consistent UI sizing (h-8 for all selectors)
-    - Optimistic updates for all interactions
-    - All projects shown (empty projects collapsed by default, not hidden)
-  - **Data Source**:
-    - Uses `useDepartmentTasks()` hook
-    - API: `GET /api/departments/[departmentId]/tasks` (includes missionGroup data)
-  - **Navigation Store Population**: Auto-populates breadcrumb with department hierarchy
-  - **CreateTaskModal Integration**: Modal receives pre-filtered projects from DepartmentToolbar (matches breadcrumb projects)
-  - **Files**:
-    - `src/app/(dashboard)/department/tasks/page.tsx` - Main page (reads departmentId from URL)
-    - `src/components/views/department-tasks/` - View components
-    - `src/components/layout/department-toolbar.tsx` - Toolbar with project filtering
-    - `src/hooks/use-department-tasks.ts` - Data fetching hook
-
-**Reports Dashboard:** ✨ **COMPLETE 2025-10-26**
-
-- **Route**: `/reports` (accessible to all roles except USER)
-- **Purpose**: Analytics and reporting page with comprehensive task statistics and visualizations
-- **Status**: ✅ Complete with permission-based access, fiscal year calculation, and ADMIN global access
-
-**Key Features**:
-
-1. **Statistics Cards** (4 cards):
-   - ยังไม่มอบหมาย (Unassigned): Tasks with no assignees
-   - กำลังดำเนินการ (In Progress): Tasks with IN_PROGRESS status type
-   - เสร็จสิ้น (Completed): Tasks with DONE status type
-   - เกินกำหนด (Overdue): Tasks past due date (excluding completed)
-   - Each card has icon, color scheme, and dark mode support
-
-2. **Charts** (3 Chart.js visualizations):
-   - **Pie Chart**: Distribution by status type (Not Started / In Progress / Done)
-   - **Bar Chart**: Workload by assignee (vertical bars, sortable)
-   - **Doughnut Chart**: Task distribution by assignee
-   - All charts support dark mode with proper color schemes
-   - Legend font size: 14px (increased from default)
-
-3. **Sortable Table**:
-   - Columns: Assignee (with profile picture), Not Started, In Progress, Done, Total, Overdue
-   - Profile pictures with Avatar component (fallback initials)
-   - Thai locale string comparison for sorting
-   - Unassigned tasks shown in separate row
-   - Click column headers to sort
-
-4. **Advanced Filters**:
-   - **Date Range**: Start/End date with Thai Buddhist Era calendar popover
-   - **Fiscal Year Default**: Oct 1 - Sep 30 (Thai fiscal year)
-   - **Organization Cascade**: Mission Group → Division → Department
-   - **Real-time Filtering**: 300ms debounce on filter changes
-   - Filter toolbar background matches navbar (bg-card)
-
-**Technical Implementation**:
-
-- **API Endpoint**: `GET /api/reports/tasks` (345 lines)
-  - **Permission-based filtering**: Uses `getUserAccessibleScope()` to filter data by role
-  - **ADMIN access**: ADMIN users see ALL tasks across entire system (no department filtering)
-  - **Status type grouping**: Queries all statuses in projects (not just used statuses) to ensure IN_PROGRESS types are included
-  - **Date range validation**: Ensures startDate <= endDate
-  - **Soft delete aware**: Excludes deleted departments, projects, tasks (uses `deletedAt`/`dateDeleted`)
-  - **Aborted tasks excluded**: Filters out tasks with `closeType: 'ABORTED'`
-  - **Multi-assignee support**: Handles tasks with multiple assignees via `task_assignees` table
-
-- **React Query Hooks**: `src/hooks/use-reports.ts` (277 lines)
-  - `useReportData(filters)`: Fetches report data with 5-minute stale time
-  - `calculateReportStatistics(tasks, users)`: Client-side statistics calculation
-  - `getFiscalYearStartDate()`: Thai fiscal year calculation (Oct 1 - Sep 30)
-  - `formatDateForAPI(date)`: YYYY-MM-DD formatting
-
-- **Organization Hooks**: Extended `src/hooks/use-organization.ts`
-  - `useMissionGroups()`: Fetch all mission groups
-  - `useDivisions(missionGroupId?)`: Fetch divisions (optionally filtered)
-  - `useDepartments(divisionId?)`: Fetch departments (optionally filtered)
-
-**Components Created** (5 new files):
-
-1. **ReportToolbar** (`src/components/reports/report-toolbar.tsx` - 181 lines):
-   - Title, date pickers (DateInput with Calendar popover), cascade filters
-   - Background color matches navbar for consistency
-   - Thai Buddhist Era dates display (e.g., "21 ตุลาคม 2568")
-
-2. **StatisticsCards** (`src/components/reports/statistics-cards.tsx` - 75 lines):
-   - 4 summary cards with icons and colors
-   - Responsive grid layout (1/2/4 columns)
-
-3. **ReportsCharts** (`src/components/reports/reports-charts.tsx` - 220 lines):
-   - 3 Chart.js charts with Chart.js 4.5.1 + react-chartjs-2 5.3.0
-   - Dark mode detection and color adaptation
-   - Vertical bar chart (indexAxis: "x")
-   - Legend font size: 14px
-
-4. **ReportsTable** (`src/components/reports/reports-table.tsx` - 195 lines):
-   - Sortable table with profile pictures
-   - Avatar component with fallback initials
-   - User lookup map for O(1) access
-
-5. **Reports Page** (`src/app/(dashboard)/reports/page.tsx` - 175 lines):
-   - Main page with permission guard
-   - Filter state management
-   - Loading/error states
-   - Responsive layout
-
-**Files Modified**:
-
-- `src/components/layout/sidebar.tsx`: Enabled "รายงาน" menu (line 144-148)
-- `src/components/ui/date-picker-popover.tsx`: Enhanced DateInput to support custom height/text-size via className override
-- `package.json`: Added Chart.js dependencies (chart.js 4.5.1, react-chartjs-2 5.3.0)
-
-**Key Technical Decisions**:
-
-1. **Status Type Grouping**: Uses `STATUS.TYPE` (NOT_STARTED/IN_PROGRESS/DONE) instead of status names for cross-project comparison
-2. **ADMIN Global Access**: ADMIN users bypass department filtering to see all system data
-3. **All Statuses Included**: Query fetches ALL statuses in projects (not just used ones) to ensure type counts are accurate
-4. **Fiscal Year**: Thai fiscal year Oct 1 - Sep 30 (not calendar year)
-5. **Client-side Statistics**: Calculated on client to reduce server load (data already fetched)
-6. **Dark Mode Support**: All charts and components adapt to theme changes
-
-**Permission Matrix**:
-
-| Role | Access |
-|------|--------|
-| ADMIN | ✅ All tasks across entire system |
-| CHIEF | ✅ Tasks in their mission groups |
-| LEADER | ✅ Tasks in their divisions |
-| HEAD | ✅ Tasks in their departments |
-| MEMBER | ✅ Tasks in their departments |
-| USER | ❌ No access (sidebar hidden) |
-
-**Bug Fixes Applied**:
-
-1. ✅ Fixed field name errors (`dateDeleted` vs `deletedAt`, `dateCreated` vs `createdAt`)
-2. ✅ Fixed status query to include ALL statuses in projects (not just used ones)
-3. ✅ Fixed ADMIN access to bypass department filtering
-
-**Integration Points**:
-
-- Uses existing `getUserAccessibleScope()` from `src/lib/permissions.ts`
-- Reuses DateInput component from Create Project Modal
-- Follows established pattern for permission-based page access
-
-### Key Files to Know
-
-**Backend:**
-
-- `src/lib/auth.ts`: Session management, password hashing (SHA256+salt), token generation
-- `src/lib/permissions.ts`: ✅ **Complete permission system (621 lines)** - 11 functions for role-based access control, additionalRoles support, user management permissions, project permissions. See `TESTING_COMPLETE_2025-10-24.md` for details.
-- `src/lib/api-middleware.ts`: `withAuth()`, `withPermission()`, `withRole()` wrappers
-- `src/lib/api-response.ts`: Standard response format and error handling
-- `src/lib/db.ts`: Prisma client singleton
-
-**Frontend:**
-
-- `src/lib/api-client.ts`: Axios-based API client with Bearer token injection
-- `src/lib/use-sync-mutation.ts`: Custom React Query mutation hook with sync animation
-- `src/hooks/use-projects.ts`: Project data fetching and mutations
-- `src/hooks/use-tasks.ts`: Task data fetching and mutations (11 mutations)
-- `src/hooks/use-workspace.ts`: Workspace hierarchy data fetching (hierarchical/flat views)
-- `src/hooks/use-reports.ts`: Reports data fetching and statistics calculation ✨ **NEW 2025-10-26**
-- `src/hooks/use-organization.ts`: Organization hierarchy hooks (mission groups, divisions, departments) ✨ **EXTENDED 2025-10-26**
-- `src/hooks/use-persisted-filters.ts`: Filter state persistence with localStorage ✨ **NEW**
-- `src/stores/use-sync-store.ts`: Controls sync animation in footer
-- `src/stores/use-ui-store.ts`: Controls task panel and modals
-- `src/stores/use-navigation-store.ts`: Navigation state management (breadcrumb population) ✨ **NEW**
-- `src/components/navigation/workspace-navigation.tsx`: Workspace navigation with collapsible cards ✨ **NEW**
-- `src/components/navigation/breadcrumb.tsx`: Multi-level breadcrumb with project selector ✨ **NEW**
-- `src/components/views/common/task-filter-bar.tsx`: Shared filter bar component ✨ **NEW**
-- `src/components/views/common/filter-tasks.ts`: Centralized filtering logic ✨ **NEW**
-- `src/components/modals/create-project-modal.tsx`: Create project side panel (772 lines) ✨ **NEW**
-- `src/components/modals/edit-project-modal.tsx`: Edit project side panel (508 lines) ✨ **NEW**
-- `src/components/projects/projects-view.tsx`: Project management main view ✨ **NEW**
-- `src/hooks/use-projects-list.ts`: Projects list React Query hook ✨ **NEW**
-- `src/lib/project-utils.ts`: Project utility functions (9 functions) ✨ **NEW**
-
-**Configuration:**
-
-- `prisma/schema.prisma`: Database schema (21 tables)
-- `next.config.js`: Custom Prisma client path alias
-- `.env`: Database URL and environment variables (see below)
-
-**Environment Variables (.env):**
+### Environment Variables
 
 ```bash
+# Copy from example file and edit with your values:
+# cp .env.example .env
+
 # ===== REQUIRED =====
 DATABASE_URL="postgresql://user:password@host:port/database?schema=public"
-# Example: "postgresql://postgres:password@localhost:5432/projectflow?schema=public"
-# For render.com: "postgresql://username:password@hostname.region.render.com:5432/database_name"
 
 # ===== OPTIONAL - Development Only =====
-BYPASS_AUTH=true              # Skip authentication (fetches real user from database)
-BYPASS_USER_ID=admin001       # User ID for BYPASS_AUTH mode (default: user001 if not set)
-                              # Use admin001 for ADMIN role testing, user001 for LEADER role
-BYPASS_EMAIL=true             # Show email links in console instead of sending real emails
-PORT=3010                     # Dev server port (default: 3000, but 3010 recommended to avoid conflicts)
+BYPASS_AUTH=true              # Skip token validation but fetch REAL user from DB
+BYPASS_USER_ID=admin001       # User ID to fetch (user must exist in DB, default: user001)
+BYPASS_EMAIL=true             # Show email links in console instead of sending
+PORT=3010                     # Dev server port
 
 # ===== OPTIONAL - Production Email (Resend API) =====
-RESEND_API_KEY="re_..."              # Resend API key for email verification and password reset
-RESEND_FROM_EMAIL="noreply@..."      # Sender email address (must be verified domain)
-NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for email links (change for production)
+RESEND_API_KEY="re_..."              # Resend API key
+RESEND_FROM_EMAIL="noreply@..."      # Sender email
+NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for links
 ```
 
-⚠️ **PRODUCTION WARNING**:
+**⚠️ PRODUCTION WARNING**:
+- **CRITICAL**: Ensure `BYPASS_AUTH=false` and `BYPASS_EMAIL=false` in production
+- Never commit real API keys or credentials to version control
+- Use environment variable management service (Vercel, Railway, etc.)
 
-- **CRITICAL**: Ensure `BYPASS_AUTH=false` in production! Never deploy with auth bypass enabled.
-- **CRITICAL**: Ensure `BYPASS_EMAIL=false` in production! Always use real email service.
-- Never commit real API keys or database credentials to version control
-- Use environment variable management service (Vercel, Railway, etc.) for production secrets
+---
 
-### Password Reset Flow ✅ **COMPLETE 2025-10-23**
+## Common Workflows
 
-**Complete implementation with 2 pages + email system:**
+### Adding a New View (Board/Calendar/List Pattern)
 
-1. **Forgot Password Page** (`/forgot-password`):
-   - User enters email address
-   - Form validation (email format)
-   - System generates reset token (64-char hex, expires in 1 hour)
-   - Sends email with reset link (or shows in console if `BYPASS_EMAIL=true`)
-   - Success state with instructions
-   - Resend option available
-   - Link back to login page
+1. **Create page component** (`src/app/(dashboard)/[route]/page.tsx`):
+   ```typescript
+   export default function NewViewPage() {
+     return <NewViewComponent />;
+   }
+   ```
 
-2. **Reset Password Page** (`/reset-password?token=...`):
-   - **Token Validation:** Checks token validity and expiry on mount
-   - **Three States:**
-     - ❌ **Invalid Token:** Shows error with "Request new link" button
-     - 📝 **Valid Token:** Shows password reset form
-     - ✅ **Success:** Shows success message with auto-redirect to login
+2. **Create view component** (`src/components/views/new-view/index.tsx`):
+   ```typescript
+   import { useProject } from "@/hooks/use-projects";
+   import { useTasks } from "@/hooks/use-tasks";
 
-   - **Password Form Features:**
-     - **Popover Validation** (shows on focus, position: right):
-       - ✓ อย่างน้อย 8 ตัวอักษร
-       - ✓ มีตัวพิมพ์เล็กและใหญ่ (a-Z)
-       - ✓ มีตัวเลขอย่างน้อย 1 ตัว (0-9)
-       - ✓ มีอักขระพิเศษอย่างน้อย 1 ตัว (!@#$)
-     - **Password Strength Meter** (4 levels with colors):
-       - 🔴 อ่อนแอ (25%) - Red
-       - 🟠 พอใช้ (50%) - Orange
-       - 🟡 ดี (75%) - Yellow
-       - 🟢 ปลอดภัย (100%) - Green
-     - **Real-time Password Matching:**
-       - ✅ Green checkmark when passwords match
-       - ❌ Red cross when passwords don't match
-       - Text indicator below confirm field
-     - **Form Validation:** Zod schema with all password requirements
+   export function NewView() {
+     const { data: project } = useProject(projectId);
+     const { data: tasks } = useTasks(projectId);
 
-   - **UX Features:**
-     - Dark mode support
-     - Smooth animations (popover, strength bar)
-     - Loading states during submission
-     - Clear error messages
-     - Auto-redirect after 3 seconds on success
+     return (
+       <div className="h-full flex flex-col">
+         <ProjectToolbar /> {/* Reuse existing toolbar */}
+         {/* Your view implementation */}
+       </div>
+     );
+   }
+   ```
 
-3. **Email System:**
-   - **Development Mode** (`BYPASS_EMAIL=true`):
-     - Shows reset link in console with formatted output
-     - No actual email sent (for testing)
-   - **Production Mode:**
-     - Sends HTML email via Resend API
-     - Beautiful template with reset button
-     - 1-hour expiry notice
-     - Thai language content
+3. **Implement optimistic updates** (see `OPTIMISTIC_UPDATE_PATTERN.md`)
 
-**Files:**
+4. **Add loading/error states**:
+   ```typescript
+   if (isLoading) return <LoadingSkeleton />;
+   if (error) return <ErrorState error={error} />;
+   if (!data) return <EmptyState />;
+   ```
 
-- `src/app/(auth)/forgot-password/page.tsx` - Forgot password page (NEW)
-- `src/app/(auth)/reset-password/page.tsx` - Reset password page (REDESIGNED)
-- `src/app/api/auth/request-reset/route.ts` - Request reset API (UPDATED)
-- `src/app/api/auth/reset-password/route.ts` - Reset password API (existing)
-- `src/lib/email.ts` - Email functions with BYPASS_EMAIL mode (UPDATED)
+**Reference**: Board View, Calendar View, List View
 
-**API Endpoints:**
+### Adding a New API Endpoint
 
-- `POST /api/auth/request-reset` - Request password reset (send email)
-- `POST /api/auth/reset-password` - Reset password with token
+1. **Create route file** (`src/app/api/[resource]/route.ts`):
+   ```typescript
+   import { withAuth } from "@/lib/api-middleware";
+   import { successResponse, errorResponse } from "@/lib/api-response";
+   import { checkPermission } from "@/lib/permissions";
+   import { prisma } from "@/lib/db";
 
-**Security Features:**
+   async function handler(req: AuthenticatedRequest) {
+     const userId = req.session.userId;
 
-- Token stored in database (not hashed, but expires)
-- Token expires after 1 hour
-- All existing sessions invalidated after password reset
-- Token can only be used once (cleared after use)
-- Password requirements enforced (client + server)
+     // Check permissions
+     const hasAccess = await checkPermission(userId, "resource.read", { resourceId });
+     if (!hasAccess) return errorResponse("FORBIDDEN", "No access", 403);
 
-**Documentation:**
+     // Perform database operation
+     const data = await prisma.resource.findUnique({ where: { id } });
+     if (!data) return errorResponse("NOT_FOUND", "Not found", 404);
 
-- `PASSWORD_RESET_IMPLEMENTATION.md` - Complete implementation guide
-- `EMAIL_SETUP_GUIDE.md` - Email configuration and troubleshooting
+     return successResponse(data);
+   }
 
-### Error Handling
+   export const GET = withAuth(handler);
+   ```
 
-**API Errors:**
+2. **Add TypeScript types** (`src/types/index.ts`)
 
+3. **Create React Query hook** (`src/hooks/use-resource.ts`)
+
+**Reference**: Existing API routes in `src/app/api/`
+
+### Working with Task Closing
+
+Tasks can be closed with two types: `COMPLETED` or `ABORTED`.
+
+**API Endpoint**: `POST /api/tasks/:taskId/close`
+
+**Request Body**:
 ```typescript
-// Throw errors that will be caught by handleApiError()
-throw new ApiError("CUSTOM_CODE", "Error message", 400, { details });
+// Close as completed
+{
+  "type": "COMPLETED",  // Task finished successfully
+  "reason": null        // Optional for COMPLETED
+}
 
-// Or use predefined responses
-return ErrorResponses.unauthorized();
-return ErrorResponses.forbidden();
-return ErrorResponses.notFound("Resource name");
-return ErrorResponses.badRequest("Message");
+// Close as aborted
+{
+  "type": "ABORTED",    // Task cancelled/abandoned
+  "reason": "Reason for cancellation"  // Required for ABORTED
+}
 ```
 
-**Client Errors:**
-
+**Frontend Usage**:
 ```typescript
-// React Query automatically catches errors
-// Display errors in UI with appropriate messages
-mutation.mutate(data, {
-  onError: (error) => {
-    console.error("Operation failed:", error);
-    // TODO: Show error toast/alert to user (toast component not yet implemented)
-  },
+import { useCloseTask } from "@/hooks/use-tasks";
+
+const closeTaskMutation = useCloseTask(projectId);
+
+// Close task as completed
+closeTaskMutation.mutate({
+  taskId: "task001",
+  type: "COMPLETED",
+});
+
+// Close task as aborted (requires reason)
+closeTaskMutation.mutate({
+  taskId: "task002",
+  type: "ABORTED",
+  reason: "Requirements changed - no longer needed",
 });
 ```
 
-### Testing
+**Database Changes**:
+- Sets `task.isClosed = true`
+- Sets `task.closeType` to "COMPLETED" or "ABORTED"
+- Sets `task.closedAt` to current timestamp
+- Sets `task.closedBy` to current user ID
+- Creates history entry with type "TASK_CLOSED"
 
-**API Testing:**
+**UI Behavior**:
+- Closed tasks are filtered from default views (unless "Show Closed" enabled)
+- Closed tasks show with strikethrough in List View
+- Close button is disabled for already-closed tasks
+- Only task creator, assignees, or ADMIN can close tasks
 
-- Test suite in `tests/api/test-runner.js` (Node.js)
-- Test documentation in `tests/api/phase*-test.md` (6 phases)
-- Test data seeded via `prisma/seed.sql`
-- Current status: 20/26 tests passing (76.9%)
+**Note**: Close Task Modal is not yet implemented - currently using mutation directly.
 
-**Test Credentials:**
+### Testing Changes Locally
 
+```bash
+# 1. Start dev server
+PORT=3010 npm run dev
+
+# 2. Test with BYPASS_AUTH (development only)
+# Add to .env: BYPASS_AUTH=true
+curl http://localhost:3010/api/endpoint
+
+# 3. Check database state
+npm run prisma:studio
+
+# 4. Run automated tests
+npm test
 ```
-Email: admin@hospital.test
-Password: SecurePass123!
-User ID: user001
+
+### Common Test Scenarios
+
+**Test User Creation (ADMIN only)**:
+```bash
+curl -X POST http://localhost:3010/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newuser@example.com",
+    "titlePrefix": "นาย",
+    "firstName": "ทดสอบ",
+    "lastName": "ระบบ",
+    "password": "SecurePass123!",
+    "role": "MEMBER",
+    "departmentId": "DEPT-058"
+  }'
 ```
 
-**Running Tests:**
+**Test Multi-Assignee Update**:
+```bash
+curl -X PATCH http://localhost:3010/api/tasks/task001 \
+  -H "Content-Type: application/json" \
+  -d '{"assigneeUserIds":["user001","user002","user003"]}'
+```
 
-1. Ensure dev server is running on port 3010
-2. Database must be seeded with test data
-3. Run: `npm test`
+**Test Task Closing (Completed)**:
+```bash
+curl -X POST http://localhost:3010/api/tasks/task001/close \
+  -H "Content-Type: application/json" \
+  -d '{"type":"COMPLETED"}'
+```
+
+**Test Task Closing (Aborted)**:
+```bash
+curl -X POST http://localhost:3010/api/tasks/task002/close \
+  -H "Content-Type: application/json" \
+  -d '{"type":"ABORTED","reason":"Requirements changed"}'
+```
+
+**Test Project Board Performance**:
+```bash
+# Should return < 200ms with all tasks, statuses, and assignees
+curl -s -w "\nTime: %{time_total}s\n" \
+  http://localhost:3010/api/projects/proj001/board
+```
+
+**Test Batch Operations**:
+```bash
+curl -X POST http://localhost:3010/api/batch \
+  -H "Content-Type: application/json" \
+  -d '{
+    "operations": [
+      {"type":"UPDATE_TASK","taskId":"task001","data":{"priority":1}},
+      {"type":"UPDATE_TASK","taskId":"task002","data":{"priority":1}},
+      {"type":"ASSIGN_TASK","taskId":"task003","assigneeUserIds":["user001"]}
+    ]
+  }'
+```
+
+**Test Department Tasks (Role-based)**:
+```bash
+# LEADER sees division scope, HEAD sees department scope
+curl http://localhost:3010/api/departments/DEPT-058/tasks?view=grouped
+```
+
+---
+
+## Troubleshooting
+
+### Top 5 Common Mistakes
+
+1. **Forgetting `npm run prisma:generate` after schema changes**
+   - Symptom: TypeScript errors about missing Prisma types
+   - Fix: Always run `npm run prisma:generate` after editing `schema.prisma`
+
+2. **Using hard deletes instead of soft deletes**
+   - Symptom: Data permanently deleted
+   - Fix: Use `prisma.model.update({ data: { deletedAt: new Date() } })` NOT `.delete()`
+
+3. **Not using optimistic updates for interactive UI**
+   - Symptom: UI feels slow
+   - Fix: Read `OPTIMISTIC_UPDATE_PATTERN.md` and use `useSyncMutation`
+
+4. **Importing Prisma from wrong location**
+   - Symptom: `PrismaClient is not a constructor` error
+   - Fix: Use `import { prisma } from "@/lib/db"` NOT `from "@prisma/client"`
+
+5. **Deploying with BYPASS_AUTH enabled**
+   - Symptom: No authentication (CRITICAL SECURITY ISSUE)
+   - Fix: Always set `BYPASS_AUTH=false` in production
+
+### Server Won't Start
+
+**Symptom**: `Error: listen EADDRINUSE :::3000`
+
+**Solution**:
+```bash
+# Option 1: Use different port
+PORT=3010 npm run dev  # Unix/Mac
+set PORT=3010 && npm run dev  # Windows CMD
+$env:PORT=3010; npm run dev  # Windows PowerShell
+
+# Option 2: Find and kill process (Windows)
+netstat -ano | findstr :<PORT>  # Find PID
+taskkill /F /PID <PID>  # Kill process
+
+# Option 3: Kill process (Unix/Mac)
+lsof -ti:3010 | xargs kill -9
+```
+
+### Prisma Client Errors
+
+**Symptom**: `Cannot find module '@prisma/client'`
+
+**Solution**:
+```bash
+# Regenerate Prisma client
+npm run prisma:generate
+
+# If still fails, delete and regenerate
+rm -rf src/generated/prisma
+npm run prisma:generate
+```
+
+### Authentication Issues
+
+**Symptom**: `401 Unauthorized` on all requests
+
+**Solution**:
+```bash
+# Use bypass mode for development
+# Add to .env: BYPASS_AUTH=true
+
+# Or re-login to get fresh token
+curl -X POST http://localhost:3010/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@hospital.test","password":"SecurePass123!"}'
+```
+
+### Database Connection Issues
+
+**Symptom**: `Can't reach database server`
+
+**Solution**:
+```bash
+# 1. Check DATABASE_URL in .env
+# 2. Test connection
+npm run prisma:studio
+
+# 3. Push schema if empty
+npm run prisma:push
+
+# 4. Seed with test data
+npx prisma db execute --file ./prisma/seed.sql --schema ./prisma/schema.prisma
+```
+
+### Hot Reload Not Working
+
+**Solution**:
+```bash
+# 1. Hard refresh browser (Ctrl+Shift+R)
+
+# 2. Clear Next.js cache
+rm -rf .next
+npm run dev
+
+# 3. If WSL, check file watchers
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+### React Hooks Order Errors
+
+**Symptom**: `Rendered more hooks than during the previous render` or hooks order errors
+
+**Solution**:
+```typescript
+// ❌ WRONG - Conditional hook call
+if (condition) {
+  const data = useQuery(...);
+}
+
+// ✅ CORRECT - Call hook unconditionally
+const data = useQuery(...);
+if (condition && data) {
+  // Use data
+}
+```
+
+**Common causes**:
+- Calling hooks inside conditions
+- Calling hooks inside loops
+- Calling hooks after early returns
+- Changing the order of hook calls between renders
+
+**Fix**: Always call hooks in the same order on every render. Move conditions inside the hook or use the hook's built-in options.
+
+### Webpack/Build Cache Errors
+
+**Symptom**:
+- `TypeError: __webpack_modules__[moduleId] is not a function`
+- `timeout of 30000ms exceeded` when navigating to pages
+- `ENOENT: no such file or directory, open '.next/routes-manifest.json'`
+- React Client Manifest errors
+
+**Solution**:
+```bash
+# 1. Kill the dev server
+# Windows:
+taskkill /F /PID <PID>
+
+# Unix/Mac:
+kill -9 <PID>
+
+# 2. Delete .next cache completely
+rm -rf .next  # Unix/Mac/Git Bash
+rd /s /q .next  # Windows CMD
+
+# 3. Restart dev server
+PORT=3010 npm run dev
+```
+
+**Root Cause**: Next.js webpack cache corruption, often happens after:
+- Multiple rapid code changes
+- Interrupted builds
+- File system issues
+- Module resolution errors
+
+**Prevention**: If you make significant changes to multiple files, consider clearing cache before restart.
+
+---
+
+## Quick Start for New Claude Instances
+
+### ⚠️ Critical Information
+
+**PROJECT STATUS**:
+- ✅ Backend: 100% Complete (78+ API endpoints)
+- 🔄 Frontend: ~68% Complete (44+/55+ components)
+- ❌ **NOT READY FOR DEPLOYMENT** - Active development
+- 🎯 Estimated completion: 2025-12-05 (5 weeks remaining)
+
+**KNOWN CRITICAL BUGS**: None (all resolved as of 2025-10-26)
+
+### First Steps (5 minutes)
+
+1. **Read this Quick Start section** (you're doing it now!)
+2. **Check "Current Priority"** section for what to work on
+3. **Review "Key Files to Know"** for essential files
+
+### What You're Being Asked To Do
+
+**If implementing a new feature**:
+1. Check if design exists in documentation files (see Documentation Index)
+2. Follow "Common Workflows" patterns
+3. Use optimistic updates for interactive UI (see OPTIMISTIC_UPDATE_PATTERN.md)
+4. Reference existing views for consistency
+5. Check recently completed features for similar patterns
+
+**If fixing a bug**:
+1. Check "Troubleshooting" section first
+2. Look for recent `*_BUG_FIX*.md` or `*_COMPLETE.md` files
+3. Use `git log --oneline --since="7 days ago"` to see recent changes
+4. Check if issue is webpack cache-related (see Troubleshooting)
+5. Read related context `.md` files
+
+**If debugging an issue**:
+1. Check recent .md files in project root (sorted by date in git status)
+2. Review `*_COMPLETE.md` files for implementation details
+3. Check `*_BUG_FIX*.md` files for known issues and solutions
+4. Use git blame to identify recent changes to problematic files
+5. Check CLAUDE.md version number for context (currently v2.13.0)
+6. Clear Next.js cache if experiencing module resolution errors
+
+**If adding an API endpoint**:
+1. Follow API endpoint pattern in "Common Workflows"
+2. Use `withAuth()` middleware for authentication
+3. Check permissions with `checkPermission()` or `canManageTargetUser()`
+4. Use soft deletes (update with deletedAt, never .delete())
+5. Return data using successResponse() / errorResponse()
+6. Add TypeScript types to src/types/
+7. Create corresponding React Query hook in src/hooks/
+
+**If asked about the codebase**:
+1. Check CLAUDE.md (this file) for overview and current status
+2. Check `PROJECT_STATUS.md` for detailed progress (may be outdated)
+3. Check documentation files (see "Documentation Index" below)
+4. Read Prisma schema for database structure
+5. Look at `old_project/` for business logic reference (not implementation)
+
+### Key Things to Remember
+
+1. **NOT production-ready** - Frontend ~68% complete
+2. **Port 3010** - Dev server runs here (not 3000)
+3. **BYPASS_AUTH=true** - Use in `.env` for testing
+4. **Always run `npm run prisma:generate`** after schema changes
+5. **Optimistic updates everywhere** - See `OPTIMISTIC_UPDATE_PATTERN.md`
+6. **Thai terminology matters** - Use correct terms (หน่วยงาน not แผนก)
+7. **Soft deletes only** - Never use `.delete()`
+8. **Multi-assignee system** - Use `assigneeUserIds` array, not singular `assigneeUserId`
+9. **Navigation components** - Breadcrumb and workspace navigation (2025-10-23)
+10. **Use `prisma.history`** NOT `prisma.activityLog`
+
+### Most Important Files
+
+**Backend**: `src/lib/auth.ts`, `src/lib/permissions.ts`, `src/lib/api-middleware.ts`
+**Frontend**: `src/hooks/use-*.ts`, `src/stores/use-*-store.ts`, `OPTIMISTIC_UPDATE_PATTERN.md`
+**Understanding**: `PROJECT_STATUS.md`, `migration_plan/`, Prisma schema
+
+### When In Doubt
+
+1. Look for existing patterns (78 API endpoints, multiple complete views)
+2. Read the relevant `.md` file (excellent documentation)
+3. Check GAS implementation (`old_project/` folder)
+4. Ask the user (better to clarify than assume)
+
+---
 
 ## Important Notes
 
@@ -925,10 +861,10 @@ await prisma.task.update({
 
 ### Prisma Client Location
 
-The Prisma client is generated to a custom location. After schema changes:
+The Prisma client is generated to a custom location:
 
 ```bash
-npm run prisma:generate  # Always run this after schema changes
+npm run prisma:generate  # Always run after schema changes
 ```
 
 ### Date Handling
@@ -938,414 +874,169 @@ npm run prisma:generate  # Always run this after schema changes
 - **API Input**: Accept ISO strings, parse with `new Date()`
 - **Display**: Use `date-fns` for formatting (Thai locale supported)
 
-### Common Pitfalls
-
-1. **Always run `npm run prisma:generate` after schema changes** - The custom Prisma client location means you must regenerate
-2. **Check port 3010** - Dev server may not run on default port 3000 (conflict with other apps)
-3. **Use soft deletes** - Never use `.delete()`, always use `.update()` with `deletedAt`/`dateDeleted`
-4. **Import Prisma correctly** - Always use `import { prisma } from "@/lib/db"` (not from @prisma/client)
-5. **Optimistic updates everywhere** - All interactive UI must use the optimistic update pattern (see OPTIMISTIC_UPDATE_PATTERN.md)
-6. **Navigation state management** - Use `useNavigationStore` for breadcrumb state (don't rely on URL only)
-7. **BYPASS_AUTH for testing** - Set `BYPASS_AUTH=true` in `.env` to skip authentication during development
-8. **Use `prisma.history` NOT `prisma.activityLog`** - The model is called `History` in the schema, not `ActivityLog`
-9. **Multi-assignee system** - Use `assigneeUserIds` array in API calls, not singular `assigneeUserId` (legacy field kept for backward compatibility but avoid using it for new code)
-
----
-
-## ⚠️ Top 5 Common Mistakes (Quick Reference)
-
-When working on this codebase, avoid these frequent errors:
-
-1. **Forgetting `npm run prisma:generate`** after schema changes
-   - Symptom: TypeScript errors about missing Prisma types
-   - Fix: Always run `npm run prisma:generate` after editing `schema.prisma`
-
-2. **Using hard deletes instead of soft deletes**
-   - Symptom: Data permanently deleted from database
-   - Fix: Use `prisma.model.update({ data: { deletedAt: new Date() } })` NOT `.delete()`
-
-3. **Not using optimistic updates for interactive UI**
-   - Symptom: UI feels slow and unresponsive
-   - Fix: Read `OPTIMISTIC_UPDATE_PATTERN.md` and use `useSyncMutation` for all mutations
-
-4. **Importing Prisma from wrong location**
-   - Symptom: `PrismaClient is not a constructor` error
-   - Fix: Use `import { prisma } from "@/lib/db"` NOT `import { PrismaClient } from "@prisma/client"`
-
-5. **Deploying with BYPASS_AUTH enabled**
-   - Symptom: Production app has no authentication (CRITICAL SECURITY ISSUE)
-   - Fix: Always set `BYPASS_AUTH=false` in production environment variables
-
-**Pro Tip**: If you encounter an error, check this list first before diving into debugging!
-
-## 🔧 Common Workflows
-
-### Adding a New View (Board/Calendar/List Pattern)
-
-When adding a new view component, follow this established pattern:
-
-1. **Create the page component** (`src/app/(dashboard)/[route]/page.tsx`):
-
-   ```typescript
-   // Minimal page that renders view component
-   export default function NewViewPage() {
-     return <NewViewComponent />;
-   }
-   ```
-
-2. **Create the view component** (`src/components/views/new-view/new-view.tsx`):
-
-   ```typescript
-   import { useProject } from "@/hooks/use-projects";
-   import { useTasks } from "@/hooks/use-tasks";
-
-   export function NewView() {
-     const { data: project } = useProject(projectId);
-     const { data: tasks } = useTasks(projectId);
-
-     return (
-       <div className="h-full flex flex-col">
-         <ProjectToolbar /> {/* Reuse existing toolbar */}
-         {/* Your view implementation */}
-       </div>
-     );
-   }
-   ```
-
-3. **Implement optimistic updates** for all interactions:
-
-   ```typescript
-   import { useSyncMutation } from "@/lib/use-sync-mutation";
-
-   const updateMutation = useSyncMutation({
-     mutationFn: ({ id, data }) => api.patch(`/api/tasks/${id}`, data),
-     onMutate: async ({ id, data }) => {
-       // Cancel outgoing refetches
-       await queryClient.cancelQueries({ queryKey: taskKeys.detail(id) });
-
-       // Save previous data for rollback
-       const previousData = queryClient.getQueryData(taskKeys.detail(id));
-
-       // Optimistically update cache
-       queryClient.setQueryData(taskKeys.detail(id), (old: any) => ({
-         ...old,
-         ...data,
-       }));
-
-       return { previousData };
-     },
-     onError: (error, { id }, context) => {
-       // Rollback on error
-       if (context?.previousData) {
-         queryClient.setQueryData(taskKeys.detail(id), context.previousData);
-       }
-     },
-     onSettled: () => {
-       // Refetch to ensure consistency
-       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-     },
-   });
-   ```
-
-4. **Add loading and error states**:
-   ```typescript
-   if (isLoading) return <LoadingSkeleton />;
-   if (error) return <ErrorState error={error} />;
-   if (!data) return <EmptyState />;
-   ```
-
-**Reference implementations**: Board View, Calendar View, List View
-
----
-
-### Adding a New API Endpoint
-
-All API endpoints follow the same pattern using middleware:
-
-1. **Create route file** (`src/app/api/[resource]/route.ts`):
-
-   ```typescript
-   import { withAuth } from "@/lib/api-middleware";
-   import { successResponse, errorResponse } from "@/lib/api-response";
-   import { checkPermission } from "@/lib/permissions";
-   import { prisma } from "@/lib/db";
-
-   async function handler(req: AuthenticatedRequest) {
-     const userId = req.session.userId;
-
-     // 1. Check permissions
-     const hasAccess = await checkPermission(userId, "resource.read", {
-       resourceId: req.params.id,
-     });
-     if (!hasAccess) {
-       return errorResponse("FORBIDDEN", "No access to resource", 403);
-     }
-
-     // 2. Perform database operation
-     const data = await prisma.resource.findUnique({
-       where: { id: req.params.id },
-     });
-
-     if (!data) {
-       return errorResponse("NOT_FOUND", "Resource not found", 404);
-     }
-
-     // 3. Return success response
-     return successResponse(data);
-   }
-
-   export const GET = withAuth(handler);
-   ```
-
-2. **Add TypeScript types** (`src/types/index.ts`):
-
-   ```typescript
-   export interface Resource {
-     id: string;
-     name: string;
-     // ... other fields
-   }
-   ```
-
-3. **Create React Query hook** (`src/hooks/use-resource.ts`):
-
-   ```typescript
-   import { useQuery } from "@tanstack/react-query";
-   import { api } from "@/lib/api-client";
-
-   export const resourceKeys = {
-     all: ["resources"] as const,
-     detail: (id: string) => [...resourceKeys.all, "detail", id] as const,
-   };
-
-   export function useResource(id: string) {
-     return useQuery({
-       queryKey: resourceKeys.detail(id),
-       queryFn: async () => {
-         const response = await api.get(`/api/resources/${id}`);
-         return response.data.resource;
-       },
-       enabled: !!id,
-     });
-   }
-   ```
-
-**Reference**: Existing API routes in `src/app/api/`
-
----
-
-### Testing Changes Locally
-
-1. **Start development server**:
-
-   ```bash
-   PORT=3010 npm run dev
-   ```
-
-2. **Test API endpoints** (use test credentials):
-
-   ```bash
-   # Login first to get session token
-   curl -X POST http://localhost:3010/api/auth/login \
-     -H "Content-Type: application/json" \
-     -d '{"email":"admin@hospital.test","password":"SecurePass123!"}'
-
-   # Use token for authenticated requests
-   curl http://localhost:3010/api/endpoint \
-     -H "Authorization: Bearer {token}"
-   ```
-
-3. **Test with BYPASS_AUTH** (development only):
-
-   ```bash
-   # Add to .env
-   BYPASS_AUTH=true
-
-   # Now all API requests auto-authenticate as user001
-   curl http://localhost:3010/api/endpoint
-   ```
-
-4. **Check database state**:
-
-   ```bash
-   npm run prisma:studio
-   ```
-
-5. **Run automated tests**:
-   ```bash
-   npm test
-   ```
-
----
-
-### Troubleshooting Common Issues
-
-#### Server Won't Start
-
-**Symptom**: `Error: listen EADDRINUSE :::3000`
-
-**Solution**:
-
-```bash
-# Option 1: Use different port
-PORT=3010 npm run dev
-
-# Option 2: Kill process on port 3000 (Windows)
-taskkill /F /PID <PID>
-
-# Option 3: Kill process on port 3000 (Unix)
-kill -9 <PID>
-```
-
----
-
-#### Prisma Client Errors
-
-**Symptom**: `Cannot find module '@prisma/client'` or `PrismaClient is not a constructor`
-
-**Solution**:
-
-```bash
-# Regenerate Prisma client (REQUIRED after schema changes)
-npm run prisma:generate
-
-# If still fails, delete and regenerate
-rm -rf src/generated/prisma
-npm run prisma:generate
-```
-
----
-
-#### Authentication Issues
-
-**Symptom**: `401 Unauthorized` on all API requests
-
-**Solution**:
-
-```bash
-# Option 1: Use bypass mode for development
-# Add to .env:
-BYPASS_AUTH=true
-
-# Option 2: Check session token
-# Make sure you're sending the token:
-# Authorization: Bearer {sessionToken}
-
-# Option 3: Re-login to get fresh token
-curl -X POST http://localhost:3010/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@hospital.test","password":"SecurePass123!"}'
-```
-
----
-
-#### Database Connection Issues
-
-**Symptom**: `Can't reach database server` or `Connection timeout`
-
-**Solution**:
-
-```bash
-# 1. Check DATABASE_URL in .env
-# Should be: postgresql://user:password@host:port/database
-
-# 2. Test database connection
-npm run prisma:studio
-
-# 3. Push schema if database is empty
-npm run prisma:push
-
-# 4. Seed database with test data
-npx prisma db execute --file ./prisma/seed.sql --schema ./prisma/schema.prisma
-```
-
----
-
-#### Hot Reload Not Working
-
-**Symptom**: Changes don't appear in browser after editing files
-
-**Solution**:
-
-```bash
-# 1. Hard refresh browser (Ctrl+Shift+R or Cmd+Shift+R)
-
-# 2. Clear Next.js cache and restart
-rm -rf .next
-npm run dev
-
-# 3. If using WSL, check file watchers limit
-echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p
-```
-
----
-
-#### Type Errors After Prisma Schema Changes
-
-**Symptom**: TypeScript errors about missing/wrong types
-
-**Solution**:
-
-```bash
-# Always regenerate Prisma client after schema changes
-npm run prisma:generate
-
-# Restart TypeScript server in VS Code
-# Cmd+Shift+P > "TypeScript: Restart TS Server"
-```
-
----
-
-### Quick Reference: Environment Variables
-
-```bash
-# Required
-DATABASE_URL="postgresql://user:password@host:port/database"
-
-# Development shortcuts
-BYPASS_AUTH=true              # Skip authentication (auto user001 session)
-BYPASS_EMAIL=true             # Show email links in console
-PORT=3010                     # Dev server port
-
-# Production (email)
-RESEND_API_KEY="re_..."      # Resend API key
-RESEND_FROM_EMAIL="noreply@example.com"
-NEXT_PUBLIC_APP_URL="http://localhost:3010"
-```
-
 ### Migration Context
 
-This project is migrating from Google Apps Script. Some naming conventions and patterns are preserved for backward compatibility:
-
-- Field names like `dateDeleted` (instead of `deletedAt`) in some models (inconsistent usage)
+This project migrated from Google Apps Script. Preserved for backward compatibility:
+- Field names like `dateDeleted` (inconsistent with `deletedAt`)
 - Priority levels 1-4 (1 = Urgent, 2 = High, 3 = Normal, 4 = Low)
-- Color schemes matching the original GAS implementation
+- Color schemes matching GAS implementation
 - Thai language UI text
 
-### Performance Considerations
+---
 
-1. **Project Board Endpoint**: Critical path - must load in < 200ms
-   - Uses single query with all includes
-   - Returns calculated fields to avoid client-side computation
+## Migration from Google Apps Script
 
-2. **Batch Operations**: Use `/api/batch` endpoint for bulk updates
+This project is a complete rewrite from Google Apps Script (GAS) to Next.js. The `old_project/` folder contains the original codebase and documentation for reference.
+
+### What's in old_project/
+
+- **Original GAS codebase**: `.gs` files with legacy implementation
+- **GAS-specific documentation**: Architecture, cache systems, deployment guides
+- **UI screenshots**: For visual consistency reference
+- **Business logic documentation**: Detailed explanations of complex features
+
+### When to Reference old_project/
+
+**DO reference when**:
+- Understanding business logic for features not yet documented in Next.js version
+- Comparing UI/UX for visual consistency
+- Clarifying requirements or expected behavior
+- Finding original color schemes, Thai text, or formatting rules
+- Understanding complex calculations or algorithms
+
+**DON'T reference when**:
+- Looking for implementation patterns (use Next.js best practices instead)
+- Finding API structure (completely redesigned as REST)
+- Understanding database schema (completely redesigned with Prisma)
+
+### Key Migration Decisions
+
+**Preserved from GAS:**
+- Field naming conventions (e.g., `dateDeleted`, `dateCreated`)
+- Priority levels 1-4 (1=Urgent, 2=High, 3=Normal, 4=Low)
+- Thai language UI text and terminology
+- Color schemes for priorities, statuses, and themes
+- Business logic and calculation formulas
+- Organizational hierarchy structure
+
+**Modernized in Next.js:**
+- REST API architecture (vs. GAS server functions)
+- PostgreSQL with Prisma (vs. Google Sheets)
+- TypeScript with full type safety (vs. JavaScript)
+- React Query for state management (vs. manual caching)
+- Optimistic UI updates (vs. full page reloads)
+- Session-based authentication (vs. Google OAuth only)
+
+### Migration Progress
+
+See `migration_plan/` folder for detailed migration documentation:
+- `00_MIGRATION_OVERVIEW.md` - High-level migration strategy
+- `01_DATABASE_MIGRATION.md` - Database schema migration
+- `02_API_MIGRATION.md` - API endpoints migration (✅ Complete)
+- `03_FRONTEND_MIGRATION.md` - Frontend migration (🔄 ~68% complete)
+- `04_DEPLOYMENT_GUIDE.md` - Deployment strategy
+- `06_BUSINESS_LOGIC_GUIDE.md` - Business logic migration
+
+---
+
+## Documentation Index
+
+### Main Documentation
+- `README.md` - Project overview and quick start
+- `CLAUDE.md` - This file ⭐ **PRIMARY REFERENCE**
+- `PROJECT_STATUS.md` - Detailed status (⚠️ May be outdated - check CLAUDE.md for current status)
+
+### Frontend Development
+- `OPTIMISTIC_UPDATE_PATTERN.md` - Standard pattern for UI updates (600+ lines) ⭐ **MUST READ**
+- `DASHBOARD_UI_UX_REFINEMENT_COMPLETE.md` - Dashboard refinements summary (14 changes) ⭐ **NEW**
+- `SYNC_ANIMATION_SYSTEM.md` - Sync footer animation
+- `TASK_PANEL_V1.0_COMPLETE.md` - Task panel completion summary
+- `PROJECT_MANAGEMENT_IMPLEMENTATION_SUMMARY.md` - Project management
+- `CREATE_TASK_MODAL_IMPLEMENTATION_COMPLETE.md` - Create task modal
+- `USER_MANAGEMENT_PERMISSIONS_COMPLETE.md` - User permissions guide
+- `FULLNAME_SPLIT_MIGRATION_CONTEXT.md` - User name field migration (442 lines)
+- `WORKSPACE_NAVIGATION_REDESIGN.md` - Workspace navigation
+
+### Backend & API
+- `AUTHENTICATION_IMPLEMENTATION_COMPLETE.md` - Auth system summary
+- `PASSWORD_RESET_IMPLEMENTATION.md` - Password reset flow
+- `EMAIL_SETUP_GUIDE.md` - Email configuration
+- `MULTI_ASSIGNEE_IMPLEMENTATION.md` - Multi-assignee system ⭐ **IMPORTANT**
+- `ACTIVITYLOG_TO_HISTORY_MIGRATION.md` - History table migration context
+- `HYBRID_PROGRESS_CALCULATION.md` - Progress calculation algorithm
+- `NOTIFICATION_SYSTEM_IMPLEMENTATION.md` - Notification system details
+
+### Testing & Security
+- `DASHBOARD_TESTING_PLAN.md` - User Dashboard comprehensive test plan (110+ test cases) ⭐ **NEW**
+- `TESTING_COMPLETE_2025-10-24.md` - Permission system test report (1,200+ lines)
+- `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` - Security audit
+- `TESTING_SUMMARY.md` - Overall testing status
+- `SECURITY_REVIEW_2025-10-24.md` - Security review findings
+- `TEST_RESULTS_2025-10-24.md` - Detailed test execution results
+- `tests/api/phase*-test.md` - API test documentation (6 phases)
+
+### Migration Plans
+- `migration_plan/01_DATABASE_MIGRATION.md` - Database schema
+- `migration_plan/02_API_MIGRATION.md` - API endpoints
+- `migration_plan/03_FRONTEND_MIGRATION_COMPLETE.md` - Frontend components
+- `migration_plan/05_ROLLOUT_PLAN.md` - Deployment strategy
+
+### Feature Planning & Design
+- `NEXT_GOAL_DEPARTMENT_TASKS.md` - Department tasks (completed)
+- `DEPARTMENT_TASKS_VIEW_DESIGN.md` - Department tasks design
+- `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md` - Gantt chart plan (future)
+- `DEPARTMENT_TASKS_CUSTOM_GROUPING_DESIGN.md` - Custom grouping (future)
+- `EDIT_PROJECT_MODAL_IMPLEMENTATION_PLAN.md` - Edit project modal design
+
+### Recent Bug Fixes & Improvements (2025-10-24 to 2025-10-26)
+- `PROJECT_BOARD_PERFORMANCE_COMPLETE.md` - Project Board API optimization (25% faster) - Phase 4 FINAL ⭐ **NEW**
+- `REPORTS_PERFORMANCE_COMPLETE.md` - Reports API optimization (55% faster) - Phase 3 ⭐ **NEW**
+- `DEPARTMENT_TASKS_PERFORMANCE_COMPLETE.md` - Department Tasks API (65% faster) - Phase 2 ⭐ **NEW**
+- `DASHBOARD_PERFORMANCE_IMPROVEMENTS_COMPLETE.md` - Dashboard API optimization (72% faster) - Phase 1 ⭐ **NEW**
+- `APP_WIDE_PERFORMANCE_OPTIMIZATION_PLAN.md` - Complete roadmap (62 endpoints) ⭐ **NEW**
+- `DASHBOARD_PERFORMANCE_ANALYSIS.md` - Performance analysis & recommendations ⭐ **NEW**
+- `REPORTS_DASHBOARD_BUG_FIXES_2025-10-26.md` - Reports fixes (8 bugs resolved)
+- `NOTIFICATION_BUG_FIX.md` - Notification system fixes
+- `DELETE_CONFIRMATION_IMPLEMENTATION_COMPLETE.md` - Delete confirmation modal
+- `PRIORITY_1_IMPLEMENTATION_COMPLETE.md` - Priority 1 features completion
+- `PRIORITY_2_3_IMPLEMENTATION_COMPLETE.md` - Priority 2-3 features completion
+
+---
+
+## Performance Considerations
+
+### API Performance (All Critical Endpoints Optimized) ✅
+
+**Optimization Status**: All 4 phases complete (2025-10-26)
+- ✅ Phase 1: Dashboard API - 72% faster (11 parallel queries)
+- ✅ Phase 2: Department Tasks API - 65% faster (4 parallel queries)
+- ✅ Phase 3: Reports API - 55% faster (3 parallel queries)
+- ✅ Phase 4: Project Board API - 25% faster (3 parallel queries)
+
+**Average Improvement**: ~50% faster across critical endpoints
+
+1. **Project Board Endpoint** - ✅ **OPTIMIZED** (Phase 4)
+   - Parallelized 3 queries (currentUser + project + departmentUsers)
+   - Removed redundant email fields
+   - Response time: ~1s dev (expected ~400-450ms in production)
+
+2. **Batch Operations** - Use `/api/batch` for bulk updates
    - Supports up to 100 operations
    - 6-10x faster than individual requests
 
-3. **React Query Stale Time**: Set appropriately per data type
+3. **React Query Stale Time** - Set appropriately:
    - User data: 5 minutes (rarely changes)
    - Task data: 2 minutes (moderate change)
    - Notifications: 1 minute (frequent updates)
 
-4. **Optimistic Updates**: ALL interactive UI uses optimistic updates for instant feedback
-   - Task drag-and-drop: < 50ms response time
-   - Form field changes: instant visual update
+4. **Optimistic Updates** - ALL interactive UI uses optimistic updates
+   - Task drag-and-drop: < 50ms response
+   - Form changes: instant visual update
    - Automatic rollback on error
 
-### Seeding the Database
+---
 
-To seed the database with test data:
+## Seeding the Database
 
 ```bash
 # Option 1: SQL seed file (recommended)
@@ -1353,438 +1044,36 @@ npx prisma db execute --file ./prisma/seed.sql --schema ./prisma/schema.prisma
 
 # Option 2: Manual via Prisma Studio
 npm run prisma:studio
-# Then manually create test data
 ```
 
-**Note:** The TypeScript seed script (`prisma/seed.ts`) exists but may have compilation issues. Use SQL seed file for now.
-
-## Documentation
-
-Comprehensive documentation is available:
-
-**Main Documentation:**
-
-- `README.md`: Project overview and quick start
-- `PROJECT_STATUS.md`: Current progress and detailed status (MUST READ for current state)
-- `AUTHENTICATION_IMPLEMENTATION_COMPLETE.md`: Authentication system complete summary
-- `PASSWORD_RESET_IMPLEMENTATION.md`: Password reset flow implementation guide
-- `EMAIL_SETUP_GUIDE.md`: Email configuration and troubleshooting guide
-
-**Frontend Development:**
-
-- `OPTIMISTIC_UPDATE_PATTERN.md`: Standard pattern for UI updates (600+ lines, MUST READ)
-- `SYNC_ANIMATION_SYSTEM.md`: Sync footer animation system
-- `PROGRESS_PHASE2.1_BOARD_VIEW.md`: Board view implementation details
-- `PROGRESS_PHASE2.2_CALENDAR_VIEW.md`: Calendar view implementation details
-- `PROGRESS_PHASE2.3_LIST_VIEW.md`: List view implementation details
-- `TASK_PANEL_V1.0_COMPLETE.md`: Task panel completion summary
-- `PROJECT_MANAGEMENT_PAGE_COMPLETE.md`: Project management page implementation
-- `PROJECT_MANAGEMENT_IMPLEMENTATION_SUMMARY.md`: Project management summary
-- `CREATE_TASK_MODAL_IMPLEMENTATION_COMPLETE.md`: Create task modal implementation
-- `USER_MANAGEMENT_PERMISSIONS_COMPLETE.md`: Complete user management permissions guide (NEW)
-- `FULLNAME_SPLIT_MIGRATION_CONTEXT.md`: User name field migration guide (442 lines, NEW)
-- `CREATE_USER_MODAL_UI_IMPROVEMENTS.md`: User modal UI improvements
-- `USER_CREATION_ADMIN_ONLY_COMPLETE.md`: Admin-only user creation implementation
-- `TASK_PANEL_DEVELOPMENT_PLAN.md`: Original development plan
-- `TASK_PANEL_PROGRESS_PHASE1-3.md`: Development progress tracking
-- `TASK_PANEL_INTEGRATION_COMPLETE.md`: Integration details
-- `TASK_PANEL_TESTING_GUIDE.md`: Testing guide
-
-**Migration Plans:**
-
-- `migration_plan/01_DATABASE_MIGRATION.md`: Database schema and migration
-- `migration_plan/02_API_MIGRATION.md`: API endpoints and implementation
-- `migration_plan/03_FRONTEND_MIGRATION_COMPLETE.md`: Full frontend component breakdown
-- `migration_plan/05_ROLLOUT_PLAN.md`: Deployment and rollout strategy
-
-**API Testing & Security:**
-
-- `tests/api/phase1-test.md`: Authentication & User APIs
-- `tests/api/phase2-test.md`: Organization Structure APIs
-- `tests/api/phase3-test.md`: Projects & Statuses APIs
-- `tests/api/phase4-test.md`: Task Management APIs
-- `tests/api/phase5-test.md`: Notifications & Activities APIs
-- `tests/api/phase6-test.md`: Batch Operations & Optimization
-- `TESTING_SUMMARY.md`: Overall testing status
-- `TESTING_COMPLETE_2025-10-24.md`: Complete permission system test report (1,200+ lines, NEW)
-- `PERMISSION_SYSTEM_REVIEW_2025-10-24.md`: Comprehensive security audit (NEW)
-- `PRIORITY_1_IMPLEMENTATION_COMPLETE.md`: Additional roles implementation (1,000+ lines)
-- `PRIORITY_2_3_IMPLEMENTATION_COMPLETE.md`: User management permissions (800+ lines)
-
-**Future Features (Planning):**
-
-- `NEXT_GOAL_DEPARTMENT_TASKS.md`: Next implementation goal (Department Tasks View)
-- `DEPARTMENT_TASKS_VIEW_DESIGN.md`: Department tasks view design
-- `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md`: Gantt chart implementation plan
-- `DEPARTMENT_TASKS_CUSTOM_GROUPING_DESIGN.md`: Custom task grouping design
-- `DEPARTMENT_TASKS_DEPENDENCIES.md`: Task dependencies implementation
-
-## Migration from Google Apps Script
-
-When implementing features, reference the original GAS implementation to maintain consistency:
-
-- Color schemes (especially priority colors)
-- Permission logic and role hierarchy
-- Business logic for progress calculation
-- Notification types and triggers
-- Thai language text and formatting
-
-See `migration_plan/` directory for detailed migration documentation.
+**Note**: TypeScript seed script (`prisma/seed.ts`) exists but may have issues. Use SQL file.
 
 ---
 
-## 🚀 Quick Start for New Claude Instances
+## Deployment Checklist
 
-If you're a new Claude instance working on this project, start here:
-
-### ⚠️ Critical Information First
-
-**PROJECT STATUS:**
-
-- ✅ Backend: 100% Complete (78+ API endpoints, database, auth)
-- 🔄 Frontend: ~55% Complete (30+/55+ components done)
-- ❌ **NOT READY FOR DEPLOYMENT** - Still in active development
-- 🎯 Estimated completion: 2025-12-15 (6 weeks remaining)
-
-**KNOWN CRITICAL BUGS:**
-
-- ~~🔴 **Workspace API Additional Roles**~~ ✅ **FIXED 2025-10-24** - Full permission system implemented and tested (8/8 tests passing)
-
-### First, Understand the Context (5 minutes)
-
-1. **Read this section** (you're doing it now!)
-2. **Check "Next Steps"** section above for current priorities
-3. **Review "Known Issues"** section for bugs to avoid
-
-### Then, Check What You're Being Asked To Do
-
-**If asked to implement a new feature:**
-
-1. Check if design exists in `NEXT_GOAL_DEPARTMENT_TASKS.md` or other design docs
-2. Follow the "Common Workflows" section patterns
-3. Use optimistic updates for all interactive UI
-4. Reference existing views (Board/Calendar/List) for consistency
-
-**If asked to fix a bug:**
-
-1. Check "Known Issues" section - it might already be documented
-2. Check "Troubleshooting Common Issues" for quick fixes
-3. Read related `.md` files for context (e.g., `WORKSPACE_API_ADDITIONAL_ROLES_ISSUE.md`)
-
-**If asked to add an API endpoint:**
-
-1. Follow the API endpoint pattern in "Common Workflows"
-2. Use `withAuth()` middleware
-3. Check permissions with `checkPermission()`
-4. Return standardized responses (`successResponse()`, `errorResponse()`)
-
-**If asked about the codebase:**
-
-1. Check `PROJECT_STATUS.md` for current progress
-2. Check documentation files listed in "Documentation" section
-3. Read the Prisma schema (`prisma/schema.prisma`) for database structure
-
-### Key Things to Remember
-
-1. **⚠️ NOT production-ready** - Frontend ~55% complete, don't attempt deployment
-2. ~~**🔴 Critical bug exists**~~ ✅ **Permission System COMPLETE** (2025-10-24) - additionalRoles fully implemented and tested
-3. **Port 3010** - Dev server runs here (not 3000)
-4. **BYPASS_AUTH=true** - Use this in `.env` for quick testing
-5. **Always run `npm run prisma:generate`** after schema changes
-6. **Optimistic updates everywhere** - See `OPTIMISTIC_UPDATE_PATTERN.md`
-7. **Thai terminology matters** - Use correct terms (หน่วยงาน not แผนก)
-8. **Soft deletes only** - Never use `.delete()`, use `.update()` with `deletedAt`
-9. **Navigation components are NEW** - Breadcrumb and workspace navigation added on 2025-10-23
-10. **Department Tasks is COMPLETE** - Full implementation with optimistic updates (completed 2025-10-23)
-11. **Multi-assignee system** - Tasks support multiple assignees via `task_assignees` table (breaking change from single assignee)
-
-### Most Important Files to Know
-
-**For Backend Work:**
-
-- `src/lib/auth.ts` - Authentication
-- `src/lib/permissions.ts` - Authorization
-- `src/lib/api-middleware.ts` - Middleware
-- `src/app/api/*/route.ts` - API endpoints
-
-**For Frontend Work:**
-
-- `src/hooks/use-*.ts` - React Query hooks
-- `src/stores/use-*-store.ts` - Zustand stores
-- `src/components/views/*` - View components
-- `OPTIMISTIC_UPDATE_PATTERN.md` - Critical pattern to follow
-
-**For Understanding the Project:**
-
-- `PROJECT_STATUS.md` - Current progress
-- `NEXT_GOAL_DEPARTMENT_TASKS.md` - Next major feature
-- `migration_plan/` - Architecture decisions
-
-### When In Doubt
-
-1. **Look for existing patterns** - We have 74 API endpoints and 3 complete project views
-2. **Read the relevant `.md` file** - We have excellent documentation
-3. **Check GAS implementation** - `old_project/` folder has original code
-4. **Ask the user** - Better to clarify than assume
-
----
-
-## 📝 Recent Changes (Changelog)
-
-### 2025-10-25 (Latest) ✨ **NEW**
-
-- ✅ **User Management Permissions Complete** - Complete role-based permission system for user management
-  - **Permission Matrix**:
-    - **ADMIN**: Can VIEW all users (including other ADMINs), can EDIT/DELETE only non-ADMIN users
-    - **HEAD/LEADER/CHIEF**: Can only toggle status (no Actions column, no Edit Modal access)
-    - **MEMBER/USER**: No access to Users page (sidebar hidden, access denied screen)
-  - **Frontend Protection**:
-    - Page-level access guard (`src/components/users/users-view.tsx`)
-    - Sidebar navigation filtering by role (`src/components/layout/sidebar.tsx`)
-    - Row-level permission checks (`src/components/users/user-row.tsx`)
-    - Table header conditional rendering (`src/components/users/users-table.tsx`)
-  - **Features**:
-    - requiredRoles array for menu items
-    - canEdit, canDelete, showActions permission checks
-    - Access denied screen with ShieldAlert icon
-    - Actions column hidden for non-ADMIN roles
-  - **Files Modified**: 4 frontend files (users-view, user-row, users-table, sidebar)
-  - **Documentation**: `USER_MANAGEMENT_PERMISSIONS_COMPLETE.md` (comprehensive guide)
-  - **Testing**: Verified with all 6 role types (ADMIN, CHIEF, LEADER, HEAD, MEMBER, USER)
-  - **Result**: Production-ready permission system with multi-layer protection
-
-- ✅ **fullName Split Migration Complete** - Complete database restructuring for user names
-  - **Migration Scope**: 10 files modified (5 backend + 5 frontend)
-  - **Database Changes**:
-    - Added 3 new fields to User model: `titlePrefix` (optional), `firstName` (required), `lastName` (required)
-    - Kept `fullName` field for backward compatibility (auto-generated)
-    - Migration script successfully migrated 7/7 existing users
-  - **Backend Updates**:
-    - `prisma/schema.prisma` - Added new fields
-    - `scripts/migrate-fullname-to-parts.ts` - Migration script (NEW)
-    - `src/lib/user-utils.ts` - Helper functions: `formatFullName()`, `isValidTitlePrefix()`, `getCommonTitlePrefixes()` (NEW)
-    - `src/app/api/admin/users/route.ts` - Updated to use new fields + auto-generate fullName
-    - `src/app/api/auth/register/route.ts` - Updated to use new fields + **FIXED critical bug** (department relation)
-  - **Frontend Updates**:
-    - `src/types/user.ts` - Updated User interface
-    - `src/hooks/use-users.ts` - Updated `CreateUserInput` and `UpdateUserInput` interfaces
-    - `src/hooks/use-auth.ts` - Updated `RegisterRequest` interface
-    - `src/components/modals/create-user-modal.tsx` - Already using 3 fields (titlePrefix dropdown + firstName + lastName)
-    - `src/app/(auth)/register/page.tsx` - Updated schema, UI, and onSubmit function
-  - **Features**:
-    - 14 Thai title prefixes support (นาย, นาง, นางสาว, ดร., ศาสตราจารย์, etc.)
-    - Auto-generated fullName maintains backward compatibility
-    - 74+ display components work without modification
-    - Form validation with required field indicators
-    - Proper layout: titlePrefix full width, firstName+lastName 2-column
-  - **Bug Fix**:
-    - Fixed `/api/auth/register` using wrong Prisma syntax (`department: { connect }` → `departmentId`)
-    - Fixed jobTitle → jobTitleId consistency
-  - **Testing**: Verified with both Thai and English names, user registration fully functional
-  - **Documentation**: `FULLNAME_SPLIT_MIGRATION_CONTEXT.md` (442 lines) - Complete migration guide
-  - **Result**: **Production-ready user name management** with structured fields and full backward compatibility
-
-### 2025-10-24
-
-- ✅ **Create Task Modal Complete** - Critical blocker resolved, complete user flow enabled
-  - **Implementation**: Slide panel modal with React Hook Form validation (654 lines)
-  - **Form Fields** (10 total):
-    - Required: Task name, Project
-    - Optional: Description, Status (slider), Priority (1-4), Difficulty (1-4)
-    - Multi-select: Assignees
-    - Date pickers: Start date, Due date
-    - Parent Task selector (for subtasks)
-  - **Features**:
-    - Slide panel animation (matches TaskPanel pattern)
-    - Smart project data loading (cache first, then API)
-    - Pre-filtered projects support (from DepartmentToolbar)
-    - Auto-select first status when project is selected
-    - Subtask creation support (parentTaskId)
-    - Optimistic close (modal closes immediately on submit)
-    - Form reset after submit
-    - Loading states (project data, submission)
-    - Toast notifications (success/error)
-    - Dark mode support
-    - Responsive 3-column grid layout
-  - **Integration**:
-    - Registered in Dashboard Layout
-    - Uses useUIStore for modal state
-    - Uses useCreateTask hook with optimistic updates
-    - Works with Board, Calendar, List, and Department Tasks views
-  - **UI Components Used**: AssigneePopover, StatusSlider, PriorityPopover, DifficultyPopover, DateInput, ProjectPopover, ParentTaskPopover
-  - **Files**:
-    - `src/components/modals/create-task-modal.tsx` (654 lines)
-  - **Result**: Complete task creation flow enabled across all project views
-
-- ✅ **User Management Complete (Phase 4: Delete User)** - Full CRUD operations complete
-  - **Implementation**: AlertDialog confirmation for delete action (matches Project deletion pattern)
-  - **Permission Check**: ADMIN/CHIEF only (enforced in API + UI)
-  - **Features**:
-    - Soft delete with session invalidation
-    - AlertDialog with detailed consequences list
-    - Loading state with spinner during deletion
-    - Toast notifications (success/error)
-    - Optimistic cache updates (removes from list immediately)
-  - **Files Modified**:
-    - `src/components/users/user-row.tsx` - Added AlertDialog, permission check, improved UX (256 lines)
-  - **API**: DELETE /api/users/:userId (already existed with `canManageTargetUser()` check)
-  - **Hook**: useDeleteUser() (already existed with optimistic updates)
-  - **Result**: User Management now 100% complete (Phases 1-4: List, Create, Edit, Delete)
-
-- ✅ **Edit User Modal Complete** - Fixed modal to properly display and edit all user fields
-  - **Issue**: Modal opened with empty titlePrefix, firstName, lastName fields
-  - **Root Cause**: GET /api/users only returned fullName, missing individual name fields
-  - **Fix**: Added titlePrefix, firstName, lastName, workLocation, internalPhone to API select query
-  - **Files Modified**:
-    - `src/app/api/users/route.ts` - Updated select to include missing fields (lines 88-119)
-  - **Result**: Modal now pre-populates all form fields correctly with existing user data
-  - **Testing**: Verified Edit User Modal displays all fields properly
-
-- ✅ **Permission System Complete (Priority 1, 2, 3)** - Full permission system migration from GAS to Next.js
-  - **Priority 1: Additional Roles Support** (3 hours) - `getUserAccessibleScope()` function with multi-role support
-  - **Priority 2: User Management Permissions** (3 hours) - 4 functions for scope-based user management
-  - **Priority 3: Project Permission Functions** (1 hour) - 4 centralized project permission functions
-  - **Implementation**: 11 functions, 864 lines of code, 5 files modified
-  - **Security**: 5 critical vulnerabilities fixed (unauthorized access, cross-admin management, etc.)
-  - **Testing**: 8/8 core tests passing, verified with real additional roles data (user001)
-  - **Performance**: All endpoints < 200ms response time
-  - **Feature Parity**: 100% achieved with GAS implementation
-  - Files modified:
-    - `src/lib/permissions.ts` - +621 lines (11 functions)
-    - `src/app/api/users/route.ts` - Added scope filtering with `getUserManageableUserIds()`
-    - `src/app/api/users/[userId]/route.ts` - Added `canManageTargetUser()` checks
-    - `src/app/api/users/[userId]/status/route.ts` - Added permission verification
-  - Documentation:
-    - `PRIORITY_1_IMPLEMENTATION_COMPLETE.md` (1,000+ lines)
-    - `PRIORITY_2_3_IMPLEMENTATION_COMPLETE.md` (800+ lines)
-    - `TESTING_COMPLETE_2025-10-24.md` (1,200+ lines) - Full test report with deployment checklist
-  - **Impact**: ✅ **CRITICAL BUG FIXED** - Multi-role users can now access all authorized data
-
-- ✅ **Delete Project Confirmation Complete** - AlertDialog with toast notifications, loading states, and error handling
-  - File: `src/components/projects/project-row.tsx` (updated)
-  - Features: Confirmation dialog, task count warning, loading spinner, success/error toasts
-  - Error handling: Specific message for projects with tasks
-  - Permission-based: Only ADMIN/CHIEF can delete
-
-- ✅ **Project Management Page & Modals Complete (Phases 1-6)** - Full project list/management interface + Create/Edit/Delete modals
-  - Route: `/projects` (enabled in sidebar)
-  - Hierarchical cascade filters (Mission Group → Division → Department)
-  - Real-time search with 300ms debounce
-  - Client-side sorting by Name/Owner/Phase (asc/desc)
-  - Client-side pagination (10/25/50/100 items per page)
-  - **Fixed table header** - Stays visible while scrolling (NEW ✨)
-  - **Scrollable content area** - Proper overflow handling for large datasets
-  - Permission-based access (ADMIN/CHIEF/LEADER/HEAD only)
-  - Permission-based actions (Edit for all, Delete for ADMIN/CHIEF only)
-  - Dark mode support with proper color schemes
-  - Phase badges with color coding (blue/yellow/orange/green)
-  - Progress bars with percentage display
-  - Responsive layout with proper flex sizing
-  - Clean code (no console.log in production)
-  - 13 new files created:
-    - `src/app/(dashboard)/projects/` - Page, loading, error
-    - `src/components/projects/` - 5 components (view, filter, table, row, pagination)
-    - `src/hooks/use-projects-list.ts` - React Query hook
-    - `src/lib/project-utils.ts` - 9 utility functions
-    - `src/types/project.ts` - TypeScript interfaces
-  - Updated `src/components/layout/sidebar.tsx` - Enabled "โปรเจค" menu
-  - Updated `src/app/api/projects/route.ts` - Added `includeDetails` param
-  - 13 new files created (see "Project Management Components" section)
-  - Documentation: `PROJECT_MANAGEMENT_PAGE_COMPLETE.md` (430+ lines)
-  - Documentation: `PROJECT_MANAGEMENT_IMPLEMENTATION_SUMMARY.md` (313 lines)
-  - **Next steps**: Delete confirmation dialog (1-2 hours), Phase 7 (Optimistic UI)
-
-### 2025-10-23 (Part 4)
-
-- ✅ **ADMIN Role Authentication Fix** - BYPASS_AUTH now fetches real user data from database
-  - Modified `src/lib/api-middleware.ts` to use `BYPASS_USER_ID` env variable
-  - Created admin001 user via `scripts/create-admin-user.ts`
-  - ADMIN users can now access all 9 Mission Groups and 72 Departments
-- ✅ **Department Navigation Fix** - Department tasks view uses URL query parameter
-  - Page reads `departmentId` from `?departmentId=DEPT-XXX` query param
-  - Breadcrumb and workspace navigation update correctly when navigating between departments
-  - Navigation state no longer tied to user's primary department
-- ✅ **Project Display Fix** - All projects now visible (not hidden when empty)
-  - Removed hiding logic from department tasks view
-  - Empty projects collapse by default (can be expanded)
-  - Shows empty state message: "ไม่มีงานที่ตรงกับตัวกรอง"
-- ✅ **CreateTaskModal Project Selector Fix** - Simple pass-through pattern
-  - DepartmentToolbar filters projects by department
-  - Passes filtered projects to both Breadcrumb AND CreateTaskButton
-  - Modal uses pre-filtered projects (matches breadcrumb)
-  - Removed complex cache fallback logic
-
-### 2025-10-23 (Part 3)
-
-- ✅ **Calendar View Improvements** - Removed empty state, calendar always visible
-- ✅ **FullCalendar Styling** - Rounded corners, muted button colors, shadcn/ui design system integration
-- ✅ **AssigneePopover Size Variants** - Added size prop (sm/md/lg) for consistent UI sizing
-- ✅ **Create Task Modal Fixes** - Fixed duplicate status label and excessive padding
-- ✅ **Shared Filter System** - Unified TaskFilterBar across Board, Calendar, and List views
-- ✅ **Filter Persistence** - Hide closed tasks switch persists in localStorage via usePersistedFilters hook
-
-### 2025-10-23 (Part 2)
-
-- ✅ **Multi-Assignee System Complete** - Tasks now support multiple assignees (breaking change fixed!)
-  - Added `task_assignees` table (many-to-many relationship)
-  - Updated API endpoints to accept `assigneeUserIds` array
-  - Backward compatible with legacy `assigneeUserId` field
-  - Frontend already supported it - no changes needed!
-  - See `MULTI_ASSIGNEE_IMPLEMENTATION.md` for full details
-
-### 2025-10-23 (Part 1)
-
-- ✅ Added interactive breadcrumb navigation with popover selectors
-- ✅ Completed workspace navigation with collapsible cards design
-- ✅ Created navigation store (Zustand) for breadcrumb state management
-- ✅ Added department toolbar component
-- ⚠️ Started department tasks page (basic structure only)
-- ✅ Updated API count to 74 endpoints (added workspace, department tasks, bulk update)
-
-### 2025-10-22
-
-- ✅ Completed authentication system (5 pages)
-- ✅ Completed password reset flow with popover validation
-- ✅ Added email system with BYPASS_EMAIL mode
-- ✅ Completed task detail panel v1.0
-
-### 2025-10-21
-
-- ✅ Completed Phase 2: API Migration (71 endpoints)
-- ✅ Completed all 3 project views (Board, Calendar, List)
-- ✅ Established optimistic update pattern
-
----
-
-## ⚠️ DEPLOYMENT CHECKLIST (Before Production)
-
-**Backend (100% Complete):** ✅
-
+**Backend**: ✅ 100% Complete
 - [x] 78+ API endpoints implemented and tested
 - [x] Database schema complete (21 tables)
-- [x] Authentication & authorization system
-- [x] Permission system with 6 roles + additionalRoles support ✅ **COMPLETE 2025-10-24**
+- [x] Authentication & authorization
+- [x] Permission system with 6 roles + additionalRoles
 
-**Frontend (~55% Complete):** 🔄
-
+**Frontend**: 🔄 ~68% Complete
 - [x] Core infrastructure (Layout, Theme, Auth)
 - [x] 3 Project views (Board, Calendar, List)
 - [x] Task detail panel
-- [x] Project Management page (Phases 1-4 complete)
-- [x] Project Management modals (Create/Edit/Delete all complete)
-- [x] Department Tasks View (Complete with optimistic updates)
-- [x] Create Task Modal (Complete 2025-10-24) ✅
-- [x] User Management pages (All phases complete 2025-10-25) ✅
-- [ ] Dashboard widgets (8 remaining)
-- [ ] ~25+ additional components (Reports, Selectors, etc.)
+- [x] Project Management (full CRUD)
+- [x] User Management (full CRUD)
+- [x] Department Tasks View
+- [x] Reports Dashboard
+- [x] User Dashboard (7 widgets + 4 stat cards) ✅ NEW
+- [ ] Additional modals (2 remaining)
+- [ ] Selectors (9 remaining)
+- [ ] Advanced features (6 remaining)
 
-**Critical Bugs:** ✅
+**Critical Bugs**: ✅ All resolved
 
-- [x] ~~**Workspace API Additional Roles**~~ ✅ **FIXED 2025-10-24** (8/8 tests passing)
-- [ ] Test remaining 6 failed API tests (76.9% → 100%) - Optional, not blocking deployment
-
-**Deployment Infrastructure:** ❌
-
+**Deployment Infrastructure**: ❌ Not ready
 - [ ] Production database setup
 - [ ] Environment variables configured
 - [ ] CI/CD pipeline
@@ -1794,6 +1083,76 @@ If you're a new Claude instance working on this project, start here:
 - [ ] Rate limiting
 - [ ] Security audit
 
-**⚠️ ESTIMATE TO PRODUCTION-READY:** 8-10 weeks minimum
+**⚠️ ESTIMATE TO PRODUCTION-READY**: 5-6 weeks
 
 ---
+
+## Additional Important Patterns
+
+### Reports Dashboard
+
+**Location**: `src/app/(dashboard)/reports/page.tsx`
+
+**Features**:
+- 5 interactive charts (Chart.js with dark mode support)
+- Organization filters (2-layer permission: ADMIN sees all, others see scope)
+- Date range filtering (7d/30d/90d/custom)
+- Export functionality (CSV/Excel via react-csv)
+- Real-time data from API endpoints
+
+**Key Components**:
+- `src/components/reports/task-completion-chart.tsx` - Completion rate over time
+- `src/components/reports/task-priority-chart.tsx` - Priority distribution
+- `src/components/reports/task-status-chart.tsx` - Status breakdown
+- `src/components/reports/organization-filter.tsx` - Mission/Division/Dept selector
+
+**Data Fetching**:
+```typescript
+import { useReports } from "@/hooks/use-reports";
+
+const { data, isLoading } = useReports({
+  startDate: "2025-10-01",
+  endDate: "2025-10-31",
+  missionGroupId: "MISSION-2024-001",
+  divisionId: "DIV-037",
+  departmentId: null, // null = all departments in division
+});
+```
+
+**Permission Logic**:
+- ADMIN/CHIEF: Can filter by any Mission Group, Division, or Department
+- LEADER: Can only see their Division
+- HEAD: Can only see their Department
+- MEMBER/USER: No access to Reports page
+
+### User Management
+
+**Location**: `src/app/(dashboard)/users/page.tsx`
+
+**Features**:
+- User list with search, filter, and pagination
+- Create/Edit/Delete users (ADMIN only)
+- Status toggle (Active/Suspended) for management roles
+- Role-based permissions (see USER_MANAGEMENT_PERMISSIONS_COMPLETE.md)
+
+**Key Components**:
+- `src/components/users/users-view.tsx` - Main container with access control
+- `src/components/users/users-table.tsx` - Table with conditional Actions column
+- `src/components/users/user-row.tsx` - Row with permission checks
+- `src/components/modals/create-user-modal.tsx` - User creation (ADMIN only)
+- `src/components/modals/edit-user-modal.tsx` - User editing (ADMIN only)
+
+**Permission Matrix**:
+- ADMIN: Full CRUD on all non-ADMIN users
+- HEAD/LEADER/CHIEF: View + Status toggle for users in scope
+- MEMBER/USER: No access (page shows "Access Denied")
+
+**Important**:
+- Users are scoped by organizational hierarchy
+- ADMIN cannot edit/delete other ADMIN users
+- Actions column hidden for non-ADMIN roles
+- Sidebar menu items ("บุคลากร", "โปรเจค") hidden for MEMBER/USER
+
+---
+
+**End of CLAUDE.md v2.12.0**
