@@ -31,6 +31,7 @@ interface Status {
 
 interface SubtasksSectionProps {
   taskId: string;
+  projectId: string;
   task?: Task | null;
   users?: User[];
   statuses?: Status[];
@@ -59,16 +60,19 @@ interface SubtasksSectionProps {
  */
 export function SubtasksSection({
   taskId,
+  projectId,
   task,
   users = [],
   statuses = []
 }: SubtasksSectionProps) {
   const permissions = useTaskPermissions(task);
   const openTaskPanel = useUIStore((state) => state.openTaskPanel);
+  const closeTaskPanel = useUIStore((state) => state.closeTaskPanel);
   const openCreateTaskModal = useUIStore((state) => state.openCreateTaskModal);
 
-  // Fetch subtasks
+  // Fetch subtasks - only for this specific parent task
   const { data: subtasksData, isLoading } = useTasks({
+    projectId: projectId,
     parentTaskId: taskId
   });
 
@@ -97,7 +101,8 @@ export function SubtasksSection({
   // Handle add subtask
   const handleAddSubtask = () => {
     if (!task) return;
-    // Open create task modal with parent task pre-filled
+    // Close task panel first, then open create task modal with parent task pre-filled
+    closeTaskPanel();
     openCreateTaskModal(task.id, undefined);
   };
 
