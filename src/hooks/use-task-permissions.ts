@@ -3,7 +3,7 @@ import { useSession } from '@/hooks/use-session';
 
 interface Task {
   id: string;
-  creatorId?: string;
+  creatorUserId?: string; // Database field name (not creatorId)
   assigneeUserId?: string | null; // Legacy single assignee
   assigneeUserIds?: string[]; // Multi-assignee support
   isClosed?: boolean;
@@ -66,7 +66,7 @@ export function useTaskPermissions(
     const userRole = session.user?.role;
 
     // Check if user is task creator or assignee
-    const isCreator = task.creatorId === userId;
+    const isCreator = task.creatorUserId === userId;
     const isAssignee = task.assigneeUserId === userId || task.assigneeUserIds?.includes(userId) || false;
     const isOwner = isCreator || isAssignee;
 
@@ -163,7 +163,7 @@ export function canEditTask(
 ): boolean {
   if (!task || !userId) return false;
 
-  const isCreator = task.creatorId === userId;
+  const isCreator = task.creatorUserId === userId;
   const isAssignee = task.assigneeUserId === userId || task.assigneeUserIds?.includes(userId) || false;
   const isOwner = isCreator || isAssignee;
 
