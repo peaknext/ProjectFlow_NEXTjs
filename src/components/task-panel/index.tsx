@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useTask } from '@/hooks/use-tasks';
 import { useProject } from '@/hooks/use-projects';
@@ -49,6 +49,9 @@ export function TaskPanel() {
   // Local state for animation control
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+
+  // Ref for scrollable content container
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Handle open/close animations
   useEffect(() => {
@@ -103,6 +106,16 @@ export function TaskPanel() {
     currentStatusId: task?.statusId || '',
   });
 
+  // Reset form state when taskId changes
+  useEffect(() => {
+    setFormState({
+      isDirty: false,
+      isSubmitting: false,
+      currentStatusId: task?.statusId || '',
+    });
+    setHandleSave(null);
+  }, [taskId, task?.statusId]);
+
   // Callback for DetailsTab to update form state
   const updateFormState = useCallback((updates: Partial<typeof formState>) => {
     setFormState(prev => ({ ...prev, ...updates }));
@@ -119,7 +132,9 @@ export function TaskPanel() {
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (isOpen) {
+      if (e.key === 'Escape' && isOpen) {
+        // Only close if Escape is not handled by a child element
+        // (child elements should call e.stopPropagation() to prevent this)
         closeTaskPanel();
       }
     };
@@ -141,6 +156,13 @@ export function TaskPanel() {
     };
   }, [shouldRender]);
 
+  // Scroll to top when task changes
+  useEffect(() => {
+    if (scrollContainerRef.current && taskId) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [taskId]);
+
   if (!shouldRender) return null;
 
   return (
@@ -159,7 +181,7 @@ export function TaskPanel() {
       <div
         className={cn(
           'fixed top-0 right-0 h-full w-full max-w-3xl',
-          'bg-white/85 dark:bg-background/85 backdrop-blur-sm',
+          'bg-background/90 backdrop-blur-sm',
           'rounded-l-xl shadow-2xl z-[101]',
           'flex flex-col',
           'transform transition-transform duration-300 ease-in-out',
@@ -173,8 +195,9 @@ export function TaskPanel() {
         <TaskPanelTabs />
 
         {/* Body (Scrollable) */}
-        <div className="flex-1 overflow-y-auto">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto" key={taskId}>
           <DetailsTab
+            key={`details-${taskId}`}
             task={task}
             isLoading={isLoading}
             users={users}
@@ -182,7 +205,7 @@ export function TaskPanel() {
             updateFormState={updateFormState}
             registerSubmitHandler={registerSubmitHandler}
           />
-          <HistoryTab task={task} />
+          <HistoryTab key={`history-${taskId}`} task={task} />
         </div>
 
         {/* Footer */}
