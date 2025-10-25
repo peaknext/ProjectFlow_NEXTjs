@@ -20,8 +20,8 @@ const batchCreatePhaseSchema = z.object({
     z.object({
       name: z.string().min(1).max(255),
       description: z.string().optional(),
-      startDate: z.string().datetime().optional(),
-      endDate: z.string().datetime().optional(),
+      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format. Expected YYYY-MM-DD').optional(),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format. Expected YYYY-MM-DD').optional(),
       phaseOrder: z.number().int(),
     })
   ).min(1, 'At least one phase is required'),

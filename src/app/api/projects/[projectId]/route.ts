@@ -22,11 +22,25 @@ const updateProjectSchema = z.object({
   description: z.string().nullable().optional(),
   departmentId: z.string().optional(),
   actionPlanId: z.string().nullable().optional(),
-  startDate: z.string().datetime().nullable().optional(),
-  endDate: z.string().datetime().nullable().optional(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format. Expected YYYY-MM-DD').nullable().optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format. Expected YYYY-MM-DD').nullable().optional(),
   status: z.enum(['ACTIVE', 'COMPLETED', 'ON_HOLD', 'ARCHIVED']).optional(),
   color: z.string().nullable().optional(),
   ownerUserId: z.string().optional(),
+  // Edit Project Modal fields
+  phases: z.array(
+    z.object({
+      id: z.string(),
+      startDate: z.string().nullable(),
+      endDate: z.string().nullable(),
+    })
+  ).optional(),
+  statuses: z.array(
+    z.object({
+      id: z.string(),
+      color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format'),
+    })
+  ).optional(),
 });
 
 /**
@@ -35,9 +49,9 @@ const updateProjectSchema = z.object({
  */
 async function getHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
 
   // Check permission
   const hasAccess = await checkPermission(
@@ -68,6 +82,15 @@ async function getHandler(
                 },
               },
             },
+          },
+          projects: {
+            where: { dateDeleted: null },
+            select: {
+              id: true,
+              name: true,
+              status: true,
+            },
+            orderBy: { name: 'asc' },
           },
         },
       },
@@ -117,10 +140,10 @@ async function getHandler(
  */
 async function patchHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const { projectId } = params;
+    const { projectId } = await params;
 
     // Check if project exists
     const existingProject = await prisma.project.findUnique({
@@ -184,6 +207,34 @@ async function patchHandler(
       },
     });
 
+    // Update phases (dates only)
+    if (updates.phases && Array.isArray(updates.phases)) {
+      for (const phaseUpdate of updates.phases) {
+        await prisma.phase.update({
+          where: { id: phaseUpdate.id },
+          data: {
+            startDate: phaseUpdate.startDate ? new Date(phaseUpdate.startDate) : null,
+            endDate: phaseUpdate.endDate ? new Date(phaseUpdate.endDate) : null,
+          },
+        });
+      }
+    }
+
+    // Update statuses (colors only)
+    if (updates.statuses && Array.isArray(updates.statuses)) {
+      for (const statusUpdate of updates.statuses) {
+        await prisma.status.update({
+          where: { id: statusUpdate.id },
+          data: {
+            color: statusUpdate.color,
+          },
+        });
+      }
+    }
+
+    // Note: History model is designed for tasks only (requires taskId)
+    // Project history tracking will be implemented separately if needed
+
     return successResponse({
       project,
       message: 'Project updated successfully',
@@ -199,9 +250,9 @@ async function patchHandler(
  */
 async function deleteHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
 
   // Check if project exists
   const existingProject = await prisma.project.findUnique({
