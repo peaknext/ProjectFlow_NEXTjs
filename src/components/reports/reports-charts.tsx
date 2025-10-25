@@ -47,13 +47,13 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
           <CardHeader>
             <CardTitle className="text-base">งานแยกตามสถานะ</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]" />
+          <CardContent className="h-[350px]" />
         </Card>
         <Card>
           <CardHeader>
             <CardTitle className="text-base">งานแยกตามผู้รับผิดชอบ</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]" />
+          <CardContent className="h-[350px]" />
         </Card>
       </div>
     );
@@ -67,14 +67,16 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "bottom" as const,
+        position: "right" as const, // Changed from bottom to right for better space utilization
         labels: {
           color: isDark ? "#e2e8f0" : "#1e293b",
           font: {
             family: "inherit",
-            size: 14, // เพิ่มจาก default (~12) เป็น 14 (ใหญ่กว่าเกือบ 2 เท่า)
+            size: 16, // Increased from 14 to 16 for better readability
           },
-          padding: 15,
+          padding: 12,
+          boxWidth: 20,
+          boxHeight: 20,
         },
       },
       tooltip: {
@@ -239,7 +241,7 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
           <CardHeader>
             <CardTitle className="text-base">งานแยกตามสถานะ</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center">
+          <CardContent className="h-[350px] flex items-center justify-center">
             <Doughnut data={workloadByTypeData} options={commonOptions} />
           </CardContent>
         </Card>
@@ -249,7 +251,7 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
           <CardHeader>
             <CardTitle className="text-base">งานแยกตามผู้รับผิดชอบ</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center">
+          <CardContent className="h-[350px] flex items-center justify-center">
             <Doughnut data={tasksByAssigneeData} options={commonOptions} />
           </CardContent>
         </Card>
