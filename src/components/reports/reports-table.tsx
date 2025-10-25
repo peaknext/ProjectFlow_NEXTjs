@@ -165,7 +165,12 @@ export function ReportsTable({ statistics, users }: ReportsTableProps) {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={row.user?.profileImageUrl || undefined} />
+                        <AvatarImage
+                          src={row.user?.profileImageUrl && row.user.profileImageUrl.trim() !== ''
+                            ? row.user.profileImageUrl
+                            : undefined
+                          }
+                        />
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {row.name === "Unassigned" ? (
                             <User className="h-4 w-4" />
