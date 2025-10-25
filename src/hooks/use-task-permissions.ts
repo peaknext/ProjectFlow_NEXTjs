@@ -4,7 +4,8 @@ import { useSession } from '@/hooks/use-session';
 interface Task {
   id: string;
   creatorId?: string;
-  assigneeUserId?: string | null;
+  assigneeUserId?: string | null; // Legacy single assignee
+  assigneeUserIds?: string[]; // Multi-assignee support
   isClosed?: boolean;
   projectId?: string;
 }
@@ -23,13 +24,13 @@ interface TaskPermissions {
  *
  * Determines user permissions for a task based on:
  * - User role (ADMIN, CHIEF, LEADER, HEAD, MEMBER, USER)
- * - Task ownership (creator or assignee)
+ * - Task ownership (creator or assignee - supports multi-assignee)
  * - Task state (open or closed)
  * - Organization hierarchy
  *
  * Permission Rules:
  * - canView: Anyone in organization
- * - canEdit: Creator, Assignee, CHIEF+, Dept HEAD+ (unless closed)
+ * - canEdit: Creator, Any Assignee, CHIEF+, Dept HEAD+ (unless closed)
  * - canClose: Same as canEdit (unless already closed)
  * - canComment: Anyone in organization (unless closed)
  * - canAddChecklist: Same as canEdit (unless closed)
@@ -66,7 +67,7 @@ export function useTaskPermissions(
 
     // Check if user is task creator or assignee
     const isCreator = task.creatorId === userId;
-    const isAssignee = task.assigneeUserId === userId;
+    const isAssignee = task.assigneeUserId === userId || task.assigneeUserIds?.includes(userId) || false;
     const isOwner = isCreator || isAssignee;
 
     // Check if user is high-level admin
@@ -163,7 +164,7 @@ export function canEditTask(
   if (!task || !userId) return false;
 
   const isCreator = task.creatorId === userId;
-  const isAssignee = task.assigneeUserId === userId;
+  const isAssignee = task.assigneeUserId === userId || task.assigneeUserIds?.includes(userId) || false;
   const isOwner = isCreator || isAssignee;
 
   const isHighLevel = ['ADMIN', 'CHIEF', 'LEADER', 'HEAD'].includes(userRole || '');
