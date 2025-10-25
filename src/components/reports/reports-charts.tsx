@@ -72,12 +72,12 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
           color: isDark ? "#e2e8f0" : "#1e293b",
           font: {
             family: "Sarabun, ui-sans-serif, system-ui, sans-serif",
-            size: 18, // Increased to 18 for better readability
+            size: 12, // Reduced to 12px (2/3 of 18px)
             weight: "500" as any, // Medium weight for better visibility
           },
-          padding: 16,
-          boxWidth: 24,
-          boxHeight: 24,
+          padding: 12,
+          boxWidth: 20,
+          boxHeight: 20,
         },
       },
       tooltip: {
