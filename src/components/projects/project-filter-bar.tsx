@@ -158,7 +158,7 @@ export function ProjectFilterBar({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-[240px] justify-between h-10"
+                className="w-[240px] justify-between h-10 bg-white dark:bg-background"
               >
                 <span className="truncate">
                   {selectedMissionGroup?.name || "ทั้งหมด"}
@@ -200,7 +200,7 @@ export function ProjectFilterBar({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-[240px] justify-between h-10"
+                className="w-[240px] justify-between h-10 bg-white dark:bg-background"
                 disabled={availableDivisions.length === 0}
               >
                 <span className="truncate">
@@ -243,7 +243,7 @@ export function ProjectFilterBar({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-[240px] justify-between h-10"
+                className="w-[240px] justify-between h-10 bg-white dark:bg-background"
                 disabled={availableDepartments.length === 0}
               >
                 <span className="truncate">
