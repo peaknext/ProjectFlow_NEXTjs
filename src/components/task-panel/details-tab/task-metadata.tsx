@@ -30,9 +30,14 @@ interface TaskMetadataProps {
  * />
  */
 export function TaskMetadata({ creator, createdAt }: TaskMetadataProps) {
-  // Format date
+  // Format date with Thai Buddhist Era (พ.ศ.)
   const formattedDate = createdAt
-    ? format(new Date(createdAt), 'd MMMM yyyy, HH:mm', { locale: th })
+    ? (() => {
+        const date = new Date(createdAt);
+        const thaiYear = date.getFullYear() + 543;
+        const dateStr = format(date, 'd MMMM yyyy, HH:mm', { locale: th });
+        return dateStr.replace(/\d{4}/, thaiYear.toString());
+      })()
     : '-';
 
   return (
