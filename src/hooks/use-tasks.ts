@@ -7,6 +7,7 @@ import { useSyncMutation } from '@/lib/use-sync-mutation';
 import { api } from '@/lib/api-client';
 import { projectKeys } from './use-projects';
 import { departmentTasksKeys } from './use-department-tasks';
+import { dashboardKeys } from './use-dashboard';
 import { updateProjectProgressCache } from '@/lib/update-project-progress-cache';
 
 // Types
@@ -823,13 +824,13 @@ export function useUnpinTask() {
     },
     onMutate: async (taskId: string) => {
       // Cancel outgoing refetches for dashboard
-      await queryClient.cancelQueries({ queryKey: ['dashboard'] });
+      await queryClient.cancelQueries({ queryKey: dashboardKeys.all });
 
       // Save previous dashboard data
-      const previousDashboard = queryClient.getQueryData(['dashboard']);
+      const previousDashboard = queryClient.getQueryData(dashboardKeys.detail());
 
       // Optimistically remove task from pinned tasks
-      queryClient.setQueryData(['dashboard'], (old: any) => {
+      queryClient.setQueryData(dashboardKeys.detail(), (old: any) => {
         if (!old?.pinnedTasks) return old;
         return {
           ...old,
@@ -842,12 +843,12 @@ export function useUnpinTask() {
     onError: (error, taskId, context) => {
       // Rollback on error
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard'], context.previousDashboard);
+        queryClient.setQueryData(dashboardKeys.detail(), context.previousDashboard);
       }
     },
     onSettled: () => {
       // Sync with server
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
@@ -866,13 +867,13 @@ export function useCompleteTask() {
     },
     onMutate: async (taskId: string) => {
       // Cancel outgoing refetches for dashboard
-      await queryClient.cancelQueries({ queryKey: ['dashboard'] });
+      await queryClient.cancelQueries({ queryKey: dashboardKeys.all });
 
       // Save previous dashboard data
-      const previousDashboard = queryClient.getQueryData(['dashboard']);
+      const previousDashboard = queryClient.getQueryData(dashboardKeys.detail());
 
       // Optimistically update task as completed in myTasks
-      queryClient.setQueryData(['dashboard'], (old: any) => {
+      queryClient.setQueryData(dashboardKeys.detail(), (old: any) => {
         if (!old?.myTasks?.tasks) return old;
         return {
           ...old,
@@ -900,12 +901,12 @@ export function useCompleteTask() {
     onError: (error, taskId, context) => {
       // Rollback on error
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard'], context.previousDashboard);
+        queryClient.setQueryData(dashboardKeys.detail(), context.previousDashboard);
       }
     },
     onSettled: () => {
       // Sync with server
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
