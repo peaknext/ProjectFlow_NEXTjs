@@ -40,10 +40,10 @@ export function ProjectRow({ project }: ProjectRowProps) {
   // Delete confirmation dialog state
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Use cached progress from database (0-1, convert to 0-100 for display)
+  // Use cached progress from database (already 0-100)
   // Fallback to calculation if not available
   const progress = project.progress !== null && project.progress !== undefined
-    ? Math.round(project.progress * 100)
+    ? Math.round(project.progress)
     : calculateProjectProgress(project);
   const currentPhase = getCurrentPhase(project.phases);
   const progressColors = getProgressColorClasses(progress);
