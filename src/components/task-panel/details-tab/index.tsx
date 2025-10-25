@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -168,8 +168,8 @@ export function DetailsTab({
     }
   });
 
-  // Submit handler
-  const onSubmit = async (data: TaskFormData) => {
+  // Submit handler - wrapped in useCallback to prevent infinite loops
+  const onSubmit = useCallback(async (data: TaskFormData) => {
     if (!task) return;
 
     // Convert form data to API format
@@ -211,7 +211,7 @@ export function DetailsTab({
         }
       );
     });
-  };
+  }, [task, updateTask, reset]);
 
   // Reset form when task ID changes (not the entire task object to avoid unnecessary resets)
   useEffect(() => {
