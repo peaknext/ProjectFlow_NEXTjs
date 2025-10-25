@@ -10,11 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { DateInput } from "@/components/ui/date-picker-popover";
-import {
-  useMissionGroups,
-  useDivisions,
-  useDepartments,
-} from "@/hooks/use-organization";
+import { useWorkspace } from "@/hooks/use-workspace";
 import { formatDateForAPI, getFiscalYearStartDate } from "@/hooks/use-reports";
 import type { ReportFilters } from "@/hooks/use-reports";
 
@@ -27,10 +23,23 @@ export function ReportToolbar({
   filters,
   onFiltersChange,
 }: ReportToolbarProps) {
-  // Fetch organization data
-  const { data: missionGroups = [] } = useMissionGroups();
-  const { data: allDivisions = [] } = useDivisions();
-  const { data: allDepartments = [] } = useDepartments();
+  // Fetch workspace data (filtered by user's scope)
+  const { data: workspace } = useWorkspace();
+
+  // Extract mission groups, divisions, and departments from workspace
+  const missionGroups = workspace?.hierarchical || [];
+  const allDivisions = missionGroups.flatMap((mg) =>
+    (mg.divisions || []).map((div) => ({
+      ...div,
+      missionGroupId: mg.id,
+    }))
+  );
+  const allDepartments = allDivisions.flatMap((div) =>
+    (div.departments || []).map((dept) => ({
+      ...dept,
+      divisionId: div.id,
+    }))
+  );
 
   // Local state for date inputs - NO defaults, let user choose dates
   const [startDate, setStartDate] = useState(filters.startDate || "");
