@@ -18,14 +18,15 @@ import { checkPermission } from '@/lib/permissions';
 
 const createTaskSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255),
-  description: z.string().optional(),
-  assigneeUserId: z.string().optional(),
+  description: z.string().optional().nullable(),
+  assigneeUserId: z.string().optional().nullable(), // Legacy single assignee
+  assigneeUserIds: z.array(z.string()).optional().nullable(), // New multi-assignee support
   statusId: z.string().min(1, 'Status ID is required'),
   priority: z.number().int().min(1).max(4).default(3),
-  startDate: z.string().datetime().optional(),
-  dueDate: z.string().datetime().optional(),
-  difficulty: z.number().int().min(1).max(5).optional(),
-  parentTaskId: z.string().optional(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format. Expected YYYY-MM-DD').optional().nullable(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format. Expected YYYY-MM-DD').optional().nullable(),
+  difficulty: z.number().int().min(1).max(5).optional().nullable(),
+  parentTaskId: z.string().optional().nullable(),
 });
 
 /**
@@ -123,10 +124,12 @@ async function getHandler(
  */
 async function postHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const { projectId } = params;
+    const { projectId } = await params;
+
+    console.log('[POST /api/projects/:projectId/tasks] ProjectId:', projectId);
 
     // Check if project exists
     const project = await prisma.project.findUnique({
@@ -134,8 +137,11 @@ async function postHandler(
     });
 
     if (!project) {
+      console.error('[POST /api/projects/:projectId/tasks] Project not found:', projectId);
       return errorResponse('PROJECT_NOT_FOUND', 'Project not found', 404);
     }
+
+    console.log('[POST /api/projects/:projectId/tasks] Project found:', project.name);
 
     // Check permission
     const hasAccess = await checkPermission(
@@ -145,11 +151,20 @@ async function postHandler(
     );
 
     if (!hasAccess) {
+      console.error('[POST /api/projects/:projectId/tasks] No permission for user:', req.session.userId);
       return errorResponse('FORBIDDEN', 'No permission to create tasks', 403);
     }
 
+    console.log('[POST /api/projects/:projectId/tasks] Permission granted');
+
     const body = await req.json();
+    console.log('[POST /api/projects/:projectId/tasks] Request body:', JSON.stringify(body, null, 2));
+
     const data = createTaskSchema.parse(body);
+    console.log('[POST /api/projects/:projectId/tasks] Validated data:', JSON.stringify(data, null, 2));
+
+    // Determine assignee: use first from array if provided, otherwise use single assignee
+    const assigneeUserId = data.assigneeUserIds?.[0] || data.assigneeUserId || null;
 
     // Validate status belongs to project
     const status = await prisma.status.findUnique({
@@ -161,9 +176,9 @@ async function postHandler(
     }
 
     // Validate assignee exists
-    if (data.assigneeUserId) {
+    if (assigneeUserId) {
       const assignee = await prisma.user.findUnique({
-        where: { id: data.assigneeUserId },
+        where: { id: assigneeUserId },
       });
 
       if (!assignee) {
@@ -183,12 +198,26 @@ async function postHandler(
     }
 
     // Create task
+    console.log('[POST /api/projects/:projectId/tasks] Creating task with data:', {
+      name: data.name,
+      description: data.description || null,
+      projectId,
+      assigneeUserId,
+      statusId: data.statusId,
+      priority: data.priority,
+      startDate: data.startDate,
+      dueDate: data.dueDate,
+      difficulty: data.difficulty,
+      parentTaskId: data.parentTaskId,
+      creatorUserId: req.session.userId,
+    });
+
     const task = await prisma.task.create({
       data: {
         name: data.name,
         description: data.description || null,
         projectId,
-        assigneeUserId: data.assigneeUserId || null,
+        assigneeUserId: assigneeUserId,
         statusId: data.statusId,
         priority: data.priority,
         startDate: data.startDate ? new Date(data.startDate) : null,
@@ -216,26 +245,26 @@ async function postHandler(
       },
     });
 
-    // Create activity log
-    await prisma.activityLog.create({
+    console.log('[POST /api/projects/:projectId/tasks] Task created successfully:', task.id);
+
+    // Create history log
+    await prisma.history.create({
       data: {
+        taskId: task.id,
         userId: req.session.userId,
-        actionType: 'CREATE',
-        entityType: 'Task',
-        entityId: task.id,
-        changes: { created: task },
+        historyText: `สร้างงาน "${task.name}"`,
       },
     });
 
     // Send notification to assignee (if assigned and not self)
-    if (data.assigneeUserId && data.assigneeUserId !== req.session.userId) {
+    if (assigneeUserId && assigneeUserId !== req.session.userId) {
       await prisma.notification.create({
         data: {
-          userId: data.assigneeUserId,
+          userId: assigneeUserId,
           type: 'TASK_ASSIGNED',
-          title: 'งานใหม่ถูกมอบหมาย',
           message: `คุณได้รับมอบหมายงาน: ${task.name}`,
-          link: `/projects/${projectId}?task=${task.id}`,
+          taskId: task.id,
+          triggeredByUserId: req.session.userId,
         },
       });
     }
@@ -253,6 +282,11 @@ async function postHandler(
       201
     );
   } catch (error) {
+    console.error('[POST /api/projects/:projectId/tasks] Error occurred:', error);
+    if (error instanceof Error) {
+      console.error('[POST /api/projects/:projectId/tasks] Error message:', error.message);
+      console.error('[POST /api/projects/:projectId/tasks] Error stack:', error.stack);
+    }
     return handleApiError(error);
   }
 }
