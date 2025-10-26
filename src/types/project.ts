@@ -9,6 +9,7 @@ export interface ProjectWithDetails {
   departmentId: string;
   ownerUserId: string;
   status: string;
+  progress?: number; // 0-100 percentage, calculated from tasks
   createdAt: string;
   updatedAt: string;
 

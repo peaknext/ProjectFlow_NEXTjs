@@ -13,6 +13,7 @@ import type { UserRole } from '../generated/prisma';
  */
 export interface AccessibleScope {
   isAdmin: boolean;
+  type: 'all' | 'missionGroup' | 'division' | 'department';
   missionGroupIds: string[];
   divisionIds: string[];
   departmentIds: string[];
@@ -402,6 +403,7 @@ export async function getUserAccessibleScope(
 
   if (!user) {
     return {
+      type: 'department' as const,
       isAdmin: false,
       missionGroupIds: [],
       divisionIds: [],
@@ -428,6 +430,7 @@ export async function getUserAccessibleScope(
 
     return {
       isAdmin: true,
+      type: 'all' as const,
       missionGroupIds: allMGs.map((mg) => mg.id),
       divisionIds: allDivs.map((d) => d.id),
       departmentIds: allDepts.map((d) => d.id),
@@ -576,11 +579,32 @@ export async function getUserAccessibleScope(
     }
   });
 
+  // Determine scope type based on which level has the most specific access
+  const mgArray = Array.from(accessibleMGs);
+  const divArray = Array.from(accessibleDivs);
+  const deptArray = Array.from(accessibleDepts);
+
+  let scopeType: 'all' | 'missionGroup' | 'division' | 'department' = 'department';
+
+  // If user has department-specific access, type is 'department'
+  if (deptArray.length > 0) {
+    scopeType = 'department';
+  }
+  // If user has division-wide access (but no dept-specific), type is 'division'
+  else if (divArray.length > 0) {
+    scopeType = 'division';
+  }
+  // If user has mission group-wide access, type is 'missionGroup'
+  else if (mgArray.length > 0) {
+    scopeType = 'missionGroup';
+  }
+
   return {
     isAdmin: false,
-    missionGroupIds: Array.from(accessibleMGs),
-    divisionIds: Array.from(accessibleDivs),
-    departmentIds: Array.from(accessibleDepts),
+    type: scopeType,
+    missionGroupIds: mgArray,
+    divisionIds: divArray,
+    departmentIds: deptArray,
   };
 }
 
