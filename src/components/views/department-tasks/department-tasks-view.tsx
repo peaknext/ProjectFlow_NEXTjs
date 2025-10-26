@@ -64,10 +64,17 @@ interface User {
 interface Project {
   id: string;
   name: string;
-  isActive: boolean;
+  isActive?: boolean;
+  status?: string;
   progress: number; // 0-1 from API (calculated using GAS formula)
   tasks: Task[];
   statuses: Status[];
+  // Additional fields from ProjectGroup (optional)
+  description?: string | null;
+  createdAt?: string;
+  stats?: any;
+  assignedUsers?: any[];
+  owner?: any;
 }
 
 interface DepartmentTasksViewProps {

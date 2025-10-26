@@ -94,6 +94,10 @@ export interface Department {
   division: {
     id: string;
     name: string;
+    missionGroup?: {
+      id: string;
+      name: string;
+    };
   };
 }
 
