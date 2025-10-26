@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.20.0 (2025-10-26)
-**Last Major Update**: Bug fixes - Task Panel save button & Department Tasks status popover (Session 3)
+**Version**: 2.21.0 (2025-10-27)
+**Last Major Update**: Next.js 15 Migration Lessons + Render Deployment Fixes (Session 3)
 
 ---
 
@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Architecture](#architecture) - Database, API, frontend structure
 - [Key Files to Know](#key-files-to-know) - Essential files for backend/frontend work
 - [Common Workflows](#common-workflows) - Adding views, endpoints, testing
+- [Next.js 15 Migration Lessons](#nextjs-15-migration-lessons) - Important lessons from Render deployment ⭐ **NEW**
 - [Troubleshooting](#troubleshooting) - Common issues and solutions
 - [Quick Start](#quick-start-for-new-claude-instances) - Onboarding guide
 - [Documentation Index](#documentation-index) - All project documentation
@@ -95,6 +96,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Render Deployment + Next.js 15 Migration (2025-10-27 Session 3)** - Successfully deployed to Render with 5 critical fixes: (1) Moved build tools (autoprefixer, postcss, tailwindcss, @tanstack/react-query-devtools) to dependencies, (2) Added 39 missing files to Git (API routes, components, hooks), (3) Updated 16 API routes to use Promise-based params (`await params`), (4) Fixed middleware types to return `NextRouteHandler` for Next.js 15 compatibility, (5) Documented Next.js 15 migration lessons in CLAUDE.md. Build time: ~3-5 minutes. Total changes: 5 commits, 135+ files, +9,000 lines. See [Next.js 15 Migration Lessons](#nextjs-15-migration-lessons)
 - ✅ **Bug Fixes: Task Panel & Status Popover (2025-10-26 Session 3)** - Fixed Task Panel save button remaining disabled in Board/List/Calendar/Department Tasks views. Root cause: Race condition where `setHandleSave(null)` was called on every re-render due to `task?.statusId` in dependencies. Solution: Removed unnecessary state reset and changed dependencies to `[taskId]` only. Fixed Department Tasks Pinned Tasks table showing aggregated statuses from all projects instead of task's own project. Added `projectStatusesMap` lookup and fixed undefined `projectData` variable. See PROGRESS_2025-10-26_SESSION3.md
 - ✅ **CRITICAL SECURITY FIX: Data Leakage Prevention (2025-10-26 Session 3)** - Fixed critical bug where notifications and other cached data from User A would persist and be visible to User B after logout→login session switch. Root cause: React Query cache not cleared on login, only on logout. Solution: Added `queryClient.clear()` in login mutation's `onMutate` hook to clear all cached data BEFORE new user session starts. Verified localStorage items (only sessionToken needs clearing, UI preferences are non-sensitive). **REQUIRES USER TESTING**. See DATA_LEAKAGE_SECURITY_FIX.md
 - ✅ **Modal UX & Permission Improvements (2025-10-26 Session 2)** - Implemented dirty check system for Edit Project Modal and Edit User Modal (disabled save button when no changes, unsaved changes warning dialog, removed cancel button). Fixed MEMBER permission bug by adding creatorUserId field to Board and Department Tasks APIs. Added project info button (?) in Department Tasks view to open Edit Project Modal. Fixed Edit Project Modal 403 error with read-only mode for MEMBER/USER roles. Updated fullName format to Thai convention (no space between title prefix and first name). See PROGRESS_2025-10-26_SESSION2.md
@@ -634,6 +636,183 @@ curl -X POST http://localhost:3010/api/batch \
 # LEADER sees division scope, HEAD sees department scope
 curl http://localhost:3010/api/departments/DEPT-058/tasks?view=grouped
 ```
+
+---
+
+## Next.js 15 Migration Lessons
+
+**Important lessons learned from deploying to Render with Next.js 15** (2025-10-27):
+
+### 1. **Route Params are Promises**
+
+**Issue**: Next.js 15 changed dynamic route params to be Promise-based.
+
+**Old (Next.js 14):**
+```typescript
+async function handler(
+  req: AuthenticatedRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;  // Direct access
+}
+```
+
+**New (Next.js 15):**
+```typescript
+async function handler(
+  req: AuthenticatedRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;  // Must await
+}
+```
+
+**Why it matters:**
+- Dev mode (`npm run dev`) works with old pattern due to compatibility layer
+- Production build (`npm run build`) fails with type error
+- Must update all dynamic route handlers: `[id]`, `[projectId]`, `[taskId]`, etc.
+
+---
+
+### 2. **Middleware Type Compatibility**
+
+**Issue**: Middleware return types must be compatible with Next.js 15 route handler signature.
+
+**Problem:**
+```typescript
+// ❌ This causes type error in build
+export function withAuth<T>(handler: ApiHandler<T>): ApiHandler<T> {
+  // ApiHandler expects AuthenticatedRequest
+}
+```
+
+**Solution:**
+```typescript
+// ✅ Return NextRouteHandler for Next.js compatibility
+type NextRouteHandler<T> = (
+  req: NextRequest,
+  context: T
+) => Promise<NextResponse> | NextResponse;
+
+export function withAuth<T>(handler: ApiHandler<T>): NextRouteHandler<T> {
+  // Accept NextRequest, cast to AuthenticatedRequest internally
+}
+```
+
+**Why it matters:**
+- Next.js expects handlers to accept `NextRequest` not custom extended types
+- Middleware must cast internally, not in the type signature
+- Affects all middleware: `withAuth`, `withPermission`, `withRole`, `apiHandler`
+
+---
+
+### 3. **Build Tools Must Be in dependencies**
+
+**Issue**: Packages used during build must be in `dependencies`, not `devDependencies`.
+
+**Problem packages:**
+```json
+{
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",        // ❌ Build needs this
+    "postcss": "^8.5.6",                // ❌ Build needs this
+    "tailwindcss": "^3.4.18",           // ❌ Build needs this
+    "@tanstack/react-query-devtools": "^5.90.2"  // ❌ Imported in code
+  }
+}
+```
+
+**Solution:**
+Move to `dependencies` so Render installs them during production build.
+
+**Why it matters:**
+- Render may use `npm ci --production` or skip devDependencies
+- PostCSS processing requires autoprefixer during build
+- Any package imported in code (even with `if (dev)` check) must be available at build time
+
+---
+
+### 4. **Git Tracking is Critical**
+
+**Issue**: Files not tracked by Git won't exist in deployment.
+
+**Common mistake:**
+```bash
+# Create new files locally
+touch src/hooks/use-workspace.ts
+touch src/components/ui/progress.tsx
+
+# Work with them in dev mode ✅
+# But forget to git add ❌
+
+git push  # Files NOT pushed!
+```
+
+**Result:** Render build fails with "Module not found" errors.
+
+**Solution:**
+```bash
+# Always check untracked files before push
+git status
+
+# Add ALL new files
+git add src/
+
+# Verify before commit
+git status
+```
+
+**Why it matters:**
+- Local dev works because files exist locally
+- Render clones from Git - if file not in Git, it doesn't exist
+- 39 files were missing in this project's first deployment attempt
+
+---
+
+### 5. **Dev Mode vs Build Mode**
+
+**Issue**: Development and production builds behave very differently.
+
+**Development (`npm run dev`):**
+- ✅ Lenient type checking
+- ✅ Type warnings shown but don't block
+- ✅ JIT compilation (only compile pages you visit)
+- ✅ Compatibility mode for Next.js 15 features
+- ⚡ Fast (~2s startup)
+
+**Production (`npm run build`):**
+- ❌ Strict type checking (TypeScript compiler runs on ALL files)
+- ❌ Type errors BLOCK build entirely
+- ❌ AOT compilation (compile everything)
+- ❌ No compatibility mode - must follow Next.js 15 exactly
+- 🐌 Slow (~3-5 minutes)
+
+**Best practice:**
+```bash
+# Test production build locally BEFORE deploying
+npm run build
+
+# If build passes locally, it should pass on Render
+```
+
+**Why it matters:**
+- 4 out of 5 deployment errors were caught by running `npm run build` locally
+- Dev mode hides type errors that will fail in production
+- Always test build before pushing to deployment
+
+---
+
+### Quick Checklist for Next.js 15 Deployment
+
+Before deploying to Render, verify:
+
+- [ ] All route params use `Promise<{}>` type and `await params`
+- [ ] Middleware returns `NextRouteHandler` type (not `ApiHandler`)
+- [ ] Build tools in `dependencies` (autoprefixer, postcss, tailwindcss)
+- [ ] Runtime packages in `dependencies` (@tanstack/react-query-devtools)
+- [ ] Run `git status` to check for untracked files
+- [ ] Run `npm run build` locally to catch type errors
+- [ ] All new files are committed: `git add src/` then `git push`
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "project": {
-    "name": "ProjectFlow",
+    "name": "ProjectFlows",
     "description": "Migration from Google App Script to Next.js with 95% feature parity",
     "tech_stack": [
       "Next.js",

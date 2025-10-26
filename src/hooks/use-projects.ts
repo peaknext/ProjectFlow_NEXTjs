@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { useSyncMutation } from '@/lib/use-sync-mutation';
 import type { Project } from '@/stores/use-app-store';
+import type { Task } from '@/hooks/use-tasks';
 
 // Types
 interface ProjectsResponse {
@@ -24,6 +25,12 @@ interface ProjectBoardResponse {
   project: Project;
   statuses: Status[];
   tasks: Task[];
+  users?: Array<{
+    id: string;
+    fullName: string;
+    email: string;
+    profileImageUrl: string | null;
+  }>;
 }
 
 interface Status {
@@ -33,22 +40,6 @@ interface Status {
   order: number;
   type: string;
 }
-
-interface Task {
-  id: string;
-  name: string;
-  description: string | null;
-  statusId: string;
-  priority: number;
-  startDate: string | null;
-  dueDate: string | null;
-  assigneeUserId: string | null;
-  isClosed: boolean;
-  closeType: string | null;
-  dateCreated: string;
-  dateModified: string;
-}
-
 interface CreateProjectInput {
   name: string;
   description?: string;

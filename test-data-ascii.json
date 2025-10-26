@@ -1,0 +1,10 @@
+{
+  "email": "test.newuser2@hospital.test",
+  "fullName": "Test User",
+  "departmentId": "DEPT-058",
+  "role": "MEMBER",
+  "jobTitle": "Staff",
+  "jobLevel": "Junior",
+  "workLocation": "Building 1 Floor 3",
+  "internalPhone": "1234"
+}

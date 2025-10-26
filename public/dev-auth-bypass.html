@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dev Auth Bypass</title>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: system-ui; padding: 40px; max-width: 600px; margin: 0 auto;">
+  <h1>🔧 Development Auth Bypass</h1>
+  <p>This tool creates a mock session token in localStorage for development/testing.</p>
+
+  <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+    <strong>⚠️ WARNING:</strong> Only use this in development mode with BYPASS_AUTH=true
+  </div>
+
+  <label style="display: block; margin-top: 20px; font-weight: 600;">
+    User ID:
+    <input id="userId" type="text" value="cmh54o5rn00099iugu3rlq0px"
+           style="display: block; width: 100%; padding: 8px; margin-top: 5px; font-family: monospace;">
+  </label>
+
+  <button onclick="createMockSession()"
+          style="margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
+    Create Mock Session
+  </button>
+
+  <div id="result" style="margin-top: 20px; padding: 15px; border-radius: 8px; display: none;"></div>
+
+  <script>
+    async function createMockSession() {
+      const userId = document.getElementById('userId').value;
+      const resultDiv = document.getElementById('result');
+
+      try {
+        // Test if backend accepts BYPASS_AUTH
+        const response = await fetch('/api/users/me');
+
+        if (response.ok) {
+          // Create a mock token (any non-empty string works with BYPASS_AUTH)
+          const mockToken = 'dev-bypass-token-' + Date.now();
+          localStorage.setItem('sessionToken', mockToken);
+
+          resultDiv.style.display = 'block';
+          resultDiv.style.background = '#d1fae5';
+          resultDiv.style.border = '2px solid #10b981';
+          resultDiv.innerHTML = `
+            <strong>✅ Success!</strong><br>
+            Mock session token created in localStorage.<br><br>
+            <a href="/" style="color: #3b82f6; text-decoration: underline;">Go to Dashboard</a>
+          `;
+        } else {
+          throw new Error('BYPASS_AUTH is not enabled. Check your .env file.');
+        }
+      } catch (error) {
+        resultDiv.style.display = 'block';
+        resultDiv.style.background = '#fee2e2';
+        resultDiv.style.border = '2px solid #ef4444';
+        resultDiv.innerHTML = `
+          <strong>❌ Error:</strong><br>
+          ${error.message}<br><br>
+          Make sure:<br>
+          1. Server is running on port 3000<br>
+          2. BYPASS_AUTH=true in .env<br>
+          3. BYPASS_USER_ID=${userId} in .env
+        `;
+      }
+    }
+  </script>
+
+  <hr style="margin: 40px 0;">
+
+  <h2>How it works</h2>
+  <ol>
+    <li>Enter the user ID you want to test with</li>
+    <li>Click "Create Mock Session"</li>
+    <li>This creates a fake session token in localStorage</li>
+    <li>With BYPASS_AUTH=true, the backend ignores the token and uses BYPASS_USER_ID</li>
+    <li>The frontend sees a token exists, so AuthGuard allows access</li>
+  </ol>
+
+  <h2>Alternative: Use real login</h2>
+  <p>Or just <a href="/login" style="color: #3b82f6;">log in normally</a> with test credentials:</p>
+  <ul>
+    <li>Email: <code>admin@hospital.test</code></li>
+    <li>Password: <code>SecurePass123!</code></li>
+  </ul>
+</body>
+</html>

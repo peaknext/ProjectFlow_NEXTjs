@@ -1,0 +1,10 @@
+{
+  "email": "test.newuser@hospital.test",
+  "fullName": "ทดสอบ ผู้ใช้ใหม่",
+  "departmentId": "DEPT-058",
+  "role": "MEMBER",
+  "jobTitle": "เจ้าหน้าที่",
+  "jobLevel": "ปฏิบัติการ",
+  "workLocation": "อาคาร 1 ชั้น 3",
+  "internalPhone": "1234"
+}

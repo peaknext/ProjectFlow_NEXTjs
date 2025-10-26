@@ -1,0 +1,11 @@
+{
+  "email": "test.admin.fullname@example.com",
+  "titlePrefix": "นางสาว",
+  "firstName": "ทดสอบAdmin",
+  "lastName": "ระบบใหม่Admin",
+  "departmentId": "DEPT-058",
+  "role": "MEMBER",
+  "jobLevel": "ปฏิบัติการ",
+  "workLocation": "อาคาร 1 ชั้น 2",
+  "internalPhone": "1234"
+}
