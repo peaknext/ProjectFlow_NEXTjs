@@ -34,7 +34,7 @@ export function updateProjectProgressCache(
   try {
     // Get board data (has tasks + statuses)
     const boardData = queryClient.getQueryData<any>(
-      taskKeys.board(projectId)
+      projectKeys.board(projectId)
     );
 
     if (!boardData) return;

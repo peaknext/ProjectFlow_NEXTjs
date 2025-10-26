@@ -22,6 +22,8 @@ export interface Project {
   description?: string | null;
   color: string;
   isArchived: boolean;
+  status?: 'ACTIVE' | 'COMPLETED' | 'ON_HOLD' | 'ARCHIVED';
+  progress?: number;
   departmentId: string | null;
   divisionId: string | null;
   missionGroupId: string | null;

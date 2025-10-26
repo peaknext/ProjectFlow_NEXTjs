@@ -88,7 +88,7 @@ export function useProjectProgressDetails(projectId: string) {
       projectKeys.detail(projectId)
     );
     const boardData = queryClient.getQueryData<any>(
-      taskKeys.board(projectId)
+      projectKeys.board(projectId)
     );
 
     if (!project) {
@@ -146,13 +146,13 @@ export function useHasStaleProgress(projectId: string): boolean {
       projectKeys.detail(projectId)
     );
     const boardData = queryClient.getQueryData<any>(
-      taskKeys.board(projectId)
+      projectKeys.board(projectId)
     );
 
     if (!project || !boardData) return false;
 
     // Check if tasks have been modified (isFetching is false but data is different)
-    const queryState = queryClient.getQueryState(taskKeys.board(projectId));
+    const queryState = queryClient.getQueryState(projectKeys.board(projectId));
 
     // If there are pending mutations, progress is stale
     return (queryState?.status === 'success' && !queryState.isFetching) || false;
