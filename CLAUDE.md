@@ -964,6 +964,7 @@ See `migration_plan/` folder for detailed migration documentation:
 - `AUTHENTICATION_IMPLEMENTATION_COMPLETE.md` - Auth system summary
 - `PASSWORD_RESET_IMPLEMENTATION.md` - Password reset flow
 - `EMAIL_SETUP_GUIDE.md` - Email configuration
+- `PERMISSION_GUIDELINE.md` - Comprehensive permission system guide (23+ permissions) ⭐ **IMPORTANT**
 - `MULTI_ASSIGNEE_IMPLEMENTATION.md` - Multi-assignee system ⭐ **IMPORTANT**
 - `ACTIVITYLOG_TO_HISTORY_MIGRATION.md` - History table migration context
 - `HYBRID_PROGRESS_CALCULATION.md` - Progress calculation algorithm
