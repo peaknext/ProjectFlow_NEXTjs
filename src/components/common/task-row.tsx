@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateTask, useDeleteTask, useCloseTask, useTogglePinTask, type Task } from '@/hooks/use-tasks';
 import { useUIStore } from '@/stores/use-ui-store';
+import { useSession } from '@/hooks/use-session';
+import { canEditTask } from '@/hooks/use-task-permissions';
 import { projectKeys } from '@/hooks/use-projects';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -93,6 +95,7 @@ export function TaskRow({
   customMutations,
 }: TaskRowProps) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
 
   // Use custom mutations if provided, otherwise use default project mutations
   const defaultUpdateTask = useUpdateTask();
@@ -106,6 +109,11 @@ export function TaskRow({
   const togglePinMutation = customMutations?.togglePinTask || defaultTogglePinTask;
 
   const openTaskPanel = useUIStore((state) => state.openTaskPanel);
+
+  // Helper function to check if user can edit this task
+  const canUserEditTask = () => {
+    return canEditTask(task, session?.userId, session?.user?.role);
+  };
 
   const [editingName, setEditingName] = useState(false);
   const [editingTaskName, setEditingTaskName] = useState(task.name);
@@ -306,7 +314,7 @@ export function TaskRow({
           className="font-medium text-sm"
           onClick={(e) => {
             e.stopPropagation();
-            if (!editingName && !task.isClosed) {
+            if (!editingName && canUserEditTask()) {
               startEditingTaskName();
             }
           }}
@@ -330,7 +338,7 @@ export function TaskRow({
             <div
               className={cn(
                 'rounded px-2 py-1 -mx-2 -my-1 transition-colors',
-                !task.isClosed && 'cursor-text hover:bg-accent/50'
+                canUserEditTask() && 'cursor-text hover:bg-accent/50'
               )}
             >
               <div className={cn(task.isClosed && 'line-through')}>
@@ -345,7 +353,7 @@ export function TaskRow({
           <Select
             value={task.priority.toString()}
             onValueChange={(value) => handleQuickPriorityChange(parseInt(value))}
-            disabled={task.isClosed}
+            disabled={!canUserEditTask()}
           >
             <SelectTrigger className="h-8 w-full text-xs">
               <SelectValue>
@@ -374,7 +382,7 @@ export function TaskRow({
           <Select
             value={task.statusId}
             onValueChange={handleQuickStatusChange}
-            disabled={task.isClosed || !statuses || statuses.length === 0}
+            disabled={!canUserEditTask() || !statuses || statuses.length === 0}
           >
             <SelectTrigger className="h-8 w-full">
               <SelectValue>
@@ -420,7 +428,7 @@ export function TaskRow({
             users={users}
             selectedUserIds={task.assigneeUserIds || []}
             onSave={(newIds) => handleQuickAssigneeChange(newIds)}
-            disabled={task.isClosed}
+            disabled={!canUserEditTask()}
             maxVisible={3}
           />
         </TableCell>
@@ -432,7 +440,7 @@ export function TaskRow({
             onChange={handleQuickDueDateChange}
             placeholder="เลือกวันที่"
             className="text-xs h-8 w-full"
-            disabled={task.isClosed}
+            disabled={!canUserEditTask()}
           />
         </TableCell>
 
@@ -468,7 +476,7 @@ export function TaskRow({
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   {task.closeType === 'COMPLETED' ? 'ปิดแล้ว (สำเร็จ)' : 'ปิดแล้ว (ยกเลิก)'}
                 </DropdownMenuItem>
-              ) : (
+              ) : canUserEditTask() ? (
                 <DropdownMenuItem
                   onClick={handleOpenCloseDialog}
                   className={closeProps.isDone ? 'text-green-600' : ''}
@@ -476,15 +484,22 @@ export function TaskRow({
                   <CloseIcon className="mr-2 h-4 w-4" />
                   {closeProps.label}
                 </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem disabled>
+                  <XCircle className="mr-2 h-4 w-4" />
+                  ไม่สามารถปิดงาน
+                </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-red-600"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                ลบ
-              </DropdownMenuItem>
+              {canUserEditTask() && (
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  ลบ
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </TableCell>

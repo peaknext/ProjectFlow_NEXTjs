@@ -11,6 +11,8 @@ import { useProject, projectKeys } from '@/hooks/use-projects';
 import { useUpdateTask, useDeleteTask, useCloseTask, useTogglePinTask, type Task } from '@/hooks/use-tasks';
 import { useUIStore } from '@/stores/use-ui-store';
 import { usePersistedFilters } from '@/hooks/use-persisted-filters';
+import { useSession } from '@/hooks/use-session';
+import { canEditTask } from '@/hooks/use-task-permissions';
 import { api } from '@/lib/api-client';
 import {
   Table,
@@ -86,11 +88,17 @@ type SortOrder = 'asc' | 'desc';
 export function ListView({ projectId }: ListViewProps) {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useProject(projectId);
+  const { data: session } = useSession();
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
   const closeTaskMutation = useCloseTask();
   const togglePinMutation = useTogglePinTask();
   const openTaskPanel = useUIStore((state) => state.openTaskPanel);
+
+  // Helper function to check if user can edit a specific task
+  const canUserEditTask = (task: Task) => {
+    return canEditTask(task, session?.userId, session?.user?.role);
+  };
 
   // State
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
@@ -811,7 +819,7 @@ export function ListView({ projectId }: ListViewProps) {
                     className="font-medium text-sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (editingTaskId !== task.id && !task.isClosed) {
+                      if (editingTaskId !== task.id && canUserEditTask(task)) {
                         startEditingTaskName(task.id, task.name);
                       }
                     }}
@@ -834,7 +842,7 @@ export function ListView({ projectId }: ListViewProps) {
                     ) : (
                       <div className={cn(
                         "rounded px-2 py-1 -mx-2 -my-1 transition-colors",
-                        !task.isClosed && "cursor-text hover:bg-accent/50"
+                        canUserEditTask(task) && "cursor-text hover:bg-accent/50"
                       )}>
                         <div className={cn(task.isClosed && 'line-through')}>
                           {task.name}
@@ -848,7 +856,7 @@ export function ListView({ projectId }: ListViewProps) {
                     <Select
                       value={task.priority.toString()}
                       onValueChange={(value) => handleQuickPriorityChange(task.id, parseInt(value))}
-                      disabled={task.isClosed}
+                      disabled={!canUserEditTask(task)}
                     >
                       <SelectTrigger className="h-8 w-full text-xs">
                         <SelectValue>
@@ -877,7 +885,7 @@ export function ListView({ projectId }: ListViewProps) {
                     <Select
                       value={task.statusId}
                       onValueChange={(value) => handleQuickStatusChange(task.id, value)}
-                      disabled={task.isClosed}
+                      disabled={!canUserEditTask(task)}
                     >
                       <SelectTrigger className="h-8 w-full">
                         <SelectValue>
@@ -919,7 +927,7 @@ export function ListView({ projectId }: ListViewProps) {
                       users={availableUsers}
                       selectedUserIds={task.assigneeUserIds || []}
                       onSave={(newIds) => handleQuickAssigneeChange(task.id, newIds)}
-                      disabled={task.isClosed}
+                      disabled={!canUserEditTask(task)}
                       maxVisible={3}
                     />
                   </TableCell>
@@ -931,7 +939,7 @@ export function ListView({ projectId }: ListViewProps) {
                       onChange={(newDate) => handleQuickDueDateChange(task.id, newDate)}
                       placeholder="เลือกวันที่"
                       className="text-xs h-8 w-full"
-                      disabled={task.isClosed}
+                      disabled={!canUserEditTask(task)}
                     />
                   </TableCell>
 
@@ -967,7 +975,7 @@ export function ListView({ projectId }: ListViewProps) {
                             <CheckCircle2 className="mr-2 h-4 w-4" />
                             {task.closeType === 'COMPLETED' ? 'ปิดแล้ว (สำเร็จ)' : 'ปิดแล้ว (ยกเลิก)'}
                           </DropdownMenuItem>
-                        ) : (() => {
+                        ) : canUserEditTask(task) ? (() => {
                           const closeProps = getCloseButtonProps(task);
                           const CloseIcon = closeProps.icon;
                           return (
@@ -979,15 +987,22 @@ export function ListView({ projectId }: ListViewProps) {
                               {closeProps.label}
                             </DropdownMenuItem>
                           );
-                        })()}
+                        })() : (
+                          <DropdownMenuItem disabled>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            ไม่สามารถปิดงาน
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => setDeleteDialogTask(task)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          ลบ
-                        </DropdownMenuItem>
+                        {canUserEditTask(task) && (
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => setDeleteDialogTask(task)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            ลบ
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
