@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.17.0 (2025-10-26)
-**Last Major Update**: Cross-department task identification - Department badges in Dashboard widgets + Task Panel metadata
+**Version**: 2.18.0 (2025-10-26)
+**Last Major Update**: Permission fixes, Modal UX improvements (dirty check + unsaved warning), Thai fullName format update
 
 ---
 
@@ -95,6 +95,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Modal UX & Permission Improvements (2025-10-26 Session 2)** - Implemented dirty check system for Edit Project Modal and Edit User Modal (disabled save button when no changes, unsaved changes warning dialog, removed cancel button). Fixed MEMBER permission bug by adding creatorUserId field to Board and Department Tasks APIs. Added project info button (?) in Department Tasks view to open Edit Project Modal. Fixed Edit Project Modal 403 error with read-only mode for MEMBER/USER roles. Updated fullName format to Thai convention (no space between title prefix and first name). See PROGRESS_2025-10-26_SESSION2.md
 - ✅ **Cross-Department Task Identification (2025-10-26)** - Added department badges to Dashboard widgets (Overdue Tasks, My Tasks) and department info to Task Panel. Changed Recent Activities API to personal activity feed (shows all tasks user is involved with, not just department tasks). Badge size: text-lg (18px), positioned top-right with backdrop blur. Assignee avatars moved down to avoid overlap. See CROSS_DEPARTMENT_TASK_IDENTIFICATION_COMPLETE.md
 - ✅ **Permission System Security Fixes (2025-10-26)** - Fixed critical security bug where MEMBER could close/edit other people's tasks. Backend: Added context validation for `close_own_tasks` permission. Frontend: Added permission checks to all inline editors in List View and Task Row. Documentation: Added Multi-Layer Security Strategy to PERMISSION_GUIDELINE.md v1.1.0 (527 new lines, Defense in Depth approach)
 - ✅ **Profile Settings Page (2025-10-26)** - Complete user profile management with password change, avatar selection (16 presets), form validation, dirty checking, unsaved changes warning

@@ -232,8 +232,9 @@ export function CreateUserModal() {
       },
       {
         onSuccess: (response: any) => {
+          // Use formatFullName to match backend format (no space between title and firstName)
           const fullName = data.titlePrefix
-            ? `${data.titlePrefix} ${data.firstName} ${data.lastName}`
+            ? `${data.titlePrefix}${data.firstName} ${data.lastName}`
             : `${data.firstName} ${data.lastName}`;
           const message = response?.message || `สร้างผู้ใช้ "${fullName}" สำเร็จ`;
           toast.success(message);
@@ -266,15 +267,15 @@ export function CreateUserModal() {
       <div
         className={cn(
           'fixed top-0 right-0 h-full w-full max-w-2xl',
-          'bg-background/95 backdrop-blur-sm',
+          'bg-background/90 backdrop-blur-sm',
           'shadow-2xl z-[101] rounded-xl',
           'flex flex-col',
           'transition-transform duration-300 ease-in-out',
           isVisible ? 'translate-x-0' : 'translate-x-full'
         )}
       >
-        {/* Header (solid white background) */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-950 rounded-t-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 rounded-t-xl">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">สร้างผู้ใช้ใหม่</h2>
           <Button
             variant="ghost"
@@ -291,7 +292,7 @@ export function CreateUserModal() {
           <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
 
             {/* Info Alert */}
-            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/50 rounded-lg">
               <p className="text-sm text-blue-700 dark:text-blue-300">
                 <strong>หมายเหตุ:</strong> ระบบจะสร้างรหัสผ่านแบบสุ่มโดยอัตโนมัติ และส่งอีเมลสำหรับตั้งรหัสผ่านใหม่ให้ผู้ใช้
               </p>
@@ -314,7 +315,7 @@ export function CreateUserModal() {
                           variant="outline"
                           role="combobox"
                           aria-expanded={titlePrefixOpen}
-                          className="w-full justify-between mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                          className="w-full justify-between mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                         >
                           <span className={cn(!field.value && "text-muted-foreground")}>
                             {field.value || "-- ไม่ระบุ --"}
@@ -385,7 +386,7 @@ export function CreateUserModal() {
                   id="firstName"
                   placeholder="เช่น สมชาย"
                   {...register('firstName')}
-                  className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                  className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                 />
               </div>
 
@@ -398,7 +399,7 @@ export function CreateUserModal() {
                   id="lastName"
                   placeholder="เช่น ใจดี"
                   {...register('lastName')}
-                  className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                  className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                 />
               </div>
             </div>
@@ -413,7 +414,7 @@ export function CreateUserModal() {
                 type="email"
                 placeholder="email@example.com"
                 {...register('email')}
-                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
@@ -432,7 +433,7 @@ export function CreateUserModal() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full justify-between mt-1 h-[46px] text-base bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                      className="w-full justify-between mt-1 h-[46px] text-base bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                     >
                       <span className={cn(!watchDepartmentId && "text-muted-foreground truncate")}>
                         {watchDepartmentId
@@ -448,7 +449,7 @@ export function CreateUserModal() {
                         placeholder="ค้นหาหน่วยงาน..."
                         value={departmentSearch}
                         onChange={(e) => setDepartmentSearch(e.target.value)}
-                        className="h-9 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                        className="h-9 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                       />
                     </div>
                     <div className="max-h-[300px] overflow-y-auto">
@@ -491,7 +492,7 @@ export function CreateUserModal() {
                   name="role"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
+                      <SelectTrigger className="w-full mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700">
                         <SelectValue placeholder="เลือกบทบาท" />
                       </SelectTrigger>
                       <SelectContent>
@@ -526,7 +527,7 @@ export function CreateUserModal() {
                           role="combobox"
                           aria-expanded={jobTitleOpen}
                           disabled={isLoadingJobTitles}
-                          className="w-full justify-between mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                          className="w-full justify-between mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                         >
                           <span className={cn(!field.value && "text-muted-foreground truncate")}>
                             {isLoadingJobTitles
@@ -601,7 +602,7 @@ export function CreateUserModal() {
                         field.onChange(value === 'NONE' ? '' : value);
                       }}
                     >
-                      <SelectTrigger className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
+                      <SelectTrigger className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700">
                         <SelectValue placeholder="-- ไม่ระบุ --" />
                       </SelectTrigger>
                       <SelectContent>
@@ -634,7 +635,7 @@ export function CreateUserModal() {
                 id="workLocation"
                 placeholder="เช่น อาคาร 1 ชั้น 3"
                 {...register('workLocation')}
-                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
@@ -647,14 +648,14 @@ export function CreateUserModal() {
                 id="internalPhone"
                 placeholder="เช่น 1234, 5678"
                 {...register('internalPhone')}
-                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
           </div>
 
-          {/* Footer (solid white background - single button on right) */}
-          <footer className="flex justify-end p-4 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-700 flex-shrink-0 rounded-b-xl">
+          {/* Footer */}
+          <footer className="flex justify-end p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex-shrink-0 rounded-b-xl">
             <Button
               type="submit"
               disabled={createUserMutation.isPending}

@@ -8,6 +8,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api-middleware';
 import { successResponse } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
 import { getRolePermissions } from '@/lib/permissions';
+import { formatFullName } from '@/lib/user-utils';
 
 async function handler(req: AuthenticatedRequest) {
   // Get full user data
@@ -117,9 +118,9 @@ async function updateHandler(req: AuthenticatedRequest) {
     const newFirstName = firstName !== undefined ? firstName.trim() : currentUser?.firstName;
     const newLastName = lastName !== undefined ? lastName.trim() : currentUser?.lastName;
 
-    updateData.fullName = [newTitlePrefix, newFirstName, newLastName]
-      .filter(Boolean)
-      .join(' ');
+    if (newFirstName && newLastName) {
+      updateData.fullName = formatFullName(newTitlePrefix, newFirstName, newLastName);
+    }
   }
 
   // Update user

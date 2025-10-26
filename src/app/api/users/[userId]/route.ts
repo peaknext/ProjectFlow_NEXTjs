@@ -16,6 +16,7 @@ import {
 } from '@/lib/api-response';
 import { hashPassword, generateSecureToken } from '@/lib/auth';
 import { canManageTargetUser } from '@/lib/permissions';
+import { formatFullName } from '@/lib/user-utils';
 
 const updateUserSchema = z.object({
   fullName: z.string().min(1).optional(),
@@ -151,9 +152,7 @@ async function patchHandler(
       const firstName = updates.firstName || existingUser.firstName;
       const lastName = updates.lastName || existingUser.lastName;
 
-      updateData.fullName = titlePrefix
-        ? `${titlePrefix} ${firstName} ${lastName}`
-        : `${firstName} ${lastName}`;
+      updateData.fullName = formatFullName(titlePrefix, firstName, lastName);
     }
 
     if (updates.fullName !== undefined) updateData.fullName = updates.fullName;

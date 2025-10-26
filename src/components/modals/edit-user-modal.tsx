@@ -16,7 +16,7 @@
 import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
-import { X, Loader2, ChevronDown, Check, ChevronsUpDown } from 'lucide-react';
+import { X, Loader2, ChevronDown, Check, ChevronsUpDown, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,6 +41,16 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useUIStore } from '@/stores/use-ui-store';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useUpdateUser } from '@/hooks/use-users';
@@ -114,7 +124,7 @@ export function EditUserModal() {
     setValue,
     reset,
     handleSubmit: handleFormSubmit,
-    formState: { errors }
+    formState: { errors, isDirty }
   } = useForm<UserFormData>({
     defaultValues: {
       email: '',
@@ -131,6 +141,9 @@ export function EditUserModal() {
       notes: '',
     }
   });
+
+  // Unsaved changes confirmation
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
 
   // Watch form values
   const watchDepartmentId = watch('departmentId');
@@ -185,9 +198,24 @@ export function EditUserModal() {
     });
   }
 
-  // Handle close
+  // Handle close with unsaved changes check
   const handleClose = () => {
+    if (isDirty) {
+      setShowUnsavedWarning(true);
+    } else {
+      closeEditUserModal();
+    }
+  };
+
+  // Confirm close without saving
+  const confirmClose = () => {
+    setShowUnsavedWarning(false);
     closeEditUserModal();
+  };
+
+  // Cancel close
+  const cancelClose = () => {
+    setShowUnsavedWarning(false);
   };
 
   // Handle form submission
@@ -250,8 +278,9 @@ export function EditUserModal() {
       },
       {
         onSuccess: (response: any) => {
+          // Use formatFullName to match backend format (no space between title and firstName)
           const fullName = data.titlePrefix
-            ? `${data.titlePrefix} ${data.firstName} ${data.lastName}`
+            ? `${data.titlePrefix}${data.firstName} ${data.lastName}`
             : `${data.firstName} ${data.lastName}`;
           toast.success(`แก้ไขข้อมูล "${fullName}" สำเร็จ`);
           handleClose();
@@ -283,15 +312,15 @@ export function EditUserModal() {
       <div
         className={cn(
           'fixed top-0 right-0 h-full w-full max-w-2xl',
-          'bg-background/95 backdrop-blur-sm',
+          'bg-background/90 backdrop-blur-sm',
           'shadow-2xl z-[101] rounded-xl',
           'flex flex-col',
           'transition-transform duration-300 ease-in-out',
           isVisible ? 'translate-x-0' : 'translate-x-full'
         )}
       >
-        {/* Header (solid white background) */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-950 rounded-t-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 rounded-t-xl">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">แก้ไขข้อมูลผู้ใช้</h2>
           <Button
             variant="ghost"
@@ -324,7 +353,7 @@ export function EditUserModal() {
                           variant="outline"
                           role="combobox"
                           aria-expanded={titlePrefixOpen}
-                          className="w-full justify-between mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                          className="w-full justify-between mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                         >
                           <span className={cn(!field.value && "text-muted-foreground")}>
                             {field.value || "-- ไม่ระบุ --"}
@@ -403,7 +432,7 @@ export function EditUserModal() {
                   id="firstName"
                   placeholder="เช่น สมชาย"
                   {...register('firstName')}
-                  className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                  className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                 />
               </div>
 
@@ -416,7 +445,7 @@ export function EditUserModal() {
                   id="lastName"
                   placeholder="เช่น ใจดี"
                   {...register('lastName')}
-                  className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                  className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                 />
               </div>
             </div>
@@ -431,7 +460,7 @@ export function EditUserModal() {
                 type="email"
                 placeholder="email@example.com"
                 {...register('email')}
-                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
@@ -450,7 +479,7 @@ export function EditUserModal() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full justify-between mt-1 h-[46px] text-base bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                      className="w-full justify-between mt-1 h-[46px] text-base bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                     >
                       <span className={cn(!watchDepartmentId && "text-muted-foreground truncate")}>
                         {watchDepartmentId
@@ -466,7 +495,7 @@ export function EditUserModal() {
                         placeholder="ค้นหาหน่วยงาน..."
                         value={departmentSearch}
                         onChange={(e) => setDepartmentSearch(e.target.value)}
-                        className="h-9 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                        className="h-9 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                       />
                     </div>
                     <div className="max-h-[300px] overflow-y-auto">
@@ -509,7 +538,7 @@ export function EditUserModal() {
                   name="role"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
+                      <SelectTrigger className="w-full mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700">
                         <SelectValue placeholder="เลือกบทบาท" />
                       </SelectTrigger>
                       <SelectContent>
@@ -544,7 +573,7 @@ export function EditUserModal() {
                           role="combobox"
                           aria-expanded={jobTitleOpen}
                           disabled={isLoadingJobTitles}
-                          className="w-full justify-between mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                          className="w-full justify-between mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                         >
                           <span className={cn(!field.value && "text-muted-foreground truncate")}>
                             {isLoadingJobTitles
@@ -619,7 +648,7 @@ export function EditUserModal() {
                         field.onChange(value === 'NONE' ? '' : value);
                       }}
                     >
-                      <SelectTrigger className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
+                      <SelectTrigger className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700">
                         <SelectValue placeholder="-- ไม่ระบุ --" />
                       </SelectTrigger>
                       <SelectContent>
@@ -652,7 +681,7 @@ export function EditUserModal() {
                 id="workLocation"
                 placeholder="เช่น อาคาร 1 ชั้น 3"
                 {...register('workLocation')}
-                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
@@ -665,7 +694,7 @@ export function EditUserModal() {
                 id="internalPhone"
                 placeholder="เช่น 1234, 5678"
                 {...register('internalPhone')}
-                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
@@ -679,7 +708,7 @@ export function EditUserModal() {
                 type="url"
                 placeholder="https://example.com/image.jpg"
                 {...register('profileImageUrl')}
-                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
@@ -692,25 +721,66 @@ export function EditUserModal() {
                 id="notes"
                 placeholder="หมายเหตุสำหรับผู้ดูแลระบบ..."
                 {...register('notes')}
-                className="mt-1 min-h-[100px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                className="mt-1 min-h-[100px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
           </div>
 
-          {/* Footer (solid white background - single button on right) */}
-          <footer className="flex justify-end p-4 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-700 flex-shrink-0 rounded-b-xl">
+          {/* Footer */}
+          <footer className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex-shrink-0 rounded-b-xl">
+            {/* Show unsaved changes indicator */}
+            {isDirty ? (
+              <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
+                <span className="w-2 h-2 rounded-full bg-amber-600 dark:bg-amber-500 animate-pulse"></span>
+                <span>มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</span>
+              </div>
+            ) : (
+              <div></div>
+            )}
+
+            {/* Save button - disabled when no changes */}
             <Button
               type="submit"
-              disabled={updateUserMutation.isPending}
+              disabled={!isDirty || updateUserMutation.isPending}
               className="flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg shadow-md h-[46px] min-w-[150px]"
             >
-              {updateUserMutation.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-              <span>{updateUserMutation.isPending ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}</span>
+              {updateUserMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <span>กำลังบันทึก...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-5 w-5" />
+                  <span>บันทึก</span>
+                </>
+              )}
             </Button>
           </footer>
         </form>
       </div>
+
+      {/* Unsaved Changes Warning Dialog */}
+      <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณมีการเปลี่ยนแปลงข้อมูลที่ยังไม่ได้บันทึก หากปิดหน้าต่างนี้ การเปลี่ยนแปลงทั้งหมดจะสูญหาย
+              คุณต้องการปิดหน้าต่างโดยไม่บันทึกหรือไม่?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelClose}>
+              ยกเลิก
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClose} className="bg-red-600 hover:bg-red-700">
+              ปิดโดยไม่บันทึก
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

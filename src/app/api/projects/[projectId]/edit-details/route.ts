@@ -22,10 +22,11 @@ async function handler(
   const userId = req.session.userId;
   const { projectId } = await params;
 
-  // Check permissions (must have edit_projects permission)
-  const hasAccess = await checkPermission(userId, 'edit_projects', { projectId });
+  // Check permissions (must have view_projects permission to see details)
+  // Note: Actual editing will be checked in PATCH endpoint with edit_projects permission
+  const hasAccess = await checkPermission(userId, 'view_projects', { projectId });
   if (!hasAccess) {
-    return errorResponse('FORBIDDEN', 'No permission to edit this project', 403);
+    return errorResponse('FORBIDDEN', 'No permission to view this project', 403);
   }
 
   // Fetch project with phases and statuses

@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { type Task } from '@/hooks/use-tasks';
 import { usePersistedFilters } from '@/hooks/use-persisted-filters';
 import {
@@ -34,9 +35,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { TaskRow } from '@/components/common/task-row';
-import { ArrowUpDown, ArrowUp, ArrowDown, Pin, FolderKanban, ChevronDown, ChevronRight, FileText, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, Pin, FolderKanban, ChevronDown, ChevronRight, FileText, CheckCircle, AlertCircle, Clock, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/stores/use-ui-store';
 
 interface Status {
   id: string;
@@ -57,6 +65,7 @@ interface Project {
   id: string;
   name: string;
   isActive: boolean;
+  progress: number; // 0-1 from API (calculated using GAS formula)
   tasks: Task[];
   statuses: Status[];
 }
@@ -75,6 +84,9 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
   const [pinnedSortField, setPinnedSortField] = useState<SortField>('priority');
   const [pinnedSortOrder, setPinnedSortOrder] = useState<SortOrder>('asc');
   const [projectSorts, setProjectSorts] = useState<Record<string, { field: SortField; order: SortOrder }>>({});
+
+  // Edit Project Modal
+  const openEditProjectModal = useUIStore((state) => state.openEditProjectModal);
 
   // Initialize collapsed state: collapse projects with no tasks (after filter)
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(() => {
@@ -310,15 +322,6 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
     setCollapsedProjects(newCollapsed);
   };
 
-  // Calculate project progress
-  const calculateProgress = (project: Project): number => {
-    const allTasks = project.tasks;
-    if (allTasks.length === 0) return 0;
-
-    const completedTasks = allTasks.filter((task) => task.isClosed).length;
-    return Math.round((completedTasks / allTasks.length) * 100);
-  };
-
   // Render sort icon
   const SortIcon = ({ field, currentField, currentOrder }: { field: SortField; currentField: SortField; currentOrder: SortOrder }) => {
     if (currentField !== field) {
@@ -539,7 +542,9 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
         const sortedTasks = getSortedProjectTasks(project);
         const sort = projectSorts[project.id] || { field: 'priority', order: 'asc' };
         const isCollapsed = collapsedProjects.has(project.id);
-        const progress = calculateProgress(project);
+        // Use progress from API (0-1, convert to 0-100 for display)
+        // API calculates using GAS formula: Σ(statusOrder × difficulty) / Σ(Smax × difficulty) × 100
+        const progress = Math.round((project.progress || 0) * 100);
         const totalTasks = project.tasks.length;
         const completedTasks = project.tasks.filter((t) => t.isClosed).length;
 
@@ -558,8 +563,33 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     )}
                   </button>
-                  <CardTitle className="text-base text-primary">
-                    {project.name}
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Link
+                      href={`/projects/${project.id}/list`}
+                      className="text-primary hover:text-primary/80 hover:underline transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {project.name}
+                    </Link>
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditProjectModal(project.id);
+                            }}
+                            className="p-1 rounded-full hover:bg-accent transition-colors"
+                            aria-label="รายละเอียดโปรเจค"
+                          >
+                            <Info className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={8}>
+                          รายละเอียดโปรเจค
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </CardTitle>
                   {!project.isActive && (
                     <Badge variant="outline" className="text-xs">
@@ -570,37 +600,79 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
 
                 <div className="flex items-center gap-4">
                   {/* Quick Stats */}
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="font-medium">{totalTasks}</span>
+                  <TooltipProvider delayDuration={300}>
+                    <div className="flex items-center gap-3 text-xs">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                            <span className="font-medium">{totalTasks}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={8}>
+                          งานทั้งหมด
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <CheckCircle className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
+                            <span className="font-medium text-green-600">{completedTasks}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={8}>
+                          งานที่เสร็จแล้ว
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <AlertCircle className="h-3.5 w-3.5 text-red-600" aria-hidden="true" />
+                            <span className="font-medium text-red-600">
+                              {project.tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && !t.isClosed).length}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={8}>
+                          งานเกินกำหนด
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <Clock className="h-3.5 w-3.5 text-orange-600" aria-hidden="true" />
+                            <span className="font-medium text-orange-600">
+                              {project.tasks.filter(t => {
+                                if (!t.dueDate || t.isClosed) return false;
+                                const daysUntilDue = Math.ceil((new Date(t.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                return daysUntilDue >= 0 && daysUntilDue <= 3;
+                              }).length}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={8}>
+                          งานใกล้ครบกำหนด (0-3 วัน)
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-green-600" />
-                      <span className="font-medium text-green-600">{completedTasks}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <AlertCircle className="h-3.5 w-3.5 text-red-600" />
-                      <span className="font-medium text-red-600">
-                        {project.tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && !t.isClosed).length}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-orange-600" />
-                      <span className="font-medium text-orange-600">
-                        {project.tasks.filter(t => {
-                          if (!t.dueDate || t.isClosed) return false;
-                          const daysUntilDue = Math.ceil((new Date(t.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                          return daysUntilDue >= 0 && daysUntilDue <= 3;
-                        }).length}
-                      </span>
-                    </div>
-                  </div>
+                  </TooltipProvider>
 
                   {/* Progress Bar */}
-                  <div className="w-32">
-                    <Progress value={progress} className="h-2" />
-                  </div>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-32 cursor-help">
+                          <Progress value={progress} className="h-2" aria-label={`ความคืบหน้า ${progress}%`} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" sideOffset={8}>
+                        ความคืบหน้า: {progress}%
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
             </CardHeader>

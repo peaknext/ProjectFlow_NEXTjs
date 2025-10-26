@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigationStore } from "@/stores/use-navigation-store";
+import { EditProjectModal } from "@/components/modals/edit-project-modal";
 
 export default function DepartmentTasksPage() {
   // Get current user from auth hook
@@ -184,6 +185,9 @@ export default function DepartmentTasksPage() {
           แสดง {data.projects.length} โครงการ | รวม {data.stats.totalTasks} งาน
         </div>
       </div>
+
+      {/* Edit Project Modal */}
+      <EditProjectModal />
     </div>
   );
 }

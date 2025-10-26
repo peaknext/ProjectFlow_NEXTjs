@@ -18,10 +18,10 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Save, Loader2, Palette } from "lucide-react";
+import { X, Save, Loader2, Palette, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DateInput } from "@/components/ui/date-picker-popover";
 import { useUIStore } from "@/stores/use-ui-store";
 import { useProjectEditDetails, useEditProject } from "@/hooks/use-projects";
+import { useSession } from "@/hooks/use-session";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';
@@ -38,6 +39,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Color presets (same as CreateProjectModal)
 const COLOR_PRESETS = [
@@ -95,6 +106,15 @@ export function EditProjectModal() {
 
   const { projectId, isOpen } = editProjectModal;
 
+  // Get current user session for permission check
+  const { data: session } = useSession();
+
+  // Check if user can edit projects (ADMIN, CHIEF, LEADER, HEAD can edit)
+  const canEdit = useMemo(() => {
+    if (!session?.user?.role) return false;
+    return ['ADMIN', 'CHIEF', 'LEADER', 'HEAD'].includes(session.user.role);
+  }, [session?.user?.role]);
+
   // Fetch project edit details
   const {
     data: project,
@@ -113,7 +133,7 @@ export function EditProjectModal() {
     control,
     reset,
     handleSubmit: handleFormSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EditProjectFormData>({
     defaultValues: {
       description: "",
@@ -121,6 +141,9 @@ export function EditProjectModal() {
       statuses: [],
     },
   });
+
+  // Unsaved changes confirmation
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
 
   // Handle open/close animations (SAME AS CreateProjectModal)
   useEffect(() => {
@@ -153,9 +176,24 @@ export function EditProjectModal() {
     }
   }, [project, reset]);
 
-  // Handle close
+  // Handle close with unsaved changes check
   const handleClose = () => {
+    if (isDirty && canEdit) {
+      setShowUnsavedWarning(true);
+    } else {
+      closeEditProjectModal();
+    }
+  };
+
+  // Confirm close without saving
+  const confirmClose = () => {
+    setShowUnsavedWarning(false);
     closeEditProjectModal();
+  };
+
+  // Cancel close
+  const cancelClose = () => {
+    setShowUnsavedWarning(false);
   };
 
   // Handle form submission
@@ -291,13 +329,24 @@ export function EditProjectModal() {
               <div>
                 <Label htmlFor="description" className="text-sm font-medium">
                   คำอธิบาย
+                  {!canEdit && (
+                    <span className="ml-2 text-xs text-amber-600 dark:text-amber-500">
+                      (ดูอย่างเดียว)
+                    </span>
+                  )}
                 </Label>
                 <Textarea
                   id="description"
                   rows={4}
                   placeholder="อธิบายวัตถุประสงค์และขอบเขตของโปรเจค..."
                   {...register("description")}
-                  className="mt-1 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                  disabled={!canEdit}
+                  className={cn(
+                    "mt-1 border-slate-300 dark:border-slate-700",
+                    canEdit
+                      ? "bg-white dark:bg-slate-800"
+                      : "bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed text-muted-foreground"
+                  )}
                 />
               </div>
 
@@ -367,7 +416,13 @@ export function EditProjectModal() {
                                 value={field.value || ""}
                                 onChange={field.onChange}
                                 placeholder="เลือกวันที่"
-                                className="h-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                                disabled={!canEdit}
+                                className={cn(
+                                  "h-10 border-slate-300 dark:border-slate-700",
+                                  canEdit
+                                    ? "bg-white dark:bg-slate-800"
+                                    : "bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed"
+                                )}
                               />
                             )}
                           />
@@ -386,7 +441,13 @@ export function EditProjectModal() {
                                 value={field.value || ""}
                                 onChange={field.onChange}
                                 placeholder="เลือกวันที่"
-                                className="h-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                                disabled={!canEdit}
+                                className={cn(
+                                  "h-10 border-slate-300 dark:border-slate-700",
+                                  canEdit
+                                    ? "bg-white dark:bg-slate-800"
+                                    : "bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed"
+                                )}
                               />
                             )}
                           />
@@ -444,7 +505,13 @@ export function EditProjectModal() {
                                 <PopoverTrigger asChild>
                                   <button
                                     type="button"
-                                    className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer h-[46px]"
+                                    disabled={!canEdit}
+                                    className={cn(
+                                      "flex items-center gap-2 px-3 py-2 border rounded-lg h-[46px]",
+                                      canEdit
+                                        ? "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                                        : "bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 cursor-not-allowed"
+                                    )}
                                   >
                                     <span
                                       className="w-6 h-6 rounded border border-slate-300 dark:border-slate-700 flex-shrink-0"
@@ -453,22 +520,24 @@ export function EditProjectModal() {
                                     <Palette className="h-4 w-4 text-muted-foreground" />
                                   </button>
                                 </PopoverTrigger>
-                                <PopoverContent
-                                  className="w-[280px] p-3"
-                                  align="end"
-                                >
-                                  <div className="grid grid-cols-5 gap-2">
-                                    {COLOR_PRESETS.map((color) => (
-                                      <button
-                                        key={color}
-                                        type="button"
-                                        className="w-10 h-10 rounded border border-slate-300 dark:border-slate-700 hover:scale-110 transition-transform"
-                                        style={{ backgroundColor: color }}
-                                        onClick={() => field.onChange(color)}
-                                      />
-                                    ))}
-                                  </div>
-                                </PopoverContent>
+                                {canEdit && (
+                                  <PopoverContent
+                                    className="w-[280px] p-3"
+                                    align="end"
+                                  >
+                                    <div className="grid grid-cols-5 gap-2">
+                                      {COLOR_PRESETS.map((color) => (
+                                        <button
+                                          key={color}
+                                          type="button"
+                                          className="w-10 h-10 rounded border border-slate-300 dark:border-slate-700 hover:scale-110 transition-transform"
+                                          style={{ backgroundColor: color }}
+                                          onClick={() => field.onChange(color)}
+                                        />
+                                      ))}
+                                    </div>
+                                  </PopoverContent>
+                                )}
                               </Popover>
                             )}
                           />
@@ -487,27 +556,68 @@ export function EditProjectModal() {
         </div>
 
         {/* Footer */}
-        <footer className="flex justify-end p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0 rounded-b-xl">
-          <Button
-            type="button"
-            onClick={handleFormSubmit(onSubmit)}
-            disabled={editProjectMutation.isPending || isLoading}
-            className="flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg shadow-md h-[46px] min-w-[150px]"
-          >
-            {editProjectMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                <span>กำลังบันทึก...</span>
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-5 w-5" />
-                <span>บันทึก</span>
-              </>
-            )}
-          </Button>
+        <footer className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0 rounded-b-xl">
+          {!canEdit && (
+            <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
+              <Eye className="h-4 w-4" />
+              <span>คุณกำลังดูข้อมูลแบบอ่านอย่างเดียว</span>
+            </div>
+          )}
+          {canEdit && (
+            <>
+              {/* Show unsaved changes indicator */}
+              {isDirty && (
+                <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
+                  <span className="w-2 h-2 rounded-full bg-amber-600 dark:bg-amber-500 animate-pulse"></span>
+                  <span>มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</span>
+                </div>
+              )}
+              {!isDirty && <div></div>}
+
+              {/* Save button - disabled when no changes */}
+              <Button
+                type="button"
+                onClick={handleFormSubmit(onSubmit)}
+                disabled={!isDirty || editProjectMutation.isPending || isLoading}
+                className="flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg shadow-md h-[46px] min-w-[150px]"
+              >
+                {editProjectMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <span>กำลังบันทึก...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-5 w-5" />
+                    <span>บันทึก</span>
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </footer>
       </div>
+
+      {/* Unsaved Changes Warning Dialog */}
+      <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณมีการเปลี่ยนแปลงข้อมูลที่ยังไม่ได้บันทึก หากปิดหน้าต่างนี้ การเปลี่ยนแปลงทั้งหมดจะสูญหาย
+              คุณต้องการปิดหน้าต่างโดยไม่บันทึกหรือไม่?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelClose}>
+              ยกเลิก
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClose} className="bg-red-600 hover:bg-red-700">
+              ปิดโดยไม่บันทึก
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

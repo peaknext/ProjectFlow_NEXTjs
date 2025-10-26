@@ -218,6 +218,7 @@ async function handler(
     closeType: task.closeType,
     difficulty: task.difficulty,
     parentTaskId: task.parentTaskId,
+    creatorUserId: task.creatorUserId, // IMPORTANT: Required for permission checks
     creator: task.creator,
     createdAt: task.createdAt.toISOString(),
 
