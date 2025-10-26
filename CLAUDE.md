@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.13.0 (2025-10-26)
-**Last Major Update**: Completed Phase 4 Performance Optimization (Project Board API) - All 4 optimization phases complete
+**Version**: 2.15.0 (2025-10-26)
+**Last Major Update**: Profile Settings page implementation with password change functionality
 
 ---
 
@@ -42,8 +42,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Tech Stack**: Next.js 15 (App Router), TypeScript, PostgreSQL, Prisma ORM, React Query, Zustand, Tailwind CSS, shadcn/ui
 
 **Current Status**:
-- Backend: 100% Complete (79+ API endpoints)
-- Frontend: ~68% Complete (44+/55+ major components)
+- Backend: 100% Complete (81+ API endpoints)
+- Frontend: ~70% Complete (45+/55+ major components)
 - **NOT PRODUCTION-READY** - Active development, testing phase
 - Estimated completion: 2025-12-05 (5 weeks remaining)
 
@@ -54,9 +54,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🎯 Current Priority
 
-**What to work on next**: Dashboard Testing & Documentation
+**What to work on next**: Additional modals and selectors
 
-**Current Task**: Testing phase - validate all dashboard widgets functionality
+**Current Task**: Continue implementing remaining UI components
 
 **Dashboard Implementation Status**: ✅ **COMPLETE WITH UI/UX REFINEMENT** (7/7 widgets)
 - ✅ Stats Cards (4 cards) - permission-based, animated numbers
@@ -88,13 +88,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Advanced Features (7: global search, inline editor, batch operations UI)
 
 **Recently Completed** (Last 7 days):
-- ✅ **Phase 4: Project Board API Optimization (2025-10-26)** - Final optimization phase complete (3 parallel queries, 25% faster)
+- ✅ **Profile Settings Page (2025-10-26)** - Complete user profile management with password change, avatar selection (16 presets), form validation, dirty checking, unsaved changes warning
+- ✅ **Permission System Bug Fixes (2025-10-26)** - Fixed multi-assignee support & creatorUserId field mismatch, MEMBER can now edit own tasks
+- ✅ **Dashboard Optimistic UI (2025-10-26)** - All widgets now have instant response (0ms), fixed query key mismatch
+- ✅ **Date Validation Fixes (2025-10-26)** - Fixed 400 errors in task/project/phase creation with dates (4 API routes)
+- ✅ **Task Panel Save Button (2025-10-26)** - Fixed disabled Save button issue using useCallback pattern
+- ✅ **Project Progress Backfill (2025-10-26)** - Populated progress values for all 19 projects
+- ✅ **Phase 4: Project Board API Optimization (2025-10-26)** - 3 parallel queries, 25% faster
 - ✅ **Phase 3: Reports API Optimization (2025-10-26)** - 55% faster (3 parallel queries)
 - ✅ **Phase 2: Department Tasks API Optimization (2025-10-26)** - 65% faster (4 parallel queries)
 - ✅ **Phase 1: Dashboard API Optimization (2025-10-26)** - 72% faster (11 parallel queries)
-- ✅ Dashboard Avatar Images (2025-10-26) - Profile photos in all widgets
-- ✅ Dashboard UI/UX Refinement (2025-10-26) - 14 layout improvements, React Hooks fixes
-- ✅ User Dashboard (2025-10-26) - 7 widgets fully implemented
 
 **Known Critical Issues**: None (all resolved as of 2025-10-26)
 
@@ -795,7 +798,7 @@ PORT=3010 npm run dev
 2. Review `*_COMPLETE.md` files for implementation details
 3. Check `*_BUG_FIX*.md` files for known issues and solutions
 4. Use git blame to identify recent changes to problematic files
-5. Check CLAUDE.md version number for context (currently v2.13.0)
+5. Check CLAUDE.md version number for context (currently v2.14.0)
 6. Clear Next.js cache if experiencing module resolution errors
 
 **If adding an API endpoint**:
@@ -1155,4 +1158,4 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.12.0**
+**End of CLAUDE.md v2.14.0**

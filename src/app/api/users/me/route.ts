@@ -16,12 +16,17 @@ async function handler(req: AuthenticatedRequest) {
     select: {
       id: true,
       email: true,
+      titlePrefix: true,
+      firstName: true,
+      lastName: true,
       fullName: true,
       role: true,
       profileImageUrl: true,
       departmentId: true,
-      jobTitle: true,
+      jobTitleId: true,
       jobLevel: true,
+      workLocation: true,
+      internalPhone: true,
       pinnedTasks: true,
       additionalRoles: true,
       createdAt: true,
@@ -61,3 +66,110 @@ async function handler(req: AuthenticatedRequest) {
 }
 
 export const GET = withAuth(handler);
+
+/**
+ * PATCH /api/users/me
+ * Update current user profile
+ */
+async function updateHandler(req: AuthenticatedRequest) {
+  const userId = req.session.userId;
+  const body = await req.json();
+
+  // Allowed fields to update
+  const {
+    titlePrefix,
+    firstName,
+    lastName,
+    jobTitleId,
+    jobLevel,
+    workLocation,
+    internalPhone,
+    profileImageUrl,
+  } = body;
+
+  // Validate required fields
+  if (firstName !== undefined && !firstName?.trim()) {
+    return successResponse({ error: 'First name is required' }, 400);
+  }
+  if (lastName !== undefined && !lastName?.trim()) {
+    return successResponse({ error: 'Last name is required' }, 400);
+  }
+
+  // Build update data
+  const updateData: any = {};
+  if (titlePrefix !== undefined) updateData.titlePrefix = titlePrefix;
+  if (firstName !== undefined) updateData.firstName = firstName.trim();
+  if (lastName !== undefined) updateData.lastName = lastName.trim();
+  if (jobTitleId !== undefined) updateData.jobTitleId = jobTitleId || null;
+  if (jobLevel !== undefined) updateData.jobLevel = jobLevel;
+  if (workLocation !== undefined) updateData.workLocation = workLocation;
+  if (internalPhone !== undefined) updateData.internalPhone = internalPhone;
+  if (profileImageUrl !== undefined) updateData.profileImageUrl = profileImageUrl;
+
+  // Auto-generate fullName if name fields are being updated
+  if (firstName !== undefined || lastName !== undefined || titlePrefix !== undefined) {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { titlePrefix: true, firstName: true, lastName: true },
+    });
+
+    const newTitlePrefix = titlePrefix !== undefined ? titlePrefix : currentUser?.titlePrefix;
+    const newFirstName = firstName !== undefined ? firstName.trim() : currentUser?.firstName;
+    const newLastName = lastName !== undefined ? lastName.trim() : currentUser?.lastName;
+
+    updateData.fullName = [newTitlePrefix, newFirstName, newLastName]
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  // Update user
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+    select: {
+      id: true,
+      email: true,
+      titlePrefix: true,
+      firstName: true,
+      lastName: true,
+      fullName: true,
+      role: true,
+      profileImageUrl: true,
+      departmentId: true,
+      jobTitleId: true,
+      jobLevel: true,
+      workLocation: true,
+      internalPhone: true,
+      department: {
+        select: {
+          id: true,
+          name: true,
+          tel: true,
+          division: {
+            select: {
+              id: true,
+              name: true,
+              missionGroup: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      jobTitle: {
+        select: {
+          id: true,
+          jobTitleTh: true,
+          jobTitleEn: true,
+        },
+      },
+    },
+  });
+
+  return successResponse({ user: updatedUser });
+}
+
+export const PATCH = withAuth(updateHandler);
