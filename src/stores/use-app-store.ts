@@ -27,6 +27,21 @@ export interface Project {
   missionGroupId: string | null;
   dateCreated: string;
   dateModified: string;
+
+  // Relations (optional, included when fetching with includes)
+  department?: {
+    id: string;
+    name: string;
+    division?: {
+      id: string;
+      name: string;
+      missionGroup?: {
+        id: string;
+        name: string;
+      };
+    };
+    projects?: Project[];
+  };
 }
 
 export interface FilterState {

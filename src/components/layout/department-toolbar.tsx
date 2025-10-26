@@ -27,8 +27,8 @@ export function DepartmentToolbar({ title = 'งานในหน่วยง�
   const { data: workspaceData } = useWorkspace();
 
   // Get department from navigation store or props
-  const { department: navDepartment } = useNavigationStore();
-  const currentDepartmentId = propDepartmentId || navDepartment?.id;
+  const { departmentId: navDepartmentId } = useNavigationStore();
+  const currentDepartmentId = propDepartmentId || navDepartmentId;
 
   // Filter projects to only show those from the current department
   const departmentProjects = useMemo(() => {

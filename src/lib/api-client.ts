@@ -93,7 +93,7 @@ class ApiClient {
     const response = await this.instance.get<ApiResponse<T>>(url, config);
 
     if (!response.data.success) {
-      throw new Error(response.data.error?.message || 'Request failed');
+      throw new Error((response.data as any).error?.message || 'Request failed');
     }
 
     // Ensure we return the data (even if it's an empty object)
@@ -114,10 +114,10 @@ class ApiClient {
       console.error('[API Client] POST request failed:', {
         url,
         data,
-        error: response.data.error,
+        error: (response.data as any).error,
         fullResponse: response.data
       });
-      throw new Error(response.data.error?.message || 'Request failed');
+      throw new Error((response.data as any).error?.message || 'Request failed');
     }
 
     return response.data.data ?? ({} as T);
@@ -134,7 +134,7 @@ class ApiClient {
     const response = await this.instance.patch<ApiResponse<T>>(url, data, config);
 
     if (!response.data.success) {
-      throw new Error(response.data.error?.message || 'Request failed');
+      throw new Error((response.data as any).error?.message || 'Request failed');
     }
 
     return response.data.data ?? ({} as T);
@@ -147,7 +147,7 @@ class ApiClient {
     const response = await this.instance.delete<ApiResponse<T>>(url, config);
 
     if (!response.data.success) {
-      throw new Error(response.data.error?.message || 'Request failed');
+      throw new Error((response.data as any).error?.message || 'Request failed');
     }
 
     return response.data.data ?? ({} as T);
@@ -164,7 +164,7 @@ class ApiClient {
     const response = await this.instance.put<ApiResponse<T>>(url, data, config);
 
     if (!response.data.success) {
-      throw new Error(response.data.error?.message || 'Request failed');
+      throw new Error((response.data as any).error?.message || 'Request failed');
     }
 
     return response.data.data ?? ({} as T);
