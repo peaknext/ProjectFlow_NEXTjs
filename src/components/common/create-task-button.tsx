@@ -53,15 +53,6 @@ export function CreateTaskButton({
   const projectName = propProjectName || data?.project?.name;
 
   const handleClick = () => {
-    console.log('CreateTaskButton clicked!', {
-      projectId,
-      projectName,
-      departmentId,
-      availableProjects: availableProjects?.length,
-      parentTaskId,
-      defaultStartDate,
-      defaultDueDate,
-    });
     openCreateTaskModal({
       projectId,
       projectName,

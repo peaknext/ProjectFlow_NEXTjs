@@ -14,16 +14,26 @@ import {
   errorResponse,
   handleApiError,
 } from '@/lib/api-response';
+import { getUserAccessibleScope } from '@/lib/permissions';
 
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255),
   description: z.string().optional(),
   departmentId: z.string().min(1, 'Department ID is required'),
-  actionPlanId: z.string().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  status: z.enum(['ACTIVE', 'COMPLETED', 'ON_HOLD', 'ARCHIVED']).default('ACTIVE'),
-  color: z.string().optional(),
+  hospMissionId: z.string().nullish(),
+  actionPlanId: z.string().nullish(),
+  phases: z.array(z.object({
+    name: z.string(),
+    phaseOrder: z.number(),
+    startDate: z.string().nullable().optional(),
+    endDate: z.string().nullable().optional(),
+  })).optional(),
+  statuses: z.array(z.object({
+    name: z.string(),
+    color: z.string(),
+    order: z.number(),
+    statusType: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'DONE', 'CANCELED']),
+  })).optional(),
 });
 
 /**
@@ -43,8 +53,17 @@ async function getHandler(req: AuthenticatedRequest) {
 
   const skip = (page - 1) * limit;
 
+  // Get user's accessible scope (respects primary role + additionalRoles)
+  const scope = await getUserAccessibleScope(req.session.userId);
+
   // Build where clause
   const where: any = includeDeleted ? {} : { dateDeleted: null };
+
+  // Filter by accessible departments (critical security check)
+  // Only show projects in departments the user has access to
+  if (!scope.isAdmin) {
+    where.departmentId = { in: scope.departmentIds };
+  }
 
   if (search) {
     where.OR = [
@@ -54,6 +73,21 @@ async function getHandler(req: AuthenticatedRequest) {
   }
 
   if (departmentId) {
+    // If user provides departmentId, ensure it's in their accessible scope
+    if (!scope.isAdmin && !scope.departmentIds.includes(departmentId)) {
+      // User requested a department they don't have access to - return empty results
+      return successResponse({
+        projects: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+      });
+    }
     where.departmentId = departmentId;
   }
 
@@ -186,6 +220,9 @@ async function postHandler(req: AuthenticatedRequest) {
     const body = await req.json();
     const data = createProjectSchema.parse(body);
 
+    // Check user's accessible scope
+    const scope = await getUserAccessibleScope(req.session.userId);
+
     // Check if department exists
     const department = await prisma.department.findUnique({
       where: { id: data.departmentId },
@@ -193,6 +230,15 @@ async function postHandler(req: AuthenticatedRequest) {
 
     if (!department) {
       return errorResponse('DEPARTMENT_NOT_FOUND', 'Department not found', 404);
+    }
+
+    // Verify user has access to this department
+    if (!scope.isAdmin && !scope.departmentIds.includes(data.departmentId)) {
+      return errorResponse(
+        'FORBIDDEN',
+        'You do not have permission to create projects in this department',
+        403
+      );
     }
 
     // Check if action plan exists (if provided)
@@ -206,19 +252,33 @@ async function postHandler(req: AuthenticatedRequest) {
       }
     }
 
-    // Create project
+    // Create project with phases and statuses
     const project = await prisma.project.create({
       data: {
         name: data.name,
         description: data.description || null,
         departmentId: data.departmentId,
         actionPlanId: data.actionPlanId || null,
-        startDate: data.startDate ? new Date(data.startDate) : null,
-        endDate: data.endDate ? new Date(data.endDate) : null,
-        status: data.status,
-        color: data.color || null,
+        status: 'ACTIVE',
         ownerUserId: req.session.userId,
-        creatorUserId: req.session.userId,
+        // Create phases if provided
+        phases: data.phases && data.phases.length > 0 ? {
+          create: data.phases.map((phase: any) => ({
+            name: phase.name,
+            phaseOrder: phase.phaseOrder,
+            startDate: phase.startDate ? new Date(phase.startDate) : null,
+            endDate: phase.endDate ? new Date(phase.endDate) : null,
+          })),
+        } : undefined,
+        // Create statuses if provided
+        statuses: data.statuses && data.statuses.length > 0 ? {
+          create: data.statuses.map((status: any) => ({
+            name: status.name,
+            color: status.color,
+            order: status.order,
+            type: status.statusType,
+          })),
+        } : undefined,
       },
       include: {
         department: {
@@ -246,40 +306,23 @@ async function postHandler(req: AuthenticatedRequest) {
             name: true,
           },
         },
+        phases: {
+          orderBy: {
+            phaseOrder: 'asc',
+          },
+        },
+        statuses: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
       },
-    });
-
-    // Create default statuses (Todo, In Progress, Done)
-    await prisma.status.createMany({
-      data: [
-        {
-          name: 'Todo',
-          color: '#94a3b8',
-          order: 1,
-          type: 'NOT_STARTED',
-          projectId: project.id,
-        },
-        {
-          name: 'In Progress',
-          color: '#3b82f6',
-          order: 2,
-          type: 'IN_PROGRESS',
-          projectId: project.id,
-        },
-        {
-          name: 'Done',
-          color: '#22c55e',
-          order: 3,
-          type: 'DONE',
-          projectId: project.id,
-        },
-      ],
     });
 
     return successResponse(
       {
         project,
-        message: 'Project created successfully with default statuses',
+        message: 'Project created successfully',
       },
       201
     );

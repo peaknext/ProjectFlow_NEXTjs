@@ -118,6 +118,75 @@
     @apply bg-muted-foreground/50;
   }
 
+  /* Activities scrollbar - only visible on hover/scroll */
+  .activities-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .activities-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .activities-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+
+  .activities-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgb(209 213 219); /* gray-300 */
+  }
+
+  .activities-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(156 163 175); /* gray-400 */
+  }
+
+  .dark .activities-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+
+  .dark .activities-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgb(75 85 99); /* gray-600 */
+  }
+
+  .dark .activities-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(107 114 128); /* gray-500 */
+  }
+
+  /* Firefox */
+  .activities-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .activities-scrollbar:hover {
+    scrollbar-color: rgb(209 213 219) transparent;
+  }
+
+  .dark .activities-scrollbar {
+    scrollbar-color: transparent transparent;
+  }
+
+  .dark .activities-scrollbar:hover {
+    scrollbar-color: rgb(75 85 99) transparent;
+  }
+
+  /* Fade-in scale animation for new activities */
+  @keyframes fade-in-scale {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(-10px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-fade-in-scale {
+    animation: fade-in-scale 0.3s ease-out;
+  }
+
   /* Material Symbols - Filled variant */
   .material-symbols-outlined.filled {
     font-variation-settings: "FILL" 1;

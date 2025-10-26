@@ -52,7 +52,6 @@ async function handler(req: AuthenticatedRequest) {
     endDate = new Date();
     startDate = new Date();
     startDate.setDate(startDate.getDate() - 90); // 90 days ago
-    console.log('📅 Using default date range (90 days):', { startDate, endDate });
   } else {
     startDate = new Date(startDateParam);
     endDate = new Date(endDateParam);
@@ -236,9 +235,6 @@ async function handler(req: AuthenticatedRequest) {
   // The departmentIds array was already filtered based on organization selectors above
   taskFilter.project.departmentId = { in: departmentIds };
 
-  console.log('🔍 Task filter:', JSON.stringify(taskFilter, null, 2));
-  console.log('📊 AccessibleScope:', accessibleScope);
-  console.log('📅 Date range:', { start: startDate.toISOString(), end: endDate.toISOString() });
 
   // OPTIMIZED: Shared user select
   const userSelect = {

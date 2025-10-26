@@ -135,38 +135,35 @@ async function postHandler(
       },
     });
 
-    // Notify mentioned users (if any)
-    // TODO: Implement notification system
-    // if (mentionedUserIds.length > 0) {
-    //   await prisma.notification.createMany({
-    //     data: mentionedUserIds.map(userId => ({
-    //       userId,
-    //       type: 'MENTIONED_IN_COMMENT',
-    //       title: 'คุณถูกกล่าวถึงในความคิดเห็น',
-    //       message: `${comment.commentor.fullName} กล่าวถึงคุณในงาน: ${task.name}`,
-    //       link: `/projects/${task.projectId}?task=${taskId}`,
-    //       triggeredByUserId: req.session.userId,
-    //     })),
-    //   },
-    // });
-
-    // TODO: Implement notification system when Notification model is configured
     // Create notifications for mentioned users
-    // if (mentionedUserIds.length > 0) {
-    //   for (const userId of mentionedUserIds) {
-    //     if (userId !== req.session.userId) {
-    //       await prisma.notification.create({
-    //         data: {
-    //           userId,
-    //           type: 'COMMENT_MENTION',
-    //           title: 'คุณถูกกล่าวถึงในความคิดเห็น',
-    //           message: `${req.session.user.fullName} กล่าวถึงคุณในงาน: ${task.name}`,
-    //           link: `/projects/${task.projectId}?task=${taskId}`,
-    //         },
-    //       });
-    //     }
-    //   }
-    // }
+    if (mentionedUserIds.length > 0) {
+      const currentUserFullName = req.session.user.fullName;
+
+      // Fetch mentioned users to validate they exist
+      const mentionedUsers = await prisma.user.findMany({
+        where: { id: { in: mentionedUserIds } },
+        select: { id: true },
+      });
+
+      const validUserIds = mentionedUsers.map(u => u.id);
+
+      // Create notification for each mentioned user (except self)
+      const notificationData = validUserIds
+        .filter(userId => userId !== req.session.userId) // Don't notify self
+        .map(userId => ({
+          userId,
+          type: 'COMMENT_MENTION',
+          message: `${currentUserFullName} ได้แท็กคุณในความคิดเห็น`,
+          taskId,
+          triggeredByUserId: req.session.userId,
+        }));
+
+      if (notificationData.length > 0) {
+        await prisma.notification.createMany({
+          data: notificationData,
+        });
+      }
+    }
 
     return successResponse(
       {

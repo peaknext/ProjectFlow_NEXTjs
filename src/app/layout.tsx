@@ -15,6 +15,18 @@ const sarabun = Sarabun({
 export const metadata: Metadata = {
   title: 'ProjectFlows - Project Management System',
   description: 'Next.js Project Management System for Hospital IT Department',
+  icons: {
+    icon: [
+      {
+        url: '/ProjectFlowLogo.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+    apple: {
+      url: '/ProjectFlowLogo.svg',
+      type: 'image/svg+xml',
+    },
+  },
 };
 
 export default function RootLayout({

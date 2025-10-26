@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { withAuth } from '@/lib/api-middleware';
 import type { AuthenticatedRequest } from '@/lib/api-middleware';
 import { successResponse, handleApiError } from '@/lib/api-response';
+import { calculateProgress } from '@/lib/calculate-progress';
 
 const batchProgressSchema = z.object({
   projectIds: z.array(z.string()).min(1).max(50), // Limit to 50 projects per batch
@@ -37,21 +38,22 @@ async function calculateProjectProgress(
   projectId: string,
   tx: any
 ): Promise<ProjectProgress | null> {
-  // Get project with all tasks
+  // Get project with all tasks and statuses
   const project = await tx.project.findUnique({
     where: { id: projectId, dateDeleted: null },
     select: {
       id: true,
       name: true,
       tasks: {
-        where: { deletedAt: null },
+        where: { deletedAt: null, parentTaskId: null }, // Only main tasks
         select: {
           id: true,
-          isClosed: true,
+          difficulty: true,
           closeType: true,
           statusId: true,
           status: {
             select: {
+              order: true,
               type: true,
             },
           },
@@ -71,6 +73,11 @@ async function calculateProjectProgress(
           },
         },
       },
+      statuses: {
+        select: {
+          order: true,
+        },
+      },
     },
   });
 
@@ -78,39 +85,33 @@ async function calculateProjectProgress(
     return null;
   }
 
-  const tasks = project.tasks;
-  const totalTasks = tasks.length;
+  // Use shared calculation utility
+  const progressResult = calculateProgress(project.tasks, project.statuses);
 
-  // Count tasks by status type
-  const completedTasks = tasks.filter(
-    (t) => t.isClosed && t.closeType === 'COMPLETED'
+  // Count tasks by status type for additional stats
+  const validTasks = project.tasks.filter((t) => t.closeType !== 'ABORTED');
+
+  const inProgressTasks = validTasks.filter(
+    (t) => !t.closeType && t.status?.type === 'IN_PROGRESS'
   ).length;
 
-  const inProgressTasks = tasks.filter(
-    (t) => !t.isClosed && t.status?.type === 'IN_PROGRESS'
+  const notStartedTasks = validTasks.filter(
+    (t) => !t.closeType && t.status?.type === 'NOT_STARTED'
   ).length;
 
-  const notStartedTasks = tasks.filter(
-    (t) => !t.isClosed && t.status?.type === 'NOT_STARTED'
-  ).length;
-
-  // Calculate basic progress
-  const progressPercentage =
-    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  // Count subtasks
-  const allSubtasks = tasks.flatMap((t) => t.subtasks);
+  // Count subtasks (from valid tasks only)
+  const allSubtasks = validTasks.flatMap((t) => t.subtasks);
   const totalSubtasks = allSubtasks.length;
   const completedSubtasks = allSubtasks.filter((s) => s.isClosed).length;
 
-  // Count checklists
-  const allChecklists = tasks.flatMap((t) => t.checklists);
+  // Count checklists (from valid tasks only)
+  const allChecklists = validTasks.flatMap((t) => t.checklists);
   const totalChecklists = allChecklists.length;
   const completedChecklists = allChecklists.filter((c) => c.isChecked).length;
 
   // Calculate weighted overall progress
-  // Tasks: 60%, Subtasks: 20%, Checklists: 20%
-  const taskProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 60 : 0;
+  // Use GAS formula progress as base (60%), add subtasks (20%) and checklists (20%)
+  const taskProgress = progressResult.progress * 0.6; // Use GAS formula result
   const subtaskProgress =
     totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 20 : 0;
   const checklistProgress =
@@ -123,11 +124,11 @@ async function calculateProjectProgress(
   return {
     projectId: project.id,
     projectName: project.name,
-    totalTasks,
-    completedTasks,
+    totalTasks: progressResult.totalTasks,
+    completedTasks: progressResult.completedTasks,
     inProgressTasks,
     notStartedTasks,
-    progressPercentage,
+    progressPercentage: progressResult.progress,
     totalSubtasks,
     completedSubtasks,
     totalChecklists,

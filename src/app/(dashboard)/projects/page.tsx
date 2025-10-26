@@ -4,18 +4,19 @@ import { useAuth } from "@/hooks/use-auth";
 import { ProjectsView } from "@/components/projects/projects-view";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { hasAnyRole } from "@/lib/role-utils";
 
 export default function ProjectsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
   // Check permissions - only ADMIN, CHIEF, LEADER, HEAD can access
-  const canAccessProjectManagement = user?.role && [
-    "ADMIN",
-    "CHIEF",
-    "LEADER",
-    "HEAD",
-  ].includes(user.role);
+  // Uses effective role (primary + additional roles combined)
+  const canAccessProjectManagement = user?.role && hasAnyRole(
+    user.role,
+    user.additionalRoles,
+    ["ADMIN", "CHIEF", "LEADER", "HEAD"]
+  );
 
   useEffect(() => {
     // Redirect if user cannot access

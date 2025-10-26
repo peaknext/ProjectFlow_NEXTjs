@@ -16,7 +16,7 @@ import {
 import { canUserCloseTask } from '@/lib/permissions';
 
 const closeTaskSchema = z.object({
-  closeType: z.enum(['COMPLETED', 'ABORTED'], {
+  type: z.enum(['COMPLETED', 'ABORTED'], {
     required_error: 'Close type is required (COMPLETED or ABORTED)',
   }),
   reason: z.string().optional(),
@@ -62,7 +62,7 @@ async function handler(
     }
 
     const body = await req.json();
-    const { closeType, reason } = closeTaskSchema.parse(body);
+    const { type: closeType, reason } = closeTaskSchema.parse(body);
 
     // Close task
     const closedTask = await prisma.task.update({
@@ -116,9 +116,8 @@ async function handler(
         data: {
           userId: existingTask.assigneeUserId,
           type: 'TASK_CLOSED',
-          title: 'สถานะงานเปลี่ยนแปลง',
           message: notificationMessage,
-          link: `/projects/${existingTask.projectId}?task=${taskId}`,
+          triggeredByUserId: req.session.userId,
         },
       });
     }

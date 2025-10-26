@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface Status {
   id: string;
@@ -43,7 +43,7 @@ export function StatusSlider({
   value,
   onChange,
   disabled = false,
-  className
+  className,
 }: StatusSliderProps) {
   // Sort statuses by order to ensure correct sequence
   const sortedStatuses = useMemo(() => {
@@ -52,7 +52,7 @@ export function StatusSlider({
 
   // Find current index from statusId
   const currentIndex = useMemo(() => {
-    const index = sortedStatuses.findIndex(s => s.id === value);
+    const index = sortedStatuses.findIndex((s) => s.id === value);
     return index >= 0 ? index : 0;
   }, [sortedStatuses, value]);
 
@@ -71,10 +71,12 @@ export function StatusSlider({
 
   // Generate gradient stops for the filled portion
   const gradientBackground = useMemo(() => {
-    if (sortedStatuses.length === 0) return 'linear-gradient(to right, #e5e7eb, #e5e7eb)';
+    if (sortedStatuses.length === 0)
+      return "linear-gradient(to right, #e5e7eb, #e5e7eb)";
 
     const totalSteps = sortedStatuses.length - 1;
-    if (totalSteps === 0) return `linear-gradient(to right, ${sortedStatuses[0].color}, ${sortedStatuses[0].color})`;
+    if (totalSteps === 0)
+      return `linear-gradient(to right, ${sortedStatuses[0].color}, ${sortedStatuses[0].color})`;
 
     const cutoffPercent = (sliderValue / totalSteps) * 100;
 
@@ -85,10 +87,10 @@ export function StatusSlider({
         const stopPercent = (i / totalSteps) * 100;
         return `${status.color} ${stopPercent}%`;
       })
-      .join(', ');
+      .join(", ");
 
     // Neutral color for unfilled portion (dark mode aware)
-    const neutralColor = '#e5e7eb'; // Will be overridden by CSS for dark mode
+    const neutralColor = "#e5e7eb"; // Will be overridden by CSS for dark mode
 
     // If slider is not at the end, add neutral color for remaining portion
     if (sliderValue < totalSteps) {
@@ -123,16 +125,14 @@ export function StatusSlider({
 
   if (sortedStatuses.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground">
-        No statuses available
-      </div>
+      <div className="text-sm text-muted-foreground">กรุณาเลือกโปรเจคก่อน</div>
     );
   }
 
   const totalSteps = sortedStatuses.length - 1;
 
   return (
-    <div className={cn('w-full space-y-2', className)}>
+    <div className={cn("w-full space-y-2", className)}>
       {/* Current Status Feedback */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -158,16 +158,16 @@ export function StatusSlider({
           onChange={handleChange}
           disabled={disabled}
           className={cn(
-            'w-full h-2 rounded-lg appearance-none cursor-pointer',
-            'focus:outline-none focus:ring-2 focus:ring-offset-2',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
-            'slider-thumb'
+            "w-full h-2 rounded-lg appearance-none cursor-pointer",
+            "focus:outline-none focus:ring-2 focus:ring-offset-2",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
+            "slider-thumb"
           )}
           style={{
             background: gradientBackground,
             // @ts-ignore - CSS custom properties
-            '--thumb-color': currentStatus.color,
-            '--focus-ring-color': hexToRgba(currentStatus.color, 0.4)
+            "--thumb-color": currentStatus.color,
+            "--focus-ring-color": hexToRgba(currentStatus.color, 0.4),
           }}
         />
 
@@ -177,11 +177,12 @@ export function StatusSlider({
             <span
               key={status.id}
               className={cn(
-                'transition-colors',
-                status.id === currentStatus.id && 'font-semibold'
+                "transition-colors",
+                status.id === currentStatus.id && "font-semibold"
               )}
               style={{
-                color: status.id === currentStatus.id ? status.color : undefined
+                color:
+                  status.id === currentStatus.id ? status.color : undefined,
               }}
             >
               {status.name}
@@ -192,7 +193,7 @@ export function StatusSlider({
 
       <style jsx>{`
         /* Webkit (Chrome, Safari) */
-        input[type='range'].slider-thumb::-webkit-slider-thumb {
+        input[type="range"].slider-thumb::-webkit-slider-thumb {
           appearance: none;
           width: 20px;
           height: 20px;
@@ -204,16 +205,16 @@ export function StatusSlider({
           transition: transform 0.15s ease;
         }
 
-        input[type='range'].slider-thumb::-webkit-slider-thumb:hover {
+        input[type="range"].slider-thumb::-webkit-slider-thumb:hover {
           transform: scale(1.1);
         }
 
-        input[type='range'].slider-thumb:focus::-webkit-slider-thumb {
+        input[type="range"].slider-thumb:focus::-webkit-slider-thumb {
           box-shadow: 0 0 0 4px var(--focus-ring-color);
         }
 
         /* Firefox */
-        input[type='range'].slider-thumb::-moz-range-thumb {
+        input[type="range"].slider-thumb::-moz-range-thumb {
           width: 20px;
           height: 20px;
           border-radius: 50%;
@@ -224,17 +225,17 @@ export function StatusSlider({
           transition: transform 0.15s ease;
         }
 
-        input[type='range'].slider-thumb::-moz-range-thumb:hover {
+        input[type="range"].slider-thumb::-moz-range-thumb:hover {
           transform: scale(1.1);
         }
 
-        input[type='range'].slider-thumb:focus::-moz-range-thumb {
+        input[type="range"].slider-thumb:focus::-moz-range-thumb {
           box-shadow: 0 0 0 4px var(--focus-ring-color);
         }
 
         /* Dark mode neutral color override */
         @media (prefers-color-scheme: dark) {
-          input[type='range'].slider-thumb {
+          input[type="range"].slider-thumb {
             /* Will use inline style gradient */
           }
         }

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession, type Session } from './auth';
 import { checkPermission } from './permissions';
 import { ErrorResponses, handleApiError } from './api-response';
+import { prisma } from './db';
 
 // Extend NextRequest to include session
 export interface AuthenticatedRequest extends NextRequest {

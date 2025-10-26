@@ -23,13 +23,14 @@ interface ParentTaskBannerProps {
  * {task.parentTaskId && <ParentTaskBanner parentTaskId={task.parentTaskId} />}
  */
 export function ParentTaskBanner({ parentTaskId }: ParentTaskBannerProps) {
-  const { data: parentTask, isLoading } = useTask(parentTaskId);
-  const { setTaskPanelOpen } = useUIStore();
+  const { data: parentTaskResponse, isLoading } = useTask(parentTaskId);
+  const parentTask = parentTaskResponse?.task;
+  const openTaskPanel = useUIStore((state) => state.openTaskPanel);
 
   const handleParentClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (parentTask) {
-      setTaskPanelOpen(parentTask.id);
+      openTaskPanel(parentTask.id);
     }
   };
 
@@ -49,13 +50,12 @@ export function ParentTaskBanner({ parentTaskId }: ParentTaskBannerProps) {
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
       <MoveRight className="h-4 w-4" />
       <span>เป็นงานย่อยของ:</span>
-      <a
-        href="#"
+      <button
         onClick={handleParentClick}
-        className="font-semibold text-primary hover:underline"
+        className="font-semibold text-primary hover:underline cursor-pointer"
       >
         {parentTask.name}
-      </a>
+      </button>
     </div>
   );
 }

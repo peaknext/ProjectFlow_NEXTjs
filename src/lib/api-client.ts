@@ -58,9 +58,18 @@ axiosInstance.interceptors.response.use(
     // Handle 401 Unauthorized - redirect to login
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('sessionToken');
-        localStorage.removeItem('currentUser');
-        window.location.href = '/login';
+        // Don't redirect if already on auth pages or calling auth APIs
+        const currentPath = window.location.pathname;
+        const requestUrl = error.config?.url || '';
+        const isAuthPage = ['/login', '/register', '/request-reset', '/reset-password', '/verify-email'].includes(currentPath);
+        const isAuthAPI = requestUrl.includes('/api/auth/');
+
+        // Only redirect if NOT on auth page and NOT calling auth API
+        if (!isAuthPage && !isAuthAPI) {
+          localStorage.removeItem('sessionToken');
+          localStorage.removeItem('currentUser');
+          window.location.href = '/login';
+        }
       }
     }
 

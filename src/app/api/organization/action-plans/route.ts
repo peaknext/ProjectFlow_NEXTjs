@@ -16,7 +16,8 @@ import {
 
 const createActionPlanSchema = z.object({
   name: z.string().min(1, 'Name is required').max(500),
-  itGoalId: z.string().min(1, 'IT goal ID is required'),
+  hospMissionId: z.string().min(1, 'Hospital mission ID is required'),
+  itGoalIds: z.array(z.string()).optional(),
   description: z.string().optional(),
   order: z.number().int().default(0),
 });
@@ -27,40 +28,28 @@ const createActionPlanSchema = z.object({
  */
 async function getHandler(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const itGoalId = searchParams.get('goalId') || undefined;
   const hospitalMissionId = searchParams.get('missionId') || undefined;
   const includeDeleted = searchParams.get('includeDeleted') === 'true';
 
   const where: any = includeDeleted ? {} : { deletedAt: null };
 
-  if (itGoalId) {
-    where.itGoalId = itGoalId;
-  }
-
   if (hospitalMissionId) {
-    where.itGoal = {
-      hospitalMissionId: hospitalMissionId,
-    };
+    where.hospMissionId = hospitalMissionId;
   }
 
   const plans = await prisma.actionPlan.findMany({
     where,
     include: {
-      itGoal: {
+      hospitalMission: {
         select: {
           id: true,
           name: true,
-          hospitalMission: {
-            select: {
-              id: true,
-              name: true,
-              year: true,
-            },
-          },
+          startYear: true,
+          endYear: true,
         },
       },
       projects: {
-        where: { deletedAt: null },
+        where: { dateDeleted: null },
         select: {
           id: true,
           name: true,
@@ -80,8 +69,7 @@ async function getHandler(req: NextRequest) {
       },
     },
     orderBy: [
-      { itGoal: { hospitalMission: { year: 'desc' } } },
-      { order: 'asc' },
+      { name: 'asc' },
     ],
   });
 
@@ -100,43 +88,30 @@ async function postHandler(req: NextRequest) {
     const body = await req.json();
     const data = createActionPlanSchema.parse(body);
 
-    // Check if IT goal exists
-    const goal = await prisma.iTGoal.findUnique({
-      where: { id: data.itGoalId },
-      include: {
-        hospitalMission: {
-          select: {
-            id: true,
-            name: true,
-            year: true,
-          },
-        },
-      },
+    // Check if hospital mission exists
+    const mission = await prisma.hospitalMission.findUnique({
+      where: { id: data.hospMissionId },
     });
 
-    if (!goal) {
-      return errorResponse('GOAL_NOT_FOUND', 'IT goal not found', 404);
+    if (!mission) {
+      return errorResponse('MISSION_NOT_FOUND', 'Hospital mission not found', 404);
     }
 
     const plan = await prisma.actionPlan.create({
       data: {
         name: data.name,
-        itGoalId: data.itGoalId,
+        hospMissionId: data.hospMissionId,
+        itGoalIds: data.itGoalIds || null,
         description: data.description || null,
         order: data.order,
       },
       include: {
-        itGoal: {
+        hospitalMission: {
           select: {
             id: true,
             name: true,
-            hospitalMission: {
-              select: {
-                id: true,
-                name: true,
-                year: true,
-              },
-            },
+            startYear: true,
+            endYear: true,
           },
         },
         _count: {

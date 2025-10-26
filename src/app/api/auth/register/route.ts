@@ -13,11 +13,14 @@ import {
   handleApiError,
 } from '@/lib/api-response';
 import { sendVerificationEmail } from '@/lib/email';
+import { formatFullName } from '@/lib/user-utils';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  fullName: z.string().min(1, 'Full name is required'),
+  titlePrefix: z.string().optional(),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
   departmentId: z.string().optional(),
   jobTitle: z.string().optional(),
   jobLevel: z.string().optional(),
@@ -64,15 +67,25 @@ export async function POST(req: NextRequest) {
     // Generate email verification token
     const verificationToken = generateSecureToken();
 
+    // Generate fullName for backward compatibility
+    const fullName = formatFullName(
+      data.titlePrefix,
+      data.firstName,
+      data.lastName
+    );
+
     // Create user
     const user = await prisma.user.create({
       data: {
         email: data.email.toLowerCase(),
-        fullName: data.fullName,
+        titlePrefix: data.titlePrefix || null,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        fullName, // Auto-generated
         passwordHash,
         salt,
         departmentId: data.departmentId || null,
-        jobTitle: data.jobTitle || null,
+        jobTitleId: null,
         jobLevel: data.jobLevel || null,
         verificationToken,
         isVerified: false,

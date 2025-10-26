@@ -2,8 +2,8 @@
  * useReports - Hooks for reports data fetching
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
 
 // Types
 export interface ReportTask {
@@ -75,8 +75,9 @@ export interface ReportFilters {
 
 // Query keys
 export const reportKeys = {
-  all: ['reports'] as const,
-  tasks: (filters: ReportFilters) => [...reportKeys.all, 'tasks', filters] as const,
+  all: ["reports"] as const,
+  tasks: (filters: ReportFilters) =>
+    [...reportKeys.all, "tasks", filters] as const,
 };
 
 /**
@@ -88,11 +89,13 @@ export function useReportData(filters: ReportFilters) {
     queryFn: async () => {
       const params = new URLSearchParams();
 
-      if (filters.startDate) params.append('startDate', filters.startDate);
-      if (filters.endDate) params.append('endDate', filters.endDate);
-      if (filters.missionGroupId) params.append('missionGroupId', filters.missionGroupId);
-      if (filters.divisionId) params.append('divisionId', filters.divisionId);
-      if (filters.departmentId) params.append('departmentId', filters.departmentId);
+      if (filters.startDate) params.append("startDate", filters.startDate);
+      if (filters.endDate) params.append("endDate", filters.endDate);
+      if (filters.missionGroupId)
+        params.append("missionGroupId", filters.missionGroupId);
+      if (filters.divisionId) params.append("divisionId", filters.divisionId);
+      if (filters.departmentId)
+        params.append("departmentId", filters.departmentId);
 
       const response = await api.get<ReportDataResponse>(
         `/api/reports/tasks?${params.toString()}`
@@ -119,8 +122,8 @@ export interface ReportStatistics {
   workloadByType: Record<
     string,
     {
-      'Not Started': number;
-      'In Progress': number;
+      "Not Started": number;
+      "In Progress": number;
       Done: number;
       total: number;
       overdue: number;
@@ -133,13 +136,6 @@ export function calculateReportStatistics(
   tasks: ReportTask[],
   users: ReportUser[]
 ): ReportStatistics {
-  console.log('🔍 calculateReportStatistics called with:', {
-    tasksCount: tasks.length,
-    usersCount: users.length,
-    firstTask: tasks[0],
-    firstUser: users[0],
-  });
-
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Normalize to start of day
 
@@ -152,14 +148,14 @@ export function calculateReportStatistics(
     },
     tasksByAssignee: {},
     workloadByType: {},
-    statusTypes: ['Not Started', 'In Progress', 'Done'],
+    statusTypes: ["Not Started", "In Progress", "Done"],
   };
 
   // Initialize workload for all users
   users.forEach((user) => {
     stats.workloadByType[user.fullName] = {
-      'Not Started': 0,
-      'In Progress': 0,
+      "Not Started": 0,
+      "In Progress": 0,
       Done: 0,
       total: 0,
       overdue: 0,
@@ -168,35 +164,35 @@ export function calculateReportStatistics(
   });
 
   // Add "Unassigned" category
-  stats.workloadByType['Unassigned'] = {
-    'Not Started': 0,
-    'In Progress': 0,
+  stats.workloadByType["Unassigned"] = {
+    "Not Started": 0,
+    "In Progress": 0,
     Done: 0,
     total: 0,
     overdue: 0,
   };
-  stats.tasksByAssignee['Unassigned'] = 0;
+  stats.tasksByAssignee["Unassigned"] = 0;
 
   // Process each task
   tasks.forEach((task) => {
-    const statusType = task.status.type || 'NOT_STARTED';
+    const statusType = task.status.type || "NOT_STARTED";
     const normalizedType =
-      statusType === 'NOT_STARTED'
-        ? 'Not Started'
-        : statusType === 'IN_PROGRESS'
-        ? 'In Progress'
-        : 'Done';
+      statusType === "NOT_STARTED"
+        ? "Not Started"
+        : statusType === "IN_PROGRESS"
+          ? "In Progress"
+          : "Done";
 
     // Check if overdue
     const isOverdue =
       task.dueDate &&
       new Date(task.dueDate) < today &&
-      normalizedType !== 'Done';
+      normalizedType !== "Done";
 
     // Count by status type
-    if (normalizedType === 'In Progress') {
+    if (normalizedType === "In Progress") {
       stats.summary.inProgress++;
-    } else if (normalizedType === 'Done') {
+    } else if (normalizedType === "Done") {
       stats.summary.completed++;
     }
 
@@ -207,11 +203,11 @@ export function calculateReportStatistics(
     // Handle unassigned tasks
     if (!task.assigneeUserIds || task.assigneeUserIds.length === 0) {
       stats.summary.unassigned++;
-      stats.tasksByAssignee['Unassigned']++;
-      stats.workloadByType['Unassigned'][normalizedType]++;
-      stats.workloadByType['Unassigned'].total++;
+      stats.tasksByAssignee["Unassigned"]++;
+      stats.workloadByType["Unassigned"][normalizedType]++;
+      stats.workloadByType["Unassigned"].total++;
       if (isOverdue) {
-        stats.workloadByType['Unassigned'].overdue++;
+        stats.workloadByType["Unassigned"].overdue++;
       }
       return;
     }
@@ -223,8 +219,8 @@ export function calculateReportStatistics(
       // Initialize if not exists
       if (!stats.workloadByType[assigneeName]) {
         stats.workloadByType[assigneeName] = {
-          'Not Started': 0,
-          'In Progress': 0,
+          "Not Started": 0,
+          "In Progress": 0,
           Done: 0,
           total: 0,
           overdue: 0,
@@ -248,16 +244,10 @@ export function calculateReportStatistics(
 
   // Remove users with no tasks (except Unassigned)
   Object.keys(stats.workloadByType).forEach((name) => {
-    if (name !== 'Unassigned' && stats.workloadByType[name].total === 0) {
+    if (name !== "Unassigned" && stats.workloadByType[name].total === 0) {
       delete stats.workloadByType[name];
       delete stats.tasksByAssignee[name];
     }
-  });
-
-  console.log('✅ calculateReportStatistics result:', {
-    summary: stats.summary,
-    workloadByType: stats.workloadByType,
-    tasksByAssignee: stats.tasksByAssignee,
   });
 
   return stats;
@@ -283,7 +273,7 @@ export function getFiscalYearStartDate(): Date {
  */
 export function formatDateForAPI(date: Date): string {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }

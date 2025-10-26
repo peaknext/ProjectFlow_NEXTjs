@@ -1,6 +1,6 @@
 'use client';
 
-import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { Control, UseFormSetValue, UseFormWatch, FieldErrors } from 'react-hook-form';
 import { Controller } from 'react-hook-form';
 import { TaskFormData } from './index';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,7 @@ import { AssigneePopover } from '@/components/ui/assignee-popover';
 import { PriorityPopover, PriorityValue } from '@/components/ui/priority-popover';
 import { DifficultyPopover, DifficultyValue } from '@/components/ui/difficulty-popover';
 import { DateInput } from '@/components/ui/date-picker-popover';
+import { cn } from '@/lib/utils';
 
 interface User {
   id: string;
@@ -20,6 +21,7 @@ interface FieldGridProps {
   control: Control<TaskFormData>;
   setValue: UseFormSetValue<TaskFormData>;
   watch: UseFormWatch<TaskFormData>;
+  errors?: FieldErrors<TaskFormData>;
   disabled?: boolean;
   users?: User[];
 }
@@ -44,6 +46,7 @@ interface FieldGridProps {
  *   control={control}
  *   setValue={setValue}
  *   watch={watch}
+ *   errors={errors}
  *   disabled={!canEdit}
  *   users={projectUsers}
  * />
@@ -52,6 +55,7 @@ export function FieldGrid({
   control,
   setValue,
   watch,
+  errors,
   disabled = false,
   users = []
 }: FieldGridProps) {
@@ -130,12 +134,22 @@ export function FieldGrid({
           name="startDate"
           control={control}
           render={({ field }) => (
-            <DateInput
-              value={field.value}
-              onChange={(newDate) => field.onChange(newDate)}
-              placeholder="เลือกวันที่"
-              disabled={disabled}
-            />
+            <div>
+              <DateInput
+                value={field.value}
+                onChange={(newDate) => field.onChange(newDate)}
+                placeholder="เลือกวันที่"
+                disabled={disabled}
+                className={cn(
+                  errors?.startDate && 'border-red-500 focus-visible:ring-red-500'
+                )}
+              />
+              {errors?.startDate && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  {errors.startDate.message}
+                </p>
+              )}
+            </div>
           )}
         />
       </div>

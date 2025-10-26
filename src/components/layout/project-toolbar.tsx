@@ -7,23 +7,29 @@
 
 import { Button } from '@/components/ui/button';
 import { CreateTaskButton } from '@/components/common/create-task-button';
-import { List, LayoutGrid, Calendar, ChevronRight } from 'lucide-react';
+import { List, LayoutGrid, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Breadcrumb } from '@/components/navigation/breadcrumb';
+import { useWorkspace } from '@/hooks/use-workspace';
 
 type ViewType = 'list' | 'board' | 'calendar';
 
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-  level: 'missionGroup' | 'division' | 'department' | 'project';
-  id: string;
-}
-
 interface ProjectToolbarProps {
-  breadcrumbs?: BreadcrumbItem[];
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
-  onCreateTask: () => void;
+  /**
+   * Project name to display in title
+   */
+  projectName?: string;
+  /**
+   * Optional projects list for breadcrumb project selector
+   * If provided, shows project selector button in breadcrumb
+   */
+  projects?: Array<{ id: string; name: string; status?: string }>;
+  /**
+   * Callback when project is selected from breadcrumb
+   */
+  onProjectSelect?: (projectId: string) => void;
 }
 
 const VIEW_CONFIG = {
@@ -45,54 +51,33 @@ const VIEW_CONFIG = {
 };
 
 export function ProjectToolbar({
-  breadcrumbs = [],
   currentView,
   onViewChange,
-  onCreateTask,
+  projectName,
+  projects,
+  onProjectSelect,
 }: ProjectToolbarProps) {
   const viewTitle = VIEW_CONFIG[currentView].title;
+
+  // Fetch workspace data for breadcrumb selectors
+  const { data: workspaceData } = useWorkspace();
 
   return (
     <div className="bg-card border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-6 py-4 flex-shrink-0">
       {/* Left side: Breadcrumb and Title */}
-      <div>
-        {/* Breadcrumb */}
-        {breadcrumbs.length > 0 && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            {breadcrumbs.map((item, index) => {
-              const isLast = index === breadcrumbs.length - 1;
-              const isCurrentLevel = isLast;
-
-              return (
-                <div key={item.id} className="flex items-center gap-2">
-                  {index > 0 && (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  )}
-                  {isCurrentLevel ? (
-                    <span className="font-semibold text-foreground">
-                      {item.label}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        // Handle breadcrumb navigation
-                        if (item.href) {
-                          window.location.href = item.href;
-                        }
-                      }}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {item.label}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+      <div className="min-w-0">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb
+          workspace={workspaceData}
+          projects={projects}
+          onProjectSelect={onProjectSelect}
+          className="mb-1"
+        />
 
         {/* Title */}
-        <h1 className="text-2xl font-bold">{viewTitle}</h1>
+        <h1 className="text-2xl font-bold">
+          {viewTitle}{projectName && `: ${projectName}`}
+        </h1>
       </div>
 
       {/* Right side: View Switcher and Create Button */}
@@ -146,7 +131,7 @@ export function ProjectToolbar({
         </div>
 
         {/* Create Task Button */}
-        <CreateTaskButton onClick={onCreateTask} />
+        <CreateTaskButton />
       </div>
     </div>
   );

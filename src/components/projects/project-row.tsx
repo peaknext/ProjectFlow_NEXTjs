@@ -61,7 +61,7 @@ export function ProjectRow({ project }: ProjectRowProps) {
 
   // Check permissions
   const canEdit = user?.role && ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(user.role);
-  const canDelete = user?.role && ["ADMIN", "CHIEF"].includes(user.role);
+  const canDelete = user?.role && ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(user.role);
 
   // Handlers
   const handleRowClick = () => {
@@ -81,26 +81,20 @@ export function ProjectRow({ project }: ProjectRowProps) {
 
   const handleDeleteConfirm = async () => {
     try {
-      await deleteMutation.mutateAsync(project.id);
+      const result = await deleteMutation.mutateAsync(project.id);
+      const taskCount = result?.deletedTasks || 0;
+
       toast.success("ลบโปรเจคสำเร็จ", {
-        description: `โปรเจค "${project.name}" ถูกลบเรียบร้อยแล้ว`,
+        description: taskCount > 0
+          ? `โปรเจค "${project.name}" และงานทั้งหมด ${taskCount} งาน ถูกลบเรียบร้อยแล้ว`
+          : `โปรเจค "${project.name}" ถูกลบเรียบร้อยแล้ว`,
       });
       setShowDeleteDialog(false);
     } catch (error: any) {
       console.error("Delete project error:", error);
-
-      // Handle specific error for projects with tasks
-      if (error?.response?.data?.code === "PROJECT_HAS_TASKS") {
-        const taskCount = project._count.tasks;
-        toast.error("ไม่สามารถลบโปรเจคได้", {
-          description: `โปรเจคนี้มีงานอยู่ ${taskCount} งาน กรุณาลบหรือย้ายงานทั้งหมดก่อนลบโปรเจค`,
-          duration: 5000,
-        });
-      } else {
-        toast.error("ไม่สามารถลบโปรเจคได้", {
-          description: "กรุณาลองใหม่อีกครั้ง หากปัญหายังคงอยู่ กรุณาติดต่อผู้ดูแลระบบ",
-        });
-      }
+      toast.error("ไม่สามารถลบโปรเจคได้", {
+        description: "กรุณาลองใหม่อีกครั้ง หากปัญหายังคงอยู่ กรุณาติดต่อผู้ดูแลระบบ",
+      });
     }
   };
 

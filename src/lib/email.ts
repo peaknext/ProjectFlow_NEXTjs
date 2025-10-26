@@ -31,13 +31,6 @@ export async function sendVerificationEmail(
 
     // Development mode - log verification link to console
     if (process.env.BYPASS_EMAIL === 'true') {
-      console.log('\n' + '='.repeat(70));
-      console.log('📧 EMAIL VERIFICATION (DEVELOPMENT MODE)');
-      console.log('='.repeat(70));
-      console.log('To:', email);
-      console.log('Name:', userName);
-      console.log('Verification URL:', verificationUrl);
-      console.log('='.repeat(70) + '\n');
       return { success: true, messageId: 'dev-mode' };
     }
 
@@ -57,7 +50,6 @@ export async function sendVerificationEmail(
       throw new Error('Failed to send verification email');
     }
 
-    console.log('Verification email sent successfully:', data);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error('Error sending verification email:', error);
@@ -83,14 +75,6 @@ export async function sendPasswordResetEmail(
 
     // Development mode - log reset link to console
     if (process.env.BYPASS_EMAIL === 'true') {
-      console.log('\n' + '='.repeat(70));
-      console.log('📧 PASSWORD RESET EMAIL (DEVELOPMENT MODE)');
-      console.log('='.repeat(70));
-      console.log('To:', email);
-      console.log('Name:', userName);
-      console.log('Reset URL:', resetUrl);
-      console.log('Expires in: 1 hour');
-      console.log('='.repeat(70) + '\n');
       return { success: true, messageId: 'dev-mode' };
     }
 
@@ -116,7 +100,6 @@ export async function sendPasswordResetEmail(
       throw new Error('Failed to send password reset email');
     }
 
-    console.log('Password reset email sent successfully:', data);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error('Error sending password reset email:', error);

@@ -89,7 +89,7 @@ async function handler(req: AuthenticatedRequest) {
 
         try {
           let result: any = null;
-          let activityLog: any = null;
+          let historyLog: any = null;
 
           switch (op.type) {
             case 'UPDATE_TASK_FIELD': {
@@ -116,7 +116,7 @@ async function handler(req: AuthenticatedRequest) {
               });
 
               // Log activity
-              activityLog = await tx.history.create({
+              historyLog = await tx.history.create({
                 data: {
                   taskId: op.taskId,
                   userId: req.session.userId,
@@ -151,7 +151,7 @@ async function handler(req: AuthenticatedRequest) {
               });
 
               // Log activity
-              activityLog = await tx.history.create({
+              historyLog = await tx.history.create({
                 data: {
                   taskId: op.taskId,
                   userId: req.session.userId,
@@ -201,7 +201,7 @@ async function handler(req: AuthenticatedRequest) {
               }
 
               // Log activity
-              activityLog = await tx.history.create({
+              historyLog = await tx.history.create({
                 data: {
                   taskId: op.taskId,
                   userId: req.session.userId,
@@ -238,7 +238,7 @@ async function handler(req: AuthenticatedRequest) {
               });
 
               // Log activity
-              activityLog = await tx.history.create({
+              historyLog = await tx.history.create({
                 data: {
                   taskId: item.taskId,
                   userId: req.session.userId,
@@ -284,7 +284,7 @@ async function handler(req: AuthenticatedRequest) {
               });
 
               // Log activity
-              activityLog = await tx.history.create({
+              historyLog = await tx.history.create({
                 data: {
                   taskId: op.taskId,
                   userId: req.session.userId,

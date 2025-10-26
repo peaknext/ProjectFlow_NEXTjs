@@ -12,6 +12,7 @@ import {
   errorResponse,
   handleApiError,
 } from '@/lib/api-response';
+import { sendPasswordResetEmail } from '@/lib/email';
 
 const requestResetSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -54,8 +55,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // TODO: Send password reset email
-    // await sendPasswordResetEmail(user.email, resetToken);
+    // Send password reset email
+    try {
+      await sendPasswordResetEmail(user.email, user.fullName, resetToken);
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      // Continue anyway - token is saved in database
+    }
 
     return successResponse({
       message: 'Password reset link sent. Please check your email.',

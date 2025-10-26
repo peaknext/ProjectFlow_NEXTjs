@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +10,8 @@ import { Logo } from "@/components/common/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, AlertCircle } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
@@ -19,17 +21,68 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { login, isLoggingIn } = useAuth();
+  const { login, isLoggingIn, loginError } = useAuth();
+
+  // Local state for persistent error (recommended by TanStack Query for forms)
+  const [displayError, setDisplayError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
+  // Capture error from mutation and store in local state
+  const errorJustSetRef = useRef(false);
+
+  useEffect(() => {
+    if (loginError) {
+      const errorMessage = (loginError as any)?.response?.data?.message ||
+                          'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง';
+      setDisplayError(errorMessage);
+      errorJustSetRef.current = true; // Mark that error was just set
+    }
+  }, [loginError]);
+
+  // Watch form values and clear error when user types
+  const emailValue = watch('email');
+  const passwordValue = watch('password');
+
+  // Store previous values to detect actual changes
+  const prevEmailRef = useRef<string | undefined>(undefined);
+  const prevPasswordRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+
+    // Skip clearing error if it was just set (first render after error)
+    if (errorJustSetRef.current) {
+      errorJustSetRef.current = false;
+      prevEmailRef.current = emailValue;
+      prevPasswordRef.current = passwordValue;
+      return;
+    }
+
+    // Only clear error if values actually changed (user is typing)
+    const emailChanged = emailValue !== prevEmailRef.current;
+    const passwordChanged = passwordValue !== prevPasswordRef.current;
+
+
+    if (displayError && (emailChanged || passwordChanged)) {
+      setDisplayError(null);
+    }
+
+    // Update previous values
+    prevEmailRef.current = emailValue;
+    prevPasswordRef.current = passwordValue;
+  }, [emailValue, passwordValue, displayError]);
+
   const onSubmit = (data: LoginFormData) => {
+    // Clear error before submitting
+    setDisplayError(null);
+
     login({
       email: data.email,
       password: data.password,
@@ -98,6 +151,16 @@ export default function LoginPage() {
               ลืมรหัสผ่าน?
             </Link>
           </div>
+
+          {/* Login Error Alert */}
+          {displayError && (
+            <Alert variant="destructive" className="animate-in fade-in-50">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {displayError}
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Submit Button */}
           <Button

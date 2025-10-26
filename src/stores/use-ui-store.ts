@@ -32,6 +32,13 @@ interface ModalState {
     isOpen: boolean;
     projectId?: string;
   };
+  createUser: {
+    isOpen: boolean;
+  };
+  editUser: {
+    isOpen: boolean;
+    data?: any; // User data to edit
+  };
   taskPanel: {
     isOpen: boolean;
     taskId?: string;
@@ -78,6 +85,10 @@ interface UIState {
   closeCreateProjectModal: () => void;
   openEditProjectModal: (projectId: string) => void;
   closeEditProjectModal: () => void;
+  openCreateUserModal: () => void;
+  closeCreateUserModal: () => void;
+  openEditUserModal: (userData: any) => void;
+  closeEditUserModal: () => void;
   openTaskPanel: (taskId: string) => void;
   closeTaskPanel: () => void;
   closeAllModals: () => void;
@@ -95,6 +106,8 @@ const initialModalState: ModalState = {
   editTask: { isOpen: false },
   createProject: { isOpen: false },
   editProject: { isOpen: false },
+  createUser: { isOpen: false },
+  editUser: { isOpen: false },
   taskPanel: { isOpen: false },
 };
 
@@ -218,6 +231,38 @@ export const useUIStore = create<UIState>()(
           modals: {
             ...state.modals,
             editProject: { isOpen: false },
+          },
+        })),
+
+      openCreateUserModal: () =>
+        set((state) => ({
+          modals: {
+            ...state.modals,
+            createUser: { isOpen: true },
+          },
+        })),
+
+      closeCreateUserModal: () =>
+        set((state) => ({
+          modals: {
+            ...state.modals,
+            createUser: { isOpen: false },
+          },
+        })),
+
+      openEditUserModal: (userData) =>
+        set((state) => ({
+          modals: {
+            ...state.modals,
+            editUser: { isOpen: true, data: userData },
+          },
+        })),
+
+      closeEditUserModal: () =>
+        set((state) => ({
+          modals: {
+            ...state.modals,
+            editUser: { isOpen: false },
           },
         })),
 

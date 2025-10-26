@@ -10,13 +10,16 @@ import type { AuthenticatedRequest } from '@/lib/api-middleware';
 import { successResponse } from '@/lib/api-response';
 
 async function handler(req: AuthenticatedRequest) {
+  const userId = req.session.userId;
+
   // Count unread notifications
   const count = await prisma.notification.count({
     where: {
-      userId: req.session.userId,
+      userId,
       isRead: false,
     },
   });
+
 
   return successResponse({
     unreadCount: count,

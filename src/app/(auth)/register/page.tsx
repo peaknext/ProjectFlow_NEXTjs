@@ -9,9 +9,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '@/components/common/logo';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { getCommonTitlePrefixes } from '@/lib/user-utils';
 
 const registerSchema = z.object({
-  fullName: z.string().min(2, 'กรุณากรอกชื่อ-นามสกุล'),
+  titlePrefix: z.string().optional(),
+  firstName: z.string().min(1, 'กรุณากรอกชื่อ'),
+  lastName: z.string().min(1, 'กรุณากรอกนามสกุล'),
   email: z.string().email('รูปแบบอีเมลไม่ถูกต้อง'),
   divisionId: z.string().min(1, 'กรุณาเลือกกลุ่มงาน'),
   departmentId: z.string().min(1, 'กรุณาเลือกหน่วยงาน'),
@@ -156,9 +159,12 @@ export default function RegisterPage() {
 
   const onSubmit = (data: RegisterFormData) => {
     registerUser({
-      fullName: data.fullName,
+      titlePrefix: data.titlePrefix,
+      firstName: data.firstName,
+      lastName: data.lastName,
       email: data.email,
       password: data.password,
+      departmentId: data.departmentId,
     });
   };
 
@@ -179,39 +185,74 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          {/* Full Name + Email */}
+          {/* Title Prefix (Full width) */}
+          <div>
+            <label htmlFor="titlePrefix" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              คำนำหน้าชื่อ (ถ้ามี)
+            </label>
+            <select
+              id="titlePrefix"
+              {...register('titlePrefix')}
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
+            >
+              <option value="">-- ไม่ระบุ --</option>
+              {getCommonTitlePrefixes().map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* First Name + Last Name */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Full Name */}
+            {/* First Name */}
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                ชื่อ-สกุล
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                ชื่อ <span className="text-red-500">*</span>
               </label>
               <input
-                id="fullName"
+                id="firstName"
                 type="text"
-                placeholder="กรอกชื่อและนามสกุล"
-                autoComplete="name"
-                {...register('fullName')}
+                placeholder="เช่น สมชาย"
+                autoComplete="given-name"
+                {...register('firstName')}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
               />
-              <p className="text-sm text-red-500 mt-1 h-4">{errors.fullName?.message || ''}</p>
+              <p className="text-sm text-red-500 mt-1 h-4">{errors.firstName?.message || ''}</p>
             </div>
 
-            {/* Email */}
+            {/* Last Name */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                อีเมล
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                นามสกุล <span className="text-red-500">*</span>
               </label>
               <input
-                id="email"
-                type="email"
-                placeholder="กรอกอีเมล"
-                autoComplete="email"
-                {...register('email')}
+                id="lastName"
+                type="text"
+                placeholder="เช่น ใจดี"
+                autoComplete="family-name"
+                {...register('lastName')}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
               />
-              <p className="text-sm text-red-500 mt-1 h-4">{errors.email?.message || ''}</p>
+              <p className="text-sm text-red-500 mt-1 h-4">{errors.lastName?.message || ''}</p>
             </div>
+          </div>
+
+          {/* Email (Full width) */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              อีเมล <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="กรอกอีเมล"
+              autoComplete="email"
+              {...register('email')}
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
+            />
+            <p className="text-sm text-red-500 mt-1 h-4">{errors.email?.message || ''}</p>
           </div>
 
           {/* Division + Department */}

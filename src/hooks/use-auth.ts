@@ -107,12 +107,11 @@ export function useAuth() {
       const response = await api.post<LoginResponse>('/api/auth/login', data);
       return response;
     },
-    onMutate: async () => {
-      // CRITICAL: Clear all cached data from previous user session
-      // This prevents data leakage between user sessions (notifications, tasks, etc.)
-      queryClient.clear();
-    },
     onSuccess: (data) => {
+      // CRITICAL: Clear all cached queries from previous user session AFTER successful login
+      // This prevents data leakage between user sessions (notifications, tasks, etc.)
+      queryClient.removeQueries();
+
       // Store session token
       localStorage.setItem('sessionToken', data.sessionToken);
 
@@ -128,12 +127,16 @@ export function useAuth() {
       router.push('/dashboard');
     },
     onError: (error: any) => {
+      // Toast notification (will disappear)
       toast({
         title: 'เข้าสู่ระบบไม่สำเร็จ',
         description: error.response?.data?.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
         variant: 'destructive',
       });
+      // Error is also available in mutation.error for persistent display
     },
+    retry: false, // Don't retry failed login attempts
+    retryOnMount: false, // Don't retry when component remounts
   });
 
   // Register mutation
@@ -281,5 +284,8 @@ export function useAuth() {
     resendVerification: resendVerificationMutation.mutate,
     isLoggingIn: loginMutation.isPending,
     isRegistering: registerMutation.isPending,
+    loginError: loginMutation.error,
+    loginMutation, // Return entire mutation for advanced control
+    resetLoginError: loginMutation.reset, // Reset mutation state (clear error)
   };
 }

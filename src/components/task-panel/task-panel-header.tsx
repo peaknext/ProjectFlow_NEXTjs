@@ -41,7 +41,7 @@ export function TaskPanelHeader({ task, isLoading }: TaskPanelHeaderProps) {
   };
 
   return (
-    <header className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0 bg-white dark:bg-background rounded-tl-xl">
+    <header className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 rounded-tl-xl">
       <div className="flex items-center gap-2">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           รายละเอียดงาน

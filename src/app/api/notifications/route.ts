@@ -20,6 +20,7 @@ import { successResponse, handleApiError } from '@/lib/api-response';
  */
 async function handler(req: AuthenticatedRequest) {
   const { searchParams } = new URL(req.url);
+  const userId = req.session.userId;
 
   const isReadParam = searchParams.get('isRead');
   const type = searchParams.get('type');
@@ -29,9 +30,10 @@ async function handler(req: AuthenticatedRequest) {
   );
   const offset = parseInt(searchParams.get('offset') || '0', 10);
 
+
   // Build where clause
   const where: any = {
-    userId: req.session.userId,
+    userId,
   };
 
   if (isReadParam !== null) {
@@ -108,6 +110,7 @@ async function handler(req: AuthenticatedRequest) {
       createdAt: notification.createdAt.toISOString(),
     };
   });
+
 
   return successResponse({
     notifications: items,

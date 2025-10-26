@@ -18,13 +18,8 @@ export default function DepartmentTasksPage() {
 
   // Get departmentId from URL query param or fallback to user's department
   const departmentIdFromUrl = searchParams.get("departmentId");
-  const departmentId = departmentIdFromUrl || user?.departmentId || user?.department?.id;
-
-  console.log('[DepartmentTasksPage] Department ID:', {
-    fromUrl: departmentIdFromUrl,
-    fromUser: user?.departmentId,
-    final: departmentId,
-  });
+  const departmentId =
+    departmentIdFromUrl || user?.departmentId || user?.department?.id;
 
   const { setDepartment } = useNavigationStore();
 

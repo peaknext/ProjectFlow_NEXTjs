@@ -15,12 +15,13 @@ import {
   errorResponse,
   handleApiError,
 } from '@/lib/api-response';
-import { canUserEditTask, canUserDeleteTask } from '@/lib/permissions';
+import { canUserViewTask, canUserEditTask, canUserDeleteTask } from '@/lib/permissions';
 
 const updateTaskSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().nullable().optional(),
-  assigneeUserId: z.string().nullable().optional(),
+  assigneeUserId: z.string().nullable().optional(), // @deprecated - use assigneeUserIds
+  assigneeUserIds: z.array(z.string()).optional(), // New: Support multiple assignees
   statusId: z.string().optional(),
   priority: z.number().int().min(1).max(4).optional(),
   startDate: z.string().nullable().optional(), // Accept both "YYYY-MM-DD" and ISO datetime
@@ -34,9 +35,9 @@ const updateTaskSchema = z.object({
  */
 async function getHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
-  const { taskId } = params;
+  const { taskId } = await params;
 
   const task = await prisma.task.findUnique({
     where: { id: taskId, deletedAt: null },
@@ -60,6 +61,22 @@ async function getHandler(
           email: true,
           profileImageUrl: true,
           jobTitle: true,
+        },
+      },
+      assignees: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              profileImageUrl: true,
+              jobTitle: true,
+            },
+          },
+        },
+        orderBy: {
+          assignedAt: 'asc',
         },
       },
       status: {
@@ -123,6 +140,12 @@ async function getHandler(
     return errorResponse('TASK_NOT_FOUND', 'Task not found', 404);
   }
 
+  // Check permission to view this task
+  const canView = await canUserViewTask(req.session.userId, taskId);
+  if (!canView) {
+    return errorResponse('FORBIDDEN', 'You do not have permission to view this task', 403);
+  }
+
   // Check if task is pinned by current user
   const currentUser = await prisma.user.findUnique({
     where: { id: req.session.userId },
@@ -132,9 +155,13 @@ async function getHandler(
   const pinnedTaskIds = (currentUser?.pinnedTasks as string[]) || [];
   const isPinned = pinnedTaskIds.includes(taskId);
 
+  // Extract assignee user IDs from assignees relation
+  const assigneeUserIds = task.assignees.map(a => a.userId);
+
   return successResponse({
     task: {
       ...task,
+      assigneeUserIds, // Add array of assignee user IDs
       isPinned, // Add isPinned field
       startDate: task.startDate?.toISOString() || null,
       dueDate: task.dueDate?.toISOString() || null,
@@ -151,10 +178,10 @@ async function getHandler(
  */
 async function patchHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const { taskId } = params;
+    const { taskId } = await params;
 
     // Get existing task
     const existingTask = await prisma.task.findUnique({
@@ -196,10 +223,62 @@ async function patchHandler(
       changes.after.description = updates.description;
     }
 
-    if (updates.assigneeUserId !== undefined) {
+    // Handle assignee updates (support both old single and new multi-assignee)
+    if (updates.assigneeUserIds !== undefined) {
+      // New multi-assignee approach
+      const currentAssignees = await prisma.taskAssignee.findMany({
+        where: { taskId },
+        select: { userId: true },
+      });
+      const currentAssigneeIds = currentAssignees.map(a => a.userId);
+
+      changes.before.assigneeUserIds = currentAssigneeIds;
+      changes.after.assigneeUserIds = updates.assigneeUserIds;
+
+      // Calculate additions and removals
+      const toAdd = updates.assigneeUserIds.filter(id => !currentAssigneeIds.includes(id));
+      const toRemove = currentAssigneeIds.filter(id => !updates.assigneeUserIds.includes(id));
+
+      // Remove old assignments
+      if (toRemove.length > 0) {
+        await prisma.taskAssignee.deleteMany({
+          where: {
+            taskId,
+            userId: { in: toRemove },
+          },
+        });
+      }
+
+      // Add new assignments
+      if (toAdd.length > 0) {
+        await prisma.taskAssignee.createMany({
+          data: toAdd.map(userId => ({
+            taskId,
+            userId,
+            assignedBy: req.session.userId,
+          })),
+        });
+      }
+
+      // Update legacy assigneeUserId field (use first assignee for backward compatibility)
+      updateData.assigneeUserId = updates.assigneeUserIds.length > 0 ? updates.assigneeUserIds[0] : null;
+    } else if (updates.assigneeUserId !== undefined) {
+      // Legacy single-assignee approach (backward compatibility)
       updateData.assigneeUserId = updates.assigneeUserId;
       changes.before.assigneeUserId = existingTask.assigneeUserId;
       changes.after.assigneeUserId = updates.assigneeUserId;
+
+      // Sync with new TaskAssignee table
+      await prisma.taskAssignee.deleteMany({ where: { taskId } });
+      if (updates.assigneeUserId) {
+        await prisma.taskAssignee.create({
+          data: {
+            taskId,
+            userId: updates.assigneeUserId,
+            assignedBy: req.session.userId,
+          },
+        });
+      }
     }
 
     if (updates.statusId !== undefined) {
@@ -303,8 +382,61 @@ async function patchHandler(
       });
     }
 
-    // Assignee changed
-    if (updates.assigneeUserId !== undefined && changes.before.assigneeUserId !== changes.after.assigneeUserId) {
+    // Assignee changed (multi-assignee support)
+    if (updates.assigneeUserIds !== undefined && changes.before.assigneeUserIds && changes.after.assigneeUserIds) {
+      const beforeIds = changes.before.assigneeUserIds;
+      const afterIds = changes.after.assigneeUserIds;
+
+      const added = afterIds.filter((id: string) => !beforeIds.includes(id));
+      const removed = beforeIds.filter((id: string) => !afterIds.includes(id));
+
+      // Log additions
+      if (added.length > 0) {
+        const addedUsers = await prisma.user.findMany({
+          where: { id: { in: added } },
+          select: { fullName: true },
+        });
+        const names = addedUsers.map(u => u.fullName).join(', ');
+        historyEntries.push({
+          taskId,
+          userId: req.session.userId,
+          historyText: `มอบหมายงาน "${updatedTask.name}" ให้กับ ${names}`,
+        });
+
+        // Create notifications for newly assigned users
+        const currentUserFullName = req.session.user.fullName;
+        const notificationData = added
+          .filter((userId: string) => userId !== req.session.userId) // Don't notify self
+          .map((userId: string) => ({
+            userId,
+            type: 'TASK_ASSIGNED',
+            message: `${currentUserFullName} ได้มอบหมายงาน "${updatedTask.name}" ให้กับคุณ`,
+            taskId,
+            triggeredByUserId: req.session.userId,
+          }));
+
+        if (notificationData.length > 0) {
+          await prisma.notification.createMany({
+            data: notificationData,
+          });
+        }
+      }
+
+      // Log removals
+      if (removed.length > 0) {
+        const removedUsers = await prisma.user.findMany({
+          where: { id: { in: removed } },
+          select: { fullName: true },
+        });
+        const names = removedUsers.map(u => u.fullName).join(', ');
+        historyEntries.push({
+          taskId,
+          userId: req.session.userId,
+          historyText: `ยกเลิกการมอบหมายงาน "${updatedTask.name}" ของ ${names}`,
+        });
+      }
+    } else if (updates.assigneeUserId !== undefined && changes.before.assigneeUserId !== changes.after.assigneeUserId) {
+      // Legacy single-assignee logging (backward compatibility)
       const assigneeBefore = changes.before.assigneeUserId
         ? await prisma.user.findUnique({
             where: { id: changes.before.assigneeUserId },
@@ -319,26 +451,49 @@ async function patchHandler(
         : null;
 
       if (!assigneeBefore && assigneeAfter) {
-        // Assigned
         historyEntries.push({
           taskId,
           userId: req.session.userId,
           historyText: `มอบหมายงาน "${updatedTask.name}" ให้กับ ${assigneeAfter.fullName}`,
         });
+
+        // Create notification for newly assigned user (legacy single-assignee)
+        if (changes.after.assigneeUserId && changes.after.assigneeUserId !== req.session.userId) {
+          await prisma.notification.create({
+            data: {
+              userId: changes.after.assigneeUserId,
+              type: 'TASK_ASSIGNED',
+              message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ให้กับคุณ`,
+              taskId,
+              triggeredByUserId: req.session.userId,
+            },
+          });
+        }
       } else if (assigneeBefore && !assigneeAfter) {
-        // Unassigned
         historyEntries.push({
           taskId,
           userId: req.session.userId,
           historyText: `ยกเลิกการมอบหมายงาน "${updatedTask.name}" ให้กับ ${assigneeBefore.fullName}`,
         });
       } else if (assigneeBefore && assigneeAfter) {
-        // Reassigned
         historyEntries.push({
           taskId,
           userId: req.session.userId,
           historyText: `ยกเลิกการมอบหมายงาน "${updatedTask.name}" ให้กับ ${assigneeBefore.fullName} และมอบหมายให้กับ ${assigneeAfter.fullName}`,
         });
+
+        // Create notification for newly assigned user (reassignment case)
+        if (changes.after.assigneeUserId && changes.after.assigneeUserId !== req.session.userId) {
+          await prisma.notification.create({
+            data: {
+              userId: changes.after.assigneeUserId,
+              type: 'TASK_ASSIGNED',
+              message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ให้กับคุณ`,
+              taskId,
+              triggeredByUserId: req.session.userId,
+            },
+          });
+        }
       }
     }
 
@@ -451,23 +606,11 @@ async function patchHandler(
       });
     }
 
-    // Notify new assignee if changed (only if assignee is being set to a new user)
-    if (
-      updates.assigneeUserId !== undefined &&
-      updates.assigneeUserId !== null &&
-      updates.assigneeUserId !== existingTask.assigneeUserId
-    ) {
-      await prisma.notification.create({
-        data: {
-          userId: updates.assigneeUserId,
-          type: 'TASK_ASSIGNED',
-          title: 'งานถูกมอบหมายให้คุณ',
-          message: `คุณได้รับมอบหมายงาน: ${updatedTask.name}`,
-          link: `/projects/${existingTask.projectId}?task=${taskId}`,
-          triggeredByUserId: req.session.userId,
-        },
-      });
-    }
+    // NOTE: Notification creation for task assignment is handled in the assignee tracking section above
+    // (lines 406-422 for multi-assignee, lines 462-470 and 487-495 for legacy single-assignee)
+    // Removed duplicate notification creation to fix bug where users received 2 notifications:
+    // 1. "ชื่อผู้ใช้ ได้มอบหมายงาน ... ให้กับคุณ" (from history logging section)
+    // 2. "คุณได้รับมอบหมายงาน: ..." (from this section - now removed)
 
     return successResponse({
       task: {
@@ -488,9 +631,9 @@ async function patchHandler(
  */
 async function deleteHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
-  const { taskId } = params;
+  const { taskId } = await params;
 
   // Get existing task
   const existingTask = await prisma.task.findUnique({

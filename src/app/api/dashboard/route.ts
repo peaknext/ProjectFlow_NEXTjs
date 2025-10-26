@@ -53,13 +53,6 @@ async function handler(req: AuthenticatedRequest) {
     let scope;
     try {
       scope = await getUserAccessibleScope(userId);
-      console.log('[Dashboard API] User:', userId, 'Role:', user.role);
-      console.log('[Dashboard API] Scope:', {
-        isAdmin: scope.isAdmin,
-        missionGroupIds: scope.missionGroupIds.length,
-        divisionIds: scope.divisionIds.length,
-        departmentIds: scope.departmentIds.length,
-      });
     } catch (scopeError) {
       console.error('[Dashboard API] getUserAccessibleScope error:', scopeError);
       return errorResponse('INTERNAL_ERROR', 'Failed to get user scope', 500);
@@ -103,9 +96,7 @@ async function handler(req: AuthenticatedRequest) {
             divisionId: { in: scope.divisionIds },
           },
         };
-        console.log('[Dashboard API] LEADER query:', JSON.stringify(taskWhereClause, null, 2));
       } else {
-        console.log('[Dashboard API] LEADER has no divisionIds!');
       }
     } else if (user.role === "HEAD") {
       // HEAD: Tasks in their department
@@ -120,7 +111,6 @@ async function handler(req: AuthenticatedRequest) {
     }
 
     // OPTIMIZED: Parallelize ALL queries for maximum performance
-    console.log('[Dashboard API] Task where clause:', JSON.stringify(taskWhereClause, null, 2));
 
     // Shared user select for all task queries (optimized - removed redundant fields)
     const userSelect = {

@@ -4,10 +4,12 @@ import { useState, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useUIStore } from "@/stores/use-ui-store";
 import { useProjectsList } from "@/hooks/use-projects-list";
 import { ProjectFilterBar } from "./project-filter-bar";
 import { ProjectsTable } from "./projects-table";
 import { ProjectsPagination } from "./projects-pagination";
+import { EditProjectModal } from "@/components/modals/edit-project-modal";
 import { filterProjects, sortProjects } from "@/lib/project-utils";
 import type { ProjectFilters } from "@/types/project";
 
@@ -82,9 +84,10 @@ export function ProjectsView() {
     setCurrentPage(1);
   };
 
+  const openCreateProjectModal = useUIStore((state) => state.openCreateProjectModal);
+
   const handleCreateProject = () => {
-    // TODO: Open create project modal
-    console.log("Create project clicked");
+    openCreateProjectModal();
   };
 
   if (error) {
@@ -112,8 +115,8 @@ export function ProjectsView() {
           </p>
         </div>
         {canCreateProject && (
-          <Button onClick={handleCreateProject} size="lg">
-            <Plus className="mr-2 h-5 w-5" />
+          <Button onClick={handleCreateProject} size="lg" className="px-8 py-6 text-lg">
+            <Plus className="mr-2 h-6 w-6" />
             สร้างโปรเจค
           </Button>
         )}
@@ -154,6 +157,9 @@ export function ProjectsView() {
           />
         </div>
       )}
+
+      {/* Edit Project Modal */}
+      <EditProjectModal />
     </div>
   );
 }

@@ -33,10 +33,6 @@ export function DepartmentToolbar({ title = 'งานในหน่วยง�
   // Filter projects to only show those from the current department
   const departmentProjects = useMemo(() => {
     if (!workspaceData?.hierarchical || !currentDepartmentId) {
-      console.log('[DepartmentToolbar] No workspace data or departmentId:', {
-        hasWorkspace: !!workspaceData?.hierarchical,
-        currentDepartmentId,
-      });
       return [];
     }
 
@@ -45,18 +41,12 @@ export function DepartmentToolbar({ title = 'งานในหน่วยง�
       for (const div of mg.divisions) {
         for (const dept of div.departments) {
           if (dept.id === currentDepartmentId) {
-            console.log('[DepartmentToolbar] Found department projects:', {
-              departmentId: dept.id,
-              departmentName: dept.name,
-              projectCount: dept.projects.length,
-            });
             return dept.projects;
           }
         }
       }
     }
 
-    console.log('[DepartmentToolbar] Department not found:', currentDepartmentId);
     return [];
   }, [workspaceData, currentDepartmentId]);
 

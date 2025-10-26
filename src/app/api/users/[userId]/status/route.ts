@@ -1,18 +1,19 @@
 /**
  * PATCH /api/users/:userId/status
  * Update user status (ACTIVE, SUSPENDED, INACTIVE)
- * Requires 'edit_users' permission
+ * Requires management scope permission
  */
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { withPermission } from '@/lib/api-middleware';
+import { withAuth, AuthenticatedRequest } from '@/lib/api-middleware';
 import {
   successResponse,
   errorResponse,
   handleApiError,
 } from '@/lib/api-response';
+import { canManageTargetUser } from '@/lib/permissions';
 
 const updateStatusSchema = z.object({
   status: z.enum(['ACTIVE', 'SUSPENDED', 'INACTIVE'], {
@@ -22,11 +23,12 @@ const updateStatusSchema = z.object({
 });
 
 async function handler(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
+  req: AuthenticatedRequest,
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
+    const currentUserId = req.session.userId;
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -41,6 +43,16 @@ async function handler(
 
     if (!existingUser) {
       return errorResponse('USER_NOT_FOUND', 'User not found', 404);
+    }
+
+    // Check if current user can manage target user (scope-based permission)
+    const canManage = await canManageTargetUser(currentUserId, userId);
+    if (!canManage) {
+      return errorResponse(
+        'FORBIDDEN',
+        'You do not have permission to change this user\'s status',
+        403
+      );
     }
 
     // Parse and validate request body
@@ -69,14 +81,13 @@ async function handler(
       });
     }
 
-    // TODO: Log activity
-    // await prisma.activityLog.create({
+    // TODO: Log activity (Note: User status changes don't have associated taskId)
+    // This would require a separate UserHistory table or different logging approach
+    // await prisma.history.create({
     //   data: {
     //     userId: req.session.userId,
-    //     actionType: 'UPDATE',
-    //     entityType: 'User',
-    //     entityId: userId,
-    //     changes: {
+    //     taskId: '???', // No taskId for user status changes
+    //     historyText: `Updated user status to ${status}`,
     //       before: { status: existingUser.userStatus },
     //       after: { status },
     //       reason,
@@ -94,4 +105,4 @@ async function handler(
   }
 }
 
-export const PATCH = withPermission('edit_users', handler);
+export const PATCH = withAuth(handler);

@@ -281,24 +281,56 @@ async function deleteHandler(
     return errorResponse('FORBIDDEN', 'No permission to delete this project', 403);
   }
 
-  // Warn if project has tasks
+  // Cascade delete: Soft delete all related data
+  const now = new Date();
+
   if (existingProject._count.tasks > 0) {
-    return errorResponse(
-      'PROJECT_HAS_TASKS',
-      `Project has ${existingProject._count.tasks} active tasks. Please archive or delete tasks first.`,
-      400
-    );
+    // Get all task IDs in this project
+    const taskIds = await prisma.task.findMany({
+      where: { projectId, deletedAt: null },
+      select: { id: true },
+    });
+    const taskIdList = taskIds.map(t => t.id);
+
+    // Soft delete comments associated with tasks
+    const deletedComments = await prisma.comment.updateMany({
+      where: {
+        taskId: { in: taskIdList },
+        deletedAt: null,
+      },
+      data: { deletedAt: now },
+    });
+
+    // Soft delete checklists associated with tasks
+    const deletedChecklists = await prisma.checklist.updateMany({
+      where: {
+        taskId: { in: taskIdList },
+        deletedAt: null,
+      },
+      data: { deletedAt: now },
+    });
+
+    // Soft delete all tasks
+    await prisma.task.updateMany({
+      where: {
+        projectId,
+        deletedAt: null,
+      },
+      data: { deletedAt: now },
+    });
+
   }
 
   // Soft delete project
   await prisma.project.update({
     where: { id: projectId },
-    data: { deletedAt: new Date() },
+    data: { dateDeleted: now },
   });
 
   return successResponse({
     message: 'Project deleted successfully',
     projectId,
+    deletedTasks: existingProject._count.tasks,
   });
 }
 

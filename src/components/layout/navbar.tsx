@@ -43,7 +43,13 @@ export function Navbar() {
         </Link>
 
         {/* Center - Search */}
-        <div className="flex items-center gap-4 flex-1 justify-center max-w-3xl mx-auto">
+        {/* TODO: Global Search - To be implemented in next version
+            - Search across tasks, projects, users
+            - Advanced filters and search syntax
+            - Search history and suggestions
+            - Keyboard shortcut (Cmd/Ctrl + K)
+        */}
+        {/* <div className="flex items-center gap-4 flex-1 justify-center max-w-3xl mx-auto">
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -52,7 +58,7 @@ export function Navbar() {
               className="pl-10 bg-muted/50"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Right Side - Notifications, Profile */}
         <div className="flex items-center gap-3 flex-shrink-0">

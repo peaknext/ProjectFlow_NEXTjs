@@ -246,9 +246,12 @@ export function ChecklistsSection({ taskId, task }: ChecklistsSectionProps) {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !isCreating) {
                   e.preventDefault();
+                  e.stopPropagation();
                   handleAddItem(true); // Keep form open
                 }
                 if (e.key === 'Escape') {
+                  e.preventDefault();
+                  e.stopPropagation();
                   handleCancel();
                 }
               }}

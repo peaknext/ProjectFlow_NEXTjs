@@ -52,7 +52,20 @@ export function getCurrentPhase(
   // Sort by phase order
   const sortedPhases = [...phases].sort((a, b) => a.phaseOrder - b.phaseOrder);
 
-  // Find current phase
+  // Check if ANY phase has dates
+  const hasAnyDates = sortedPhases.some(p => p.startDate || p.endDate);
+
+  // If no phases have dates, show first phase
+  if (!hasAnyDates) {
+    const firstPhase = sortedPhases[0];
+    return {
+      name: firstPhase.name,
+      order: firstPhase.phaseOrder,
+      status: "active",
+    };
+  }
+
+  // Find current phase based on dates
   for (const phase of sortedPhases) {
     const startDate = phase.startDate ? new Date(phase.startDate) : null;
     const endDate = phase.endDate ? new Date(phase.endDate) : null;
@@ -78,7 +91,7 @@ export function getCurrentPhase(
     }
   }
 
-  // If past all phases
+  // If past all phases with dates
   const lastPhase = sortedPhases[sortedPhases.length - 1];
   return {
     name: "เสร็จสิ้น",

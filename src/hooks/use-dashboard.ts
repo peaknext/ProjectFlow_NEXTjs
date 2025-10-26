@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSyncMutation } from "@/lib/use-sync-mutation";
 import { api } from "@/lib/api-client";
-import { DashboardData, UseDashboardOptions } from "@/types/dashboard";
+import { DashboardData, UseDashboardOptions, Activity } from "@/types/dashboard";
 
 /**
  * Query keys for dashboard data
@@ -10,6 +10,7 @@ export const dashboardKeys = {
   all: ["dashboard"] as const,
   detail: (options?: UseDashboardOptions) =>
     [...dashboardKeys.all, options] as const,
+  activities: () => [...dashboardKeys.all, "activities"] as const,
 };
 
 /**
@@ -40,6 +41,29 @@ export function useDashboard(options?: UseDashboardOptions) {
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
+  });
+}
+
+/**
+ * Fetch recent activities (comments + history)
+ *
+ * Polls every 60 seconds for new activities.
+ * Returns up to 30 latest activities merged from comments and history.
+ *
+ * @returns Activities data with automatic polling
+ */
+export function useActivities() {
+  return useQuery({
+    queryKey: dashboardKeys.activities(),
+    queryFn: async () => {
+      const response = await api.get<{ activities: Activity[]; count: number }>(
+        "/api/dashboard/activities"
+      );
+      return response;
+    },
+    staleTime: 0, // Always consider stale (for polling)
+    refetchInterval: 60000, // Poll every 1 minute (60 seconds)
+    refetchIntervalInBackground: false, // Stop polling when tab inactive
   });
 }
 

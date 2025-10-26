@@ -102,7 +102,7 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
             const label = context.label || "";
             // Handle both number and object values (for different chart types)
             let value = context.parsed;
-            if (typeof value === 'object' && value !== null) {
+            if (typeof value === "object" && value !== null) {
               value = value.y ?? value.x ?? context.raw ?? 0;
             } else if (value === null || value === undefined) {
               value = context.raw ?? 0;
@@ -185,18 +185,7 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
     const notStarted = Number(userData["Not Started"]) || 0;
     const inProgress = Number(userData["In Progress"]) || 0;
     const total = notStarted + inProgress;
-    console.log(`📊 Bar chart data for ${name}:`, {
-      userData,
-      notStarted,
-      inProgress,
-      total
-    });
     return total;
-  });
-
-  console.log('📊 Bar chart final data:', {
-    labels: assigneeNames,
-    data: openTasksByAssignee,
   });
 
   const openTasksData = {
@@ -231,7 +220,9 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
       y: {
         beginAtZero: true,
         grid: {
-          color: isDark ? "rgba(148, 163, 184, 0.1)" : "rgba(148, 163, 184, 0.2)",
+          color: isDark
+            ? "rgba(148, 163, 184, 0.1)"
+            : "rgba(148, 163, 184, 0.2)",
         },
         ticks: {
           color: isDark ? "#94a3b8" : "#64748b",
@@ -272,7 +263,9 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
       {/* Row 2: Bar Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">งานที่ยังไม่เสร็จแยกตามผู้รับผิดชอบ</CardTitle>
+          <CardTitle className="text-base">
+            งานที่ยังไม่เสร็จแยกตามผู้รับผิดชอบ
+          </CardTitle>
         </CardHeader>
         <CardContent className="h-[400px]">
           <Bar data={openTasksData} options={barOptions} />

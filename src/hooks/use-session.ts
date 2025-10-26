@@ -28,7 +28,6 @@ interface Session {
  * @example
  * const { data: session, isLoading } = useSession();
  * if (session) {
- *   console.log('Logged in as:', session.user?.name);
  * }
  */
 export function useSession() {

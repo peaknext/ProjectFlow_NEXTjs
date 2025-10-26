@@ -154,7 +154,7 @@ export function TaskPanelFooter({
 
   return (
     <>
-      <footer className="flex justify-between items-center p-4 lg:p-6 bg-slate-50 dark:bg-background rounded-bl-xl border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
+      <footer className="flex justify-between items-center p-4 lg:p-6 bg-white dark:bg-slate-900 rounded-bl-xl border-t border-slate-200 dark:border-slate-700 flex-shrink-0">
         {/* Close Task Button (Left) */}
         {showCloseButton ? (
           <Button

@@ -129,7 +129,6 @@ async function postHandler(
   try {
     const { projectId } = await params;
 
-    console.log('[POST /api/projects/:projectId/tasks] ProjectId:', projectId);
 
     // Check if project exists
     const project = await prisma.project.findUnique({
@@ -141,7 +140,6 @@ async function postHandler(
       return errorResponse('PROJECT_NOT_FOUND', 'Project not found', 404);
     }
 
-    console.log('[POST /api/projects/:projectId/tasks] Project found:', project.name);
 
     // Check permission
     const hasAccess = await checkPermission(
@@ -155,13 +153,10 @@ async function postHandler(
       return errorResponse('FORBIDDEN', 'No permission to create tasks', 403);
     }
 
-    console.log('[POST /api/projects/:projectId/tasks] Permission granted');
 
     const body = await req.json();
-    console.log('[POST /api/projects/:projectId/tasks] Request body:', JSON.stringify(body, null, 2));
 
     const data = createTaskSchema.parse(body);
-    console.log('[POST /api/projects/:projectId/tasks] Validated data:', JSON.stringify(data, null, 2));
 
     // Determine assignee: use first from array if provided, otherwise use single assignee
     const assigneeUserId = data.assigneeUserIds?.[0] || data.assigneeUserId || null;
@@ -198,19 +193,6 @@ async function postHandler(
     }
 
     // Create task
-    console.log('[POST /api/projects/:projectId/tasks] Creating task with data:', {
-      name: data.name,
-      description: data.description || null,
-      projectId,
-      assigneeUserId,
-      statusId: data.statusId,
-      priority: data.priority,
-      startDate: data.startDate,
-      dueDate: data.dueDate,
-      difficulty: data.difficulty,
-      parentTaskId: data.parentTaskId,
-      creatorUserId: req.session.userId,
-    });
 
     const task = await prisma.task.create({
       data: {
@@ -245,7 +227,6 @@ async function postHandler(
       },
     });
 
-    console.log('[POST /api/projects/:projectId/tasks] Task created successfully:', task.id);
 
     // Create history log
     await prisma.history.create({

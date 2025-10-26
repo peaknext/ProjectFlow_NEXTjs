@@ -46,6 +46,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'view_projects',
     'create_projects',
     'edit_projects',
+    'delete_projects',
     'view_tasks',
     'create_tasks',
     'edit_tasks',
@@ -59,6 +60,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'view_projects',
     'create_projects',
     'edit_projects',
+    'delete_projects',
     'view_tasks',
     'create_tasks',
     'edit_tasks',
@@ -974,7 +976,9 @@ export async function canUserEditProject(
  * Permission rules:
  * - ADMIN: Can delete any project
  * - CHIEF: Can delete projects in their Mission Group
- * - LEADER/HEAD/MEMBER/USER: Cannot delete projects
+ * - LEADER: Can delete projects in their Division
+ * - HEAD: Can delete projects in their Department
+ * - MEMBER/USER: Cannot delete projects
  *
  * @param userId - User ID
  * @param projectId - Project ID

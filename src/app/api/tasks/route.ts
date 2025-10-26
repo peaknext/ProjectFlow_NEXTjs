@@ -18,6 +18,7 @@ async function handler(req: AuthenticatedRequest) {
   const assigneeId = searchParams.get('assigneeId');
   const priority = searchParams.get('priority');
   const isClosed = searchParams.get('isClosed');
+  const parentTaskId = searchParams.get('parentTaskId');
   const limit = parseInt(searchParams.get('limit') || '50');
   const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -53,6 +54,10 @@ async function handler(req: AuthenticatedRequest) {
 
   if (isClosed !== null) {
     where.isClosed = isClosed === 'true';
+  }
+
+  if (parentTaskId) {
+    where.parentTaskId = parentTaskId;
   }
 
   // Get tasks

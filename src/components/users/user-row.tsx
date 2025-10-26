@@ -15,10 +15,9 @@
 "use client";
 
 import { useState } from "react";
-import { User, ROLE_LABELS, ROLE_COLORS } from "@/types/user";
+import { User, ROLE_LABELS } from "@/types/user";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,8 +65,37 @@ export function UserRow({ user }: UserRowProps) {
     .slice(0, 2);
 
   // Permission checks
-  const canDelete =
-    currentUser?.role && ["ADMIN", "CHIEF"].includes(currentUser.role);
+  // Only ADMIN can edit users (via Edit Modal)
+  // HEAD/LEADER/CHIEF can only toggle status, not edit other fields
+  const canEdit = (() => {
+    if (!currentUser) return false;
+    if (currentUser.role !== "ADMIN") return false; // Only ADMIN can edit
+
+    // Cannot edit self
+    if (currentUser.id === user.id) return false;
+
+    // Cannot edit other ADMIN users
+    if (user.role === "ADMIN") return false;
+
+    return true;
+  })();
+
+  // Only ADMIN can delete users
+  const canDelete = (() => {
+    if (!currentUser) return false;
+    if (currentUser.role !== "ADMIN") return false; // Only ADMIN can delete
+
+    // Cannot delete self
+    if (currentUser.id === user.id) return false;
+
+    // Cannot delete other ADMIN users
+    if (user.role === "ADMIN") return false;
+
+    return true;
+  })();
+
+  // Check if Actions column should be shown
+  const showActions = currentUser?.role === "ADMIN";
 
   const handleStatusToggle = async (checked: boolean) => {
     const newStatus = checked ? "ACTIVE" : "SUSPENDED";
@@ -129,7 +157,7 @@ export function UserRow({ user }: UserRowProps) {
               {user.jobTitle && (
                 <div className="text-xs text-muted-foreground">
                   {user.jobTitle.jobTitleTh}
-                  {user.jobLevel && ` ${user.jobLevel}`}
+                  {user.jobLevel && `${user.jobLevel}`}
                 </div>
               )}
             </div>
@@ -167,9 +195,9 @@ export function UserRow({ user }: UserRowProps) {
 
         {/* Role */}
         <TableCell>
-          <Badge className={ROLE_COLORS[user.role] || ""} variant="secondary">
+          <span className="text-sm">
             {ROLE_LABELS[user.role] || user.role}
-          </Badge>
+          </span>
         </TableCell>
 
         {/* Status */}
@@ -187,35 +215,47 @@ export function UserRow({ user }: UserRowProps) {
           </div>
         </TableCell>
 
-        {/* Actions */}
-        <TableCell className="text-right">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">เปิดเมนู</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => openEditUserModal(user)}>
-                <Edit className="h-4 w-4 mr-2" />
-                แก้ไข
-              </DropdownMenuItem>
-              {canDelete && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleDeleteClick}
-                    className="text-red-600 dark:text-red-400 focus:text-red-600 focus:dark:text-red-400"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    ลบ
+        {/* Actions - Only show for ADMIN */}
+        {showActions && (
+          <TableCell className="text-right">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">เปิดเมนู</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {canEdit ? (
+                  <DropdownMenuItem onClick={() => openEditUserModal(user)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    แก้ไข
                   </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
+                ) : (
+                  <DropdownMenuItem disabled className="opacity-50">
+                    <Edit className="h-4 w-4 mr-2" />
+                    แก้ไข
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      (ไม่มีสิทธิ์)
+                    </span>
+                  </DropdownMenuItem>
+                )}
+                {canDelete ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleDeleteClick}
+                      className="text-red-600 dark:text-red-400 focus:text-red-600 focus:dark:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      ลบ
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
+        )}
       </TableRow>
 
       {/* Delete Confirmation Dialog */}

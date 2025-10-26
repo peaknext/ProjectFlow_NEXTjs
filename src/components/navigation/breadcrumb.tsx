@@ -17,14 +17,23 @@
 import { useRouter } from "next/navigation";
 import { ChevronRight, FolderKanban } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useBreadcrumbPath, useNavigationStore } from "@/stores/use-navigation-store";
+import {
+  useBreadcrumbPath,
+  useNavigationStore,
+} from "@/stores/use-navigation-store";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 
 interface Division {
   id: string;
@@ -77,11 +86,17 @@ interface BreadcrumbProps {
   className?: string;
 }
 
-export function Breadcrumb({ workspace, projects, onProjectSelect, className }: BreadcrumbProps) {
+export function Breadcrumb({
+  workspace,
+  projects,
+  onProjectSelect,
+  className,
+}: BreadcrumbProps) {
   const router = useRouter();
   const { path, currentLevel } = useBreadcrumbPath();
   const navigation = useNavigationStore();
-  const { navigateToLevel, setDepartment, setDivision, setProject } = useNavigationStore();
+  const { navigateToLevel, setDepartment, setDivision, setProject } =
+    useNavigationStore();
 
   /**
    * Handle breadcrumb link click
@@ -121,7 +136,12 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
   /**
    * Handle division selection from breadcrumb selector
    */
-  const handleDivisionSelect = (divisionId: string, divisionName: string, missionGroupId: string, missionGroupName: string) => {
+  const handleDivisionSelect = (
+    divisionId: string,
+    divisionName: string,
+    missionGroupId: string,
+    missionGroupName: string
+  ) => {
     setDivision(divisionId, divisionName, missionGroupId, missionGroupName);
     router.push(`/division/tasks?id=${divisionId}`);
   };
@@ -129,14 +149,19 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
   /**
    * Handle department selection from breadcrumb selector
    */
-  const handleDepartmentSelect = (departmentId: string, departmentName: string) => {
+  const handleDepartmentSelect = (
+    departmentId: string,
+    departmentName: string
+  ) => {
     // Get division and mission group from current navigation state
     const division = workspace?.hierarchical
-      ?.flatMap(mg => mg.divisions)
-      .find(div => div.departments.some(dept => dept.id === departmentId));
+      ?.flatMap((mg) => mg.divisions)
+      .find((div) => div.departments.some((dept) => dept.id === departmentId));
 
-    const missionGroup = workspace?.hierarchical?.find(mg =>
-      mg.divisions.some(div => div.departments.some(dept => dept.id === departmentId))
+    const missionGroup = workspace?.hierarchical?.find((mg) =>
+      mg.divisions.some((div) =>
+        div.departments.some((dept) => dept.id === departmentId)
+      )
     );
 
     if (division && missionGroup) {
@@ -174,7 +199,9 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
    * Get divisions list for current mission group
    */
   const getDivisionsForMissionGroup = (missionGroupId: string): Division[] => {
-    const missionGroup = workspace?.hierarchical?.find(mg => mg.id === missionGroupId);
+    const missionGroup = workspace?.hierarchical?.find(
+      (mg) => mg.id === missionGroupId
+    );
     return missionGroup?.divisions || [];
   };
 
@@ -183,8 +210,8 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
    */
   const getDepartmentsForDivision = (divisionId: string): Department[] => {
     const division = workspace?.hierarchical
-      ?.flatMap(mg => mg.divisions)
-      .find(div => div.id === divisionId);
+      ?.flatMap((mg) => mg.divisions)
+      .find((div) => div.id === divisionId);
     return division?.departments || [];
   };
 
@@ -194,44 +221,41 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
   }
 
   return (
-    <div className={cn("flex items-center gap-2 text-sm text-muted-foreground", className)}>
+    <div
+      className={cn(
+        "flex items-center gap-2 text-sm text-muted-foreground",
+        className
+      )}
+    >
       {path.map((item, index) => {
         const isCurrentLevel = item.level === currentLevel;
-        const isNonClickable = item.level === "missionGroup" || item.level === "division";
+        const isNonClickable =
+          item.level === "missionGroup" || item.level === "division";
         const isLast = index === path.length - 1;
 
         // Determine what selector to show after this item
-        let selectorType: 'division' | 'department' | 'project' | null = null;
+        let selectorType: "division" | "department" | "project" | null = null;
         let selectorData: any[] = [];
 
         if (item.level === "missionGroup" && workspace) {
           // Show division selector after mission group
-          selectorType = 'division';
+          selectorType = "division";
           selectorData = getDivisionsForMissionGroup(item.id);
         } else if (item.level === "division" && workspace) {
           // Show department selector after division
-          selectorType = 'department';
+          selectorType = "department";
           selectorData = getDepartmentsForDivision(item.id);
-        } else if (item.level === "department" && projects && projects.length > 0) {
+        } else if (
+          item.level === "department" &&
+          projects &&
+          projects.length > 0
+        ) {
           // Show project selector after department
-          selectorType = 'project';
+          selectorType = "project";
           selectorData = projects;
         }
 
         const showSelector = selectorType && selectorData.length > 0;
-
-        // Debug department item
-        if (item.level === "department") {
-          console.log('🔍 Department breadcrumb:', {
-            itemName: item.name,
-            hasProjects: !!projects,
-            projectsLength: projects?.length,
-            projectsData: projects,
-            selectorType,
-            selectorDataLength: selectorData.length,
-            showSelector
-          });
-        }
 
         return (
           <div key={item.id} className="flex items-center gap-2">
@@ -249,7 +273,9 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
             ) : (
               // Clickable: Department or Project (if not current)
               <button
-                onClick={() => handleBreadcrumbClick(item.level, item.id, item.name)}
+                onClick={() =>
+                  handleBreadcrumbClick(item.level, item.id, item.name)
+                }
                 className="font-medium hover:text-primary transition-colors hover:underline"
               >
                 {item.name}
@@ -267,9 +293,9 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
                   >
                     <ChevronRight className="h-4 w-4" />
                     <span className="sr-only">
-                      {selectorType === 'division' && 'เลือกกลุ่มงาน'}
-                      {selectorType === 'department' && 'เลือกหน่วยงาน'}
-                      {selectorType === 'project' && 'เลือกโปรเจค'}
+                      {selectorType === "division" && "เลือกกลุ่มงาน"}
+                      {selectorType === "department" && "เลือกหน่วยงาน"}
+                      {selectorType === "project" && "เลือกโปรเจค"}
                     </span>
                   </Button>
                 </PopoverTrigger>
@@ -277,52 +303,71 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
                   <Command>
                     <CommandInput
                       placeholder={
-                        selectorType === 'division' ? 'ค้นหากลุ่มงาน...' :
-                        selectorType === 'department' ? 'ค้นหาหน่วยงาน...' :
-                        'ค้นหาโปรเจค...'
+                        selectorType === "division"
+                          ? "ค้นหากลุ่มงาน..."
+                          : selectorType === "department"
+                            ? "ค้นหาหน่วยงาน..."
+                            : "ค้นหาโปรเจค..."
                       }
                     />
                     <CommandEmpty>
-                      {selectorType === 'division' && 'ไม่พบกลุ่มงาน'}
-                      {selectorType === 'department' && 'ไม่พบหน่วยงาน'}
-                      {selectorType === 'project' && 'ไม่พบโปรเจค'}
+                      {selectorType === "division" && "ไม่พบกลุ่มงาน"}
+                      {selectorType === "department" && "ไม่พบหน่วยงาน"}
+                      {selectorType === "project" && "ไม่พบโปรเจค"}
                     </CommandEmpty>
                     <CommandGroup className="max-h-[300px] overflow-y-auto">
-                      {selectorType === 'division' && (selectorData as Division[]).map((division) => (
-                        <CommandItem
-                          key={division.id}
-                          value={division.name}
-                          onSelect={() => {
-                            const mg = workspace?.hierarchical?.find(mg => mg.id === division.missionGroupId);
-                            if (mg) {
-                              handleDivisionSelect(division.id, division.name, mg.id, mg.name);
+                      {selectorType === "division" &&
+                        (selectorData as Division[]).map((division) => (
+                          <CommandItem
+                            key={division.id}
+                            value={division.name}
+                            onSelect={() => {
+                              const mg = workspace?.hierarchical?.find(
+                                (mg) => mg.id === division.missionGroupId
+                              );
+                              if (mg) {
+                                handleDivisionSelect(
+                                  division.id,
+                                  division.name,
+                                  mg.id,
+                                  mg.name
+                                );
+                              }
+                            }}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <span className="flex-1">{division.name}</span>
+                          </CommandItem>
+                        ))}
+                      {selectorType === "department" &&
+                        (selectorData as Department[]).map((department) => (
+                          <CommandItem
+                            key={department.id}
+                            value={department.name}
+                            onSelect={() =>
+                              handleDepartmentSelect(
+                                department.id,
+                                department.name
+                              )
                             }
-                          }}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <span className="flex-1">{division.name}</span>
-                        </CommandItem>
-                      ))}
-                      {selectorType === 'department' && (selectorData as Department[]).map((department) => (
-                        <CommandItem
-                          key={department.id}
-                          value={department.name}
-                          onSelect={() => handleDepartmentSelect(department.id, department.name)}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <span className="flex-1">{department.name}</span>
-                        </CommandItem>
-                      ))}
-                      {selectorType === 'project' && (selectorData as Project[]).map((project) => (
-                        <CommandItem
-                          key={project.id}
-                          value={project.name}
-                          onSelect={() => handleProjectSelectorSelect(project.id)}
-                          className="cursor-pointer"
-                        >
-                          {project.name}
-                        </CommandItem>
-                      ))}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <span className="flex-1">{department.name}</span>
+                          </CommandItem>
+                        ))}
+                      {selectorType === "project" &&
+                        (selectorData as Project[]).map((project) => (
+                          <CommandItem
+                            key={project.id}
+                            value={project.name}
+                            onSelect={() =>
+                              handleProjectSelectorSelect(project.id)
+                            }
+                            className="cursor-pointer"
+                          >
+                            {project.name}
+                          </CommandItem>
+                        ))}
                     </CommandGroup>
                   </Command>
                 </PopoverContent>
@@ -344,7 +389,9 @@ export function Breadcrumb({ workspace, projects, onProjectSelect, className }: 
  * Breadcrumb with auto-loaded projects
  * Automatically fetches projects for current department
  */
-export function BreadcrumbWithProjects(props: Omit<BreadcrumbProps, "projects">) {
+export function BreadcrumbWithProjects(
+  props: Omit<BreadcrumbProps, "projects">
+) {
   const navigation = useNavigationStore();
   // TODO: Add useQuery to fetch projects for current department
   // const { data: projects } = useQuery({

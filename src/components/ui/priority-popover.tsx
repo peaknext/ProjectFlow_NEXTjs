@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { PriorityBadge } from '@/components/common/priority-badge';
 import { cn } from '@/lib/utils';
 
 export type PriorityValue = '1' | '2' | '3' | '4';
@@ -77,13 +78,7 @@ export function PriorityPopover({
             className
           )}
         >
-          <span
-            className="material-symbols-outlined text-lg flex-shrink-0"
-            style={{ color: selectedOption.color }}
-          >
-            {selectedOption.icon}
-          </span>
-          <span className="truncate">{selectedOption.name}</span>
+          <PriorityBadge priority={parseInt(value)} size="md" showIcon={false} />
         </button>
       </PopoverTrigger>
 
@@ -100,13 +95,7 @@ export function PriorityPopover({
                 option.id === value && 'bg-accent'
               )}
             >
-              <span
-                className="material-symbols-outlined text-lg"
-                style={{ color: option.color }}
-              >
-                {option.icon}
-              </span>
-              <span>{option.name}</span>
+              <PriorityBadge priority={parseInt(option.id)} size="md" />
             </button>
           ))}
         </div>
@@ -134,8 +123,6 @@ export function PriorityTrigger({
   disabled = false,
   className
 }: PriorityTriggerProps) {
-  const selectedOption = PRIORITY_OPTIONS.find(opt => opt.id === value) || PRIORITY_OPTIONS[2];
-
   return (
     <button
       type="button"
@@ -152,13 +139,7 @@ export function PriorityTrigger({
         className
       )}
     >
-      <span
-        className="material-symbols-outlined text-lg flex-shrink-0"
-        style={{ color: selectedOption.color }}
-      >
-        {selectedOption.icon}
-      </span>
-      <span className="truncate">{selectedOption.name}</span>
+      <PriorityBadge priority={parseInt(value)} size="md" showIcon={false} />
     </button>
   );
 }

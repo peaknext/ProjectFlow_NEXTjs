@@ -9,11 +9,11 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin, { EventDropArg } from '@fullcalendar/interaction';
-import { EventClickArg, EventMountArg } from '@fullcalendar/core';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { EventClickArg, EventMountArg, EventDropArg } from '@fullcalendar/core';
 import { useTheme } from 'next-themes';
 import { useQueryClient } from '@tanstack/react-query';
-import { useProject } from '@/hooks/use-projects';
+import { useProject, projectKeys } from '@/hooks/use-projects';
 import { useUpdateTask } from '@/hooks/use-tasks';
 import { useUIStore } from '@/stores/use-ui-store';
 import { usePersistedFilters } from '@/hooks/use-persisted-filters';
@@ -23,7 +23,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TaskFilterBar } from '@/components/views/common/task-filter-bar';
 import { filterTasks, getUniqueAssignees } from '@/components/views/common/filter-tasks';
 import type { Task } from '@/hooks/use-tasks';
-import { projectKeys } from '@/hooks/use-projects';
 
 interface CalendarViewProps {
   projectId: string;
@@ -52,6 +51,12 @@ export function CalendarView({ projectId }: CalendarViewProps) {
   // Use server data directly (no local state to avoid race conditions)
   const tasks = data?.tasks || [];
 
+  // Debug: Log when tasks change
+  useEffect(() => {
+    if (tasks.length > 0) {
+    }
+  }, [tasks]);
+
   // Apply filters to tasks
   const filteredTasks = useMemo(
     () => filterTasks(tasks, filters),
@@ -69,8 +74,13 @@ export function CalendarView({ projectId }: CalendarViewProps) {
       return true;
     })
     .map((task) => {
+      // Calculate start and end dates
+      // FullCalendar uses exclusive end dates for all-day events, so we need to add 1 day
       const startDate = task.startDate ? new Date(task.startDate) : task.dueDate ? new Date(task.dueDate) : new Date();
-      const endDate = task.dueDate ? new Date(task.dueDate) : new Date();
+
+      // For end date: add 1 day to make it exclusive (FullCalendar convention)
+      const endDate = new Date(task.dueDate || startDate);
+      endDate.setDate(endDate.getDate() + 1); // Make exclusive
 
       // Skeleton state for creating/closing tasks
       if (task.isCreating || task.isClosing) {
@@ -120,9 +130,6 @@ export function CalendarView({ projectId }: CalendarViewProps) {
   // Handle event drop (drag and drop)
   const handleEventDrop = (info: EventDropArg) => {
     const taskId = info.event.id;
-    const newDueDate = info.event.end
-      ? info.event.end.toISOString()
-      : info.event.start.toISOString();
 
     // Find task
     const task = tasks.find((t) => t.id === taskId);
@@ -139,47 +146,68 @@ export function CalendarView({ projectId }: CalendarViewProps) {
       return;
     }
 
-    const originalDueDate = task.dueDate;
+    // Calculate new dates from event (FullCalendar uses exclusive end dates for day-based events)
+    // For all-day events: end date is exclusive (next day), so we need to subtract 1 day
+    const newStartDate = info.event.start ? info.event.start.toISOString() : task.startDate;
 
-    // If date hasn't changed, do nothing
-    if (newDueDate === originalDueDate) {
+    // FullCalendar end date is exclusive, so subtract 1 day to get the actual end date
+    let newDueDate: string | null = null;
+    if (info.event.end) {
+      const endDate = new Date(info.event.end);
+      endDate.setDate(endDate.getDate() - 1); // Convert exclusive to inclusive
+      newDueDate = endDate.toISOString();
+    } else {
+      // If no end date, use start date as due date
+      newDueDate = newStartDate || task.dueDate;
+    }
+
+    // If dates haven't changed, do nothing
+    if (newStartDate === task.startDate && newDueDate === task.dueDate) {
       return;
     }
 
-    // Optimistic update: Update cache immediately before server call
+    // Prepare update data
+    const updateData: { startDate?: string | null; dueDate?: string | null } = {};
+    if (newStartDate !== task.startDate) {
+      updateData.startDate = newStartDate;
+    }
+    if (newDueDate !== task.dueDate) {
+      updateData.dueDate = newDueDate;
+    }
+
+    // IMPORTANT: We do immediate cache update here for instant calendar feedback
+    // Then mutation will also do optimistic update (redundant but safe)
+    // This prevents flicker because React Query rerender happens synchronously
     const queryKey = projectKeys.board(projectId);
+
+    // Save previous data for potential rollback
     const previousData = queryClient.getQueryData(queryKey);
 
-    // Update cache optimistically
+    // Immediate synchronous cache update (prevents flicker)
     queryClient.setQueryData(queryKey, (old: any) => {
-      if (!old) return old;
-
+      if (!old?.tasks) return old;
       return {
         ...old,
         tasks: old.tasks.map((t: Task) =>
-          t.id === taskId
-            ? { ...t, dueDate: newDueDate }
-            : t
+          t.id === taskId ? { ...t, ...updateData } : t
         ),
       };
     });
 
-    // Update server in background (sync animation handled by useSyncMutation)
+    // Call mutation - it will also do optimistic update (redundant but ensures consistency)
+    // The mutation's optimistic update won't cause issues because it updates to the same values
     updateTaskMutation.mutate(
       {
         taskId,
-        data: { dueDate: newDueDate },
+        data: updateData,
       },
       {
         onError: (error) => {
-          // Rollback to previous data on error
+          // Rollback our immediate cache update
           queryClient.setQueryData(queryKey, previousData);
+          // Revert calendar UI
           info.revert();
-          console.error('Failed to update task due date:', error);
-        },
-        onSettled: () => {
-          // Refetch to ensure sync with server
-          queryClient.invalidateQueries({ queryKey });
+          console.error('Failed to update task dates:', error);
         },
       }
     );
@@ -190,8 +218,11 @@ export function CalendarView({ projectId }: CalendarViewProps) {
     const taskId = info.event.id;
     const projectId = info.event.extendedProps.projectId;
 
+
     if (taskId && projectId) {
       openTaskPanel(taskId);
+    } else {
+      console.warn('[Calendar] Missing taskId or projectId:', { taskId, projectId });
     }
   };
 
@@ -279,6 +310,7 @@ export function CalendarView({ projectId }: CalendarViewProps) {
           events={events}
           editable={true}
           eventDrop={handleEventDrop}
+          eventResize={handleEventDrop} // Use same handler for resize
           eventClick={handleEventClick}
           eventDidMount={handleEventDidMount}
           dayCellContent={(arg) => {

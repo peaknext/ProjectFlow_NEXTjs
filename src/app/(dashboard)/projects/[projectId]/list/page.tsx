@@ -120,9 +120,6 @@ export default function ListViewPage() {
   const departmentProjects = projectData?.project?.department?.projects || [];
 
   // Debug: Check if projects are loaded from API
-  console.log('📦 List Page - departmentProjects LENGTH:', departmentProjects.length);
-  console.log('📦 List Page - departmentProjects:', JSON.stringify(departmentProjects, null, 2));
-  console.log('📦 List Page - department keys:', Object.keys(projectData?.project?.department || {}));
 
   return (
     <div className="flex flex-col h-full">

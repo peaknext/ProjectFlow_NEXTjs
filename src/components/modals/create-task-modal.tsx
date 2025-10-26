@@ -161,12 +161,6 @@ export function CreateTaskModal() {
   }, [watchProjectId]);
 
   async function loadInitialData() {
-    console.log("[CreateTaskModal] loadInitialData called", {
-      departmentId: createTaskModal.departmentId,
-      projectId: createTaskModal.projectId,
-      availableProjects: createTaskModal.availableProjects?.length,
-      projectsFromHook: projectsData?.projects?.length,
-    });
 
     // Reset form first (but keep default values)
     reset({
@@ -186,10 +180,6 @@ export function CreateTaskModal() {
 
     // PRIORITY 1: Use projects from useProjects hook (with permission check)
     if (projectsData?.projects && projectsData.projects.length > 0) {
-      console.log(
-        "[CreateTaskModal] Using projects from useProjects hook:",
-        projectsData.projects.length
-      );
 
       // Map to expected Project interface (keep departmentId for filtering)
       projects = projectsData.projects.map((p: any) => ({
@@ -204,12 +194,6 @@ export function CreateTaskModal() {
         const filteredProjects = projects.filter(
           (p: any) => p.departmentId === createTaskModal.departmentId
         );
-        console.log(
-          "[CreateTaskModal] Filtered by departmentId:",
-          filteredProjects.length,
-          "from",
-          projects.length
-        );
         projects = filteredProjects;
       }
     }
@@ -218,17 +202,10 @@ export function CreateTaskModal() {
       createTaskModal.availableProjects &&
       createTaskModal.availableProjects.length > 0
     ) {
-      console.log(
-        "[CreateTaskModal] Fallback: Using pre-filtered projects:",
-        createTaskModal.availableProjects.length
-      );
       projects = createTaskModal.availableProjects;
     }
     // PRIORITY 3: Fallback to workspace cache (last resort)
     else {
-      console.log(
-        "[CreateTaskModal] Fallback: Trying workspace cache"
-      );
       try {
         const cachedWorkspace = queryClient.getQueryData(["workspace"]) as any;
 
@@ -242,10 +219,6 @@ export function CreateTaskModal() {
           } else {
             projects = extractProjectsFromWorkspace(cachedWorkspace.workspace);
           }
-          console.log(
-            "[CreateTaskModal] Loaded projects from workspace cache:",
-            projects.length
-          );
         }
       } catch (error) {
         console.error("Failed to load projects from workspace cache:", error);
@@ -270,7 +243,6 @@ export function CreateTaskModal() {
     }
     // Auto-select if only 1 project available
     else if (projects.length === 1) {
-      console.log("[CreateTaskModal] Auto-selecting single available project:", projects[0].name);
       const project = projects[0];
       setSelectedProject(project);
       setValue("projectId", project.id);
@@ -295,41 +267,16 @@ export function CreateTaskModal() {
   ): Project[] {
     const projects: Project[] = [];
 
-    console.log("[extractProjectsFromWorkspace]", {
-      viewType: workspace.viewType,
-      hasHierarchical: !!workspace.hierarchical,
-      filterDepartmentId,
-    });
 
     if (workspace.viewType === "hierarchical" && workspace.hierarchical) {
-      console.log(
-        "[extractProjectsFromWorkspace] Using hierarchical view, MGs:",
-        workspace.hierarchical.length
-      );
       workspace.hierarchical.forEach((mg: any) => {
         mg.divisions?.forEach((div: any) => {
           div.departments?.forEach((dept: any) => {
-            console.log(
-              "[extractProjectsFromWorkspace] Checking dept:",
-              dept.id,
-              "filter:",
-              filterDepartmentId
-            );
             // If filterDepartmentId is provided, only include projects from that department
             if (filterDepartmentId && dept.id !== filterDepartmentId) {
-              console.log(
-                "[extractProjectsFromWorkspace] Skipping dept:",
-                dept.id
-              );
               return; // Skip this department
             }
 
-            console.log(
-              "[extractProjectsFromWorkspace] Including dept:",
-              dept.id,
-              "projects:",
-              dept.projects?.length
-            );
             dept.projects?.forEach((proj: any) => {
               projects.push({
                 id: proj.id,

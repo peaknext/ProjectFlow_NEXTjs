@@ -126,10 +126,35 @@ async function handler(req: AuthenticatedRequest) {
       }),
     ]);
 
+    // Filter out comments that have corresponding history entries
+    // (to avoid duplicate activities when a comment is created)
+    const filterDuplicateComments = (comments: typeof comments, histories: typeof histories) => {
+      return comments.filter((comment) => {
+        // Check if there's a history entry for this comment
+        // History entry is created within ~1 second of comment creation
+        // and contains "แสดงความคิดเห็น" in historyText
+        const hasHistoryEntry = histories.some((history) => {
+          const isSameTask = history.taskId === comment.taskId;
+          const isCommentHistory = history.historyText.includes("แสดงความคิดเห็น");
+          const timeDiff = Math.abs(
+            new Date(history.historyDate).getTime() - new Date(comment.createdAt).getTime()
+          );
+          const isNearSameTime = timeDiff < 3000; // Within 3 seconds
+
+          return isSameTask && isCommentHistory && isNearSameTime;
+        });
+
+        // Only include comment if it doesn't have a history entry
+        return !hasHistoryEntry;
+      });
+    };
+
+    const filteredComments = filterDuplicateComments(comments, histories);
+
     // Merge and sort by timestamp
     const activities = [
-      // Transform comments
-      ...comments.map((c) => ({
+      // Transform filtered comments (only those without history entries)
+      ...filteredComments.map((c) => ({
         id: `comment-${c.id}`,
         type: "comment" as const,
         timestamp: c.createdAt.toISOString(),
