@@ -8,8 +8,6 @@
       "DOM.Iterable"
     ],
     "jsx": "preserve",
-    "outDir": "./dist",
-    "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -41,7 +39,15 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "node_modules/**/*",
+    "dist",
+    "out",
+    "build",
+    "coverage",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    ".next/**/*",
+    "!.next/types/**/*.ts"
   ],
   "ts-node": {
     "compilerOptions": {
