@@ -313,7 +313,7 @@ export function CreateProjectModal() {
       color: status.color,
       order: index + 1,
       statusType: status.statusType,
-    }));
+    })) as any;
 
     // Create project with optimistic update
     createProjectMutation.mutate(

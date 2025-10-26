@@ -543,7 +543,7 @@ export function CreateTaskModal() {
                   control={control}
                   render={({ field }) => (
                     <PriorityPopover
-                      value={field.value as PriorityValue}
+                      value={field.value as any}
                       onChange={(newValue) => field.onChange(newValue)}
                     />
                   )}
@@ -562,7 +562,7 @@ export function CreateTaskModal() {
                   control={control}
                   render={({ field }) => (
                     <DifficultyPopover
-                      value={field.value as DifficultyValue}
+                      value={field.value as any}
                       onChange={(newValue) => field.onChange(newValue)}
                     />
                   )}

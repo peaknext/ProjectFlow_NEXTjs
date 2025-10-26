@@ -59,8 +59,8 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
     }
 
     // Open task panel if taskId exists
-    if (notification.taskId && notification.task?.project?.id) {
-      openTaskPanel(notification.taskId, notification.task.project.id);
+    if (notification.taskId) {
+      openTaskPanel(notification.taskId);
       onClose?.();
     }
   };

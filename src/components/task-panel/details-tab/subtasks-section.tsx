@@ -103,7 +103,7 @@ export function SubtasksSection({
     if (!task) return;
     // Close task panel first, then open create task modal with parent task pre-filled
     closeTaskPanel();
-    openCreateTaskModal(task.id, undefined);
+    openCreateTaskModal({ parentTaskId: task.id });
   };
 
   return (

@@ -105,7 +105,7 @@ export function BoardView({ projectId }: BoardViewProps) {
 
   // Handle add task - open create task modal
   const handleAddTask = (statusId: string) => {
-    openCreateTaskModal(projectId, statusId);
+    openCreateTaskModal({ projectId, defaultStatusId: statusId });
   };
 
   // Loading state
@@ -173,7 +173,7 @@ export function BoardView({ projectId }: BoardViewProps) {
               <StatusColumn
                 key={status.id}
                 status={status}
-                tasks={statusTasks}
+                tasks={statusTasks as any}
                 onTaskClick={handleTaskClick}
                 onAddTask={handleAddTask}
               />

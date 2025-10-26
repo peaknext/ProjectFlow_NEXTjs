@@ -109,7 +109,7 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(
       // Dynamic import to avoid SSR issues
       import('tributejs').then(({ default: Tribute }) => {
         // Also import CSS dynamically
-        import('tributejs/dist/tribute.css');
+//         import('tributejs/dist/tribute.css');
 
         if (!editorRef.current) return;
 

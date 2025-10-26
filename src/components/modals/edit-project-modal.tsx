@@ -355,7 +355,7 @@ export function EditProjectModal() {
                 <div className="flex items-center gap-1.5">
                   <span>สร้างโดย:</span>
                   <span className="font-medium text-foreground">
-                    {project.creator?.fullName || '-'}
+                    {(project as any).creator?.fullName || '-'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">

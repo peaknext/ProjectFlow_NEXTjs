@@ -131,7 +131,7 @@ export function MyTasksWidget({
                 สร้างงานใหม่เพื่อเริ่มต้น
               </p>
             </div>
-            <Button onClick={openCreateTaskModal} size="sm">
+            <Button onClick={() => openCreateTaskModal()} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               สร้างงาน
             </Button>

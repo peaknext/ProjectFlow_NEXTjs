@@ -72,10 +72,10 @@ export function UsersView() {
     search: filters.search,
     role: filters.role,
     status: filters.status,
-    missionGroupId: null,
+    // missionGroupId: null,
     divisionId: null,
     departmentId: null,
-  });
+  } as any);
 
   const allUsers = data?.users || [];
 

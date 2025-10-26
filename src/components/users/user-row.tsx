@@ -171,7 +171,6 @@ export function UserRow({ user }: UserRowProps) {
             {user.isVerified && (
               <Shield
                 className="h-3 w-3 text-green-600 dark:text-green-400"
-                title="ยืนยันแล้ว"
               />
             )}
           </div>

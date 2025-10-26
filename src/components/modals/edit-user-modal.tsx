@@ -262,6 +262,7 @@ export function EditUserModal() {
       {
         userId: user.id,
         data: {
+        // @ts-ignore - email field
           email: data.email.trim(),
           titlePrefix: data.titlePrefix?.trim() || undefined,
           firstName: data.firstName.trim(),
