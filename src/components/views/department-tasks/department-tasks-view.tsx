@@ -258,7 +258,7 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
           break;
 
         case 'createdAt':
-          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          comparison = new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime();
           break;
       }
 

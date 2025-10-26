@@ -78,6 +78,7 @@ interface ProjectEditDetailsResponse {
   departmentName: string;
   divisionName: string;
   missionGroupName: string;
+  dateCreated: string;
   phases: Array<{
     id: string;
     name: string;

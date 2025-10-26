@@ -42,7 +42,7 @@ export function useSyncMutation<TData = unknown, TError = unknown, TVariables = 
       const syncStartTime = Date.now();
 
       // Call original onMutate if provided
-      const context = onMutate ? await onMutate(variables) : undefined;
+      const context = (onMutate as any) ? await (onMutate as any)(variables) : undefined;
 
       // Return context with sync metadata
       return {
@@ -53,13 +53,13 @@ export function useSyncMutation<TData = unknown, TError = unknown, TVariables = 
     onSuccess: (data, variables, context) => {
       // Call original onSuccess if provided
       if (onSuccess) {
-        onSuccess(data, variables, context);
+        (onSuccess as any)(data, variables, context);
       }
     },
     onError: (error, variables, context) => {
       // Call original onError if provided
       if (onError) {
-        onError(error, variables, context);
+        (onError as any)(error, variables, context);
       }
     },
     onSettled: (data, error, variables, context) => {
@@ -74,7 +74,7 @@ export function useSyncMutation<TData = unknown, TError = unknown, TVariables = 
 
       // Call original onSettled if provided
       if (onSettled) {
-        onSettled(data, error, variables, context);
+        (onSettled as any)(data, error, variables, context);
       }
     },
   });

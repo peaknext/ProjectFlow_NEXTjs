@@ -361,9 +361,9 @@ export function EditProjectModal() {
                 <div className="flex items-center gap-1.5">
                   <span>วันที่สร้าง:</span>
                   <span className="font-medium text-foreground">
-                    {project.createdAt
+                    {project.dateCreated
                       ? (() => {
-                          const date = new Date(project.createdAt);
+                          const date = new Date(project.dateCreated);
                           const thaiYear = date.getFullYear() + 543;
                           const dateStr = format(date, 'd MMMM yyyy, HH:mm', { locale: th });
                           return dateStr.replace(/\d{4}/, thaiYear.toString());
