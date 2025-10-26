@@ -19,11 +19,17 @@ type ApiHandler<T = any> = (
   context: T
 ) => Promise<NextResponse>;
 
+// Next.js 15 compatible route handler type
+type NextRouteHandler<T = any> = (
+  req: NextRequest,
+  context: T
+) => Promise<NextResponse> | NextResponse;
+
 /**
  * Require authentication middleware
  * Attaches session to request
  */
-export function withAuth<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
+export function withAuth<T = any>(handler: ApiHandler<T>): NextRouteHandler<T> {
   return async (req: NextRequest, context: T) => {
     try {
       // BYPASS AUTH FOR TESTING (controlled by .env)
@@ -94,7 +100,7 @@ export function withPermission<T = any>(
     taskId?: string;
     departmentId?: string;
   }
-): ApiHandler<T> {
+): NextRouteHandler<T> {
   return withAuth(async (req: AuthenticatedRequest, context: T) => {
     try {
       // Extract context for permission check
@@ -123,7 +129,7 @@ export function withPermission<T = any>(
 /**
  * Combined middleware with error handling
  */
-export function apiHandler<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
+export function apiHandler<T = any>(handler: ApiHandler<T>): NextRouteHandler<T> {
   return async (req: NextRequest, context: T) => {
     try {
       return await handler(req as AuthenticatedRequest, context);
@@ -139,7 +145,7 @@ export function apiHandler<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
 export function withRole<T = any>(
   allowedRoles: string[],
   handler: ApiHandler<T>
-): ApiHandler<T> {
+): NextRouteHandler<T> {
   return withAuth(async (req: AuthenticatedRequest, context: T) => {
     if (!allowedRoles.includes(req.session.user.role)) {
       return ErrorResponses.forbidden();
