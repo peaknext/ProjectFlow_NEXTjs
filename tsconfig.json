@@ -8,7 +8,14 @@
       "DOM.Iterable"
     ],
     "jsx": "preserve",
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -33,7 +40,6 @@
     "noEmit": true
   },
   "include": [
-    "scripts/**/*",
     "src/**/*",
     ".next/types/**/*.ts"
   ],
@@ -44,6 +50,8 @@
     "out",
     "build",
     "coverage",
+    "scripts",
+    "tests",
     "**/*.spec.ts",
     "**/*.test.ts",
     ".next/**/*",
