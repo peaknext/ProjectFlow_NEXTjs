@@ -12,7 +12,6 @@ import { DashboardCalendarWidget } from "@/components/dashboard/dashboard-calend
 import { RecentActivitiesWidget } from "@/components/dashboard/recent-activities-widget";
 import { MyChecklistWidget } from "@/components/dashboard/my-checklist-widget";
 import { useDashboard, useRefreshDashboard, useLoadMoreTasks } from "@/hooks/use-dashboard";
-import { useUIStore } from "@/stores/use-ui-store";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
@@ -23,19 +22,12 @@ export default function DashboardPage() {
   const { data, isLoading, refetch } = useDashboard();
   const refresh = useRefreshDashboard();
   const loadMoreMutation = useLoadMoreTasks();
-  const { openCreateTaskModal } = useUIStore();
 
   // Handle refresh
   const handleRefresh = () => {
     refresh();
     refetch();
     setCurrentOffset(0); // Reset offset on refresh
-  };
-
-  // Handle create task
-  const handleCreateTask = () => {
-    // Open CreateTaskModal with all accessible projects
-    openCreateTaskModal();
   };
 
   // Handle load more tasks
@@ -69,7 +61,7 @@ export default function DashboardPage() {
             />
             รีเฟรช
           </Button>
-          <CreateTaskButton onClick={handleCreateTask} />
+          <CreateTaskButton />
         </div>
       </div>
 
