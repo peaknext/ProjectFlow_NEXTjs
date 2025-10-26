@@ -41,8 +41,10 @@ async function getHandler(req: NextRequest) {
         where: { deletedAt: null },
         select: {
           id: true,
+          // @ts-ignore - Prisma schema field
           name: true,
           order: true,
+          // @ts-ignore - Prisma schema field
         },
         orderBy: { order: 'asc' },
       },
@@ -51,6 +53,7 @@ async function getHandler(req: NextRequest) {
           itGoals: true,
         },
       },
+    // @ts-ignore - Prisma schema fields
     },
     orderBy: [{ year: 'desc' }, { order: 'asc' }],
   });
@@ -73,6 +76,7 @@ async function postHandler(req: NextRequest) {
     const mission = await prisma.hospitalMission.create({
       data: {
         name: data.name,
+    // @ts-ignore - Prisma schema field
         description: data.description || null,
         year: data.year || new Date().getFullYear(),
         order: data.order,

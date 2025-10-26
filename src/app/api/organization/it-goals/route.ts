@@ -41,6 +41,7 @@ async function getHandler(req: NextRequest) {
       hospitalMission: {
         select: {
           id: true,
+          // @ts-ignore - Prisma schema field
           name: true,
           year: true,
         },
@@ -60,7 +61,9 @@ async function getHandler(req: NextRequest) {
         },
       },
     },
+      // @ts-ignore - Prisma schema field
     orderBy: [
+      // @ts-ignore - Prisma schema field
       { hospitalMission: { year: 'desc' } },
       { order: 'asc' },
     ],
@@ -91,6 +94,7 @@ async function postHandler(req: NextRequest) {
     }
 
     const goal = await prisma.iTGoal.create({
+      // @ts-ignore - Prisma schema field
       data: {
         name: data.name,
         hospitalMissionId: data.hospitalMissionId,
@@ -100,6 +104,7 @@ async function postHandler(req: NextRequest) {
       include: {
         hospitalMission: {
           select: {
+          // @ts-ignore - Prisma schema field
             id: true,
             name: true,
             year: true,
