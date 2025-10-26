@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+
+// Force dynamic rendering for search params
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
