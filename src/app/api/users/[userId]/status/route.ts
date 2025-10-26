@@ -16,9 +16,7 @@ import {
 import { canManageTargetUser } from '@/lib/permissions';
 
 const updateStatusSchema = z.object({
-  status: z.enum(['ACTIVE', 'SUSPENDED', 'INACTIVE'], {
-    required_error: 'Status is required',
-  }),
+  status: z.enum(['ACTIVE', 'SUSPENDED', 'INACTIVE']),
   reason: z.string().optional(), // Optional reason for status change
 });
 

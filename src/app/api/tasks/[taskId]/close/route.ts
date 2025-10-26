@@ -16,9 +16,7 @@ import {
 import { canUserCloseTask } from '@/lib/permissions';
 
 const closeTaskSchema = z.object({
-  type: z.enum(['COMPLETED', 'ABORTED'], {
-    required_error: 'Close type is required (COMPLETED or ABORTED)',
-  }),
+  type: z.enum(['COMPLETED', 'ABORTED']),
   reason: z.string().optional(),
 });
 

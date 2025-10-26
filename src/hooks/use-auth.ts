@@ -136,7 +136,7 @@ export function useAuth() {
       // Error is also available in mutation.error for persistent display
     },
     retry: false, // Don't retry failed login attempts
-    retryOnMount: false, // Don't retry when component remounts
+    // retryOnMount: false, // Don't retry when component remounts
   });
 
   // Register mutation

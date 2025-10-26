@@ -46,7 +46,7 @@ export function ProjectGroupCard({ project }: ProjectGroupCardProps) {
   // Auto-expand if project has tasks (1 or more)
   const [isExpanded, setIsExpanded] = useState(project.tasks.length > 0);
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
-  const { setSelectedTaskId, setIsTaskPanelOpen } = useUIStore();
+  const { setSelectedTaskId, openTaskPanel } = useUIStore();
   const updateTaskMutation = useUpdateTask();
 
   // Selection handlers

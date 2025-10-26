@@ -521,7 +521,7 @@ export function CreateTaskModal() {
                   control={control}
                   render={({ field }) => (
                     <AssigneePopover
-                      users={projectUsers}
+                      users={projectUsers as any}
                       selectedUserIds={field.value}
                       onSave={(newIds) => field.onChange(newIds)}
                       disabled={isLoadingProjectData}

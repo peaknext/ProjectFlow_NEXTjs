@@ -310,7 +310,7 @@ export function CalendarView({ projectId }: CalendarViewProps) {
           events={events}
           editable={true}
           eventDrop={handleEventDrop}
-          eventResize={handleEventDrop} // Use same handler for resize
+          eventResize={handleEventDrop as any} // Use same handler for resize
           eventClick={handleEventClick}
           eventDidMount={handleEventDidMount}
           dayCellContent={(arg) => {

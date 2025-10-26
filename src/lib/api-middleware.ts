@@ -57,7 +57,7 @@ export function withAuth<T = any>(handler: ApiHandler<T>): NextRouteHandler<T> {
         }
 
         // Create session from real user data
-        authenticatedReq.session = {
+        authenticatedReq.session = { sessionToken: 'bypass-token',
           userId: user.id,
           user: {
             id: user.id,

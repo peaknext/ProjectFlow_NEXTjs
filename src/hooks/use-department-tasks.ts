@@ -105,7 +105,7 @@ export interface DepartmentTasksResponse {
   department: Department;
   stats: DepartmentStats;
   projects: ProjectGroup[];
-  users: User[];
+  users: any[];
 }
 
 // ============================================

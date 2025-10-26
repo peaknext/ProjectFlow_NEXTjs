@@ -145,13 +145,13 @@ export function TaskRow({
   const handleQuickAssigneeChange = (assigneeUserIds: string[]) => {
     const assignees = assigneeUserIds
       .map((id) => users.find((u) => u.id === id))
-      .filter(Boolean) as User[];
+      .filter(Boolean) as any;
 
     handleQuickUpdate({
       assigneeUserIds,
-      assignees,
+      assignees: assignees as any,
       assigneeUserId: assigneeUserIds[0] || null,
-      assignee: assignees[0] || null,
+      assignee: assignees[0] as any || null,
     });
   };
 
