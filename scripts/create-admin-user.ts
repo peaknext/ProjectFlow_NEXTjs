@@ -19,6 +19,7 @@ async function main() {
       titlePrefix: "นาย",
       firstName: "Admin",
       lastName: "User (Test)",
+      fullName: "นายAdmin User (Test)",  // Auto-generated format
       passwordHash:
         "511d3401e1485e7cc4445127a363bf2d9564ad56c31237b5b7287a4785c03e93",
       salt: "randomsalt123",
