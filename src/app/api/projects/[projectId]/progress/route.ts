@@ -13,9 +13,9 @@ import { calculateProgress, updateProjectProgress } from '@/lib/calculate-progre
 
 async function handler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
 
   // Check permission
   const hasAccess = await checkPermission(

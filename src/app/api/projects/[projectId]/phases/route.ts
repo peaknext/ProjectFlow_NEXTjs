@@ -30,9 +30,9 @@ const createPhaseSchema = z.object({
  */
 async function getHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
 
   // Check permission
   const hasAccess = await checkPermission(
@@ -66,10 +66,10 @@ async function getHandler(
  */
 async function postHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const { projectId } = params;
+    const { projectId } = await params;
 
     // Check if project exists
     const project = await prisma.project.findUnique({

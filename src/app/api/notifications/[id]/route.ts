@@ -20,10 +20,10 @@ import {
  */
 async function patchHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Check if notification exists and belongs to user
     const notification = await prisma.notification.findUnique({
@@ -84,9 +84,9 @@ async function patchHandler(
  */
 async function deleteHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   // Check if notification exists and belongs to user
   const notification = await prisma.notification.findUnique({

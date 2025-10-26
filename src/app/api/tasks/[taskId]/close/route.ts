@@ -24,10 +24,10 @@ const closeTaskSchema = z.object({
 
 async function handler(
   req: AuthenticatedRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const { taskId } = params;
+    const { taskId } = await params;
 
     // Get existing task
     const existingTask = await prisma.task.findUnique({

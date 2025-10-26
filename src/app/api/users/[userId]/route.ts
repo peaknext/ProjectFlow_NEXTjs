@@ -43,9 +43,9 @@ const updateUserSchema = z.object({
  */
 async function getHandler(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { userId } = params;
+  const { userId } = await params;
 
   const user = await prisma.user.findUnique({
     where: { id: userId, deletedAt: null },

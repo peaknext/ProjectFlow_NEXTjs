@@ -11,9 +11,9 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 
 async function handler(
   req: AuthenticatedRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
-  const { taskId } = params;
+  const { taskId } = await params;
 
   // Check if task is pinned
   const existingPin = await prisma.pinnedTask.findUnique({

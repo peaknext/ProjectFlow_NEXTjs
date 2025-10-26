@@ -28,9 +28,9 @@ const updateHospitalMissionSchema = z.object({
  */
 async function getHandler(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   const mission = await prisma.hospitalMission.findUnique({
     where: { id, deletedAt: null },
@@ -86,10 +86,10 @@ async function getHandler(
  */
 async function patchHandler(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const existingMission = await prisma.hospitalMission.findUnique({
       where: { id, deletedAt: null },
@@ -129,9 +129,9 @@ async function patchHandler(
  */
 async function deleteHandler(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   const existingMission = await prisma.hospitalMission.findUnique({
     where: { id, deletedAt: null },

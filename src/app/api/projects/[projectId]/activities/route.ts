@@ -12,9 +12,9 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 
 async function handler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
   const { searchParams } = new URL(req.url);
 
   const limit = Math.min(

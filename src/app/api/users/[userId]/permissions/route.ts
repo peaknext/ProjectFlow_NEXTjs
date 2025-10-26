@@ -14,9 +14,9 @@ import { getRolePermissions, getEffectiveRole } from '@/lib/permissions';
 
 async function handler(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { userId } = params;
+  const { userId } = await params;
 
   // Get query parameters
   const { searchParams } = new URL(req.url);

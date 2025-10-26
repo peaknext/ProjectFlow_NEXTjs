@@ -29,10 +29,10 @@ const updateStatusSchema = z.object({
  */
 async function patchHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string; statusId: string } }
+  { params }: { params: Promise<{ projectId: string; statusId: string }> }
 ) {
   try {
-    const { projectId, statusId } = params;
+    const { projectId, statusId } = await params;
 
     // Check if status exists
     const existingStatus = await prisma.status.findUnique({
@@ -104,9 +104,9 @@ async function patchHandler(
  */
 async function deleteHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string; statusId: string } }
+  { params }: { params: Promise<{ projectId: string; statusId: string }> }
 ) {
-  const { projectId, statusId } = params;
+  const { projectId, statusId } = await params;
 
   // Check if status exists
   const existingStatus = await prisma.status.findUnique({

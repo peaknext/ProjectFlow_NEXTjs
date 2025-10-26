@@ -27,10 +27,10 @@ const updateDepartmentSchema = z.object({
  */
 async function patchHandler(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Check if department exists
     const existingDepartment = await prisma.department.findUnique({
@@ -108,9 +108,9 @@ async function patchHandler(
  */
 async function deleteHandler(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   // Check if department exists
   const existingDepartment = await prisma.department.findUnique({

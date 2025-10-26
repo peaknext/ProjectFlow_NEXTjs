@@ -29,10 +29,10 @@ const batchCreatePhaseSchema = z.object({
 
 async function handler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const { projectId } = params;
+    const { projectId } = await params;
 
     // Check if project exists
     const project = await prisma.project.findUnique({

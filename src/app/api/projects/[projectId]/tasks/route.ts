@@ -35,9 +35,9 @@ const createTaskSchema = z.object({
  */
 async function getHandler(
   req: AuthenticatedRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
   const { searchParams } = new URL(req.url);
 
   const statusId = searchParams.get('statusId') || undefined;
