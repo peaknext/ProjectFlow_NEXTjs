@@ -795,6 +795,120 @@ return task.assigneeUserIds.includes(userId);
 
 ---
 
+## Important Security Notes
+
+### Critical Permission Checks
+
+**⚠️ SECURITY ALERT**: Always implement context-based permission checks for `*_own_*` permissions.
+
+**Bug Fixed (2025-10-26)**: MEMBER users could close other people's tasks due to missing context check in `checkPermission()`.
+
+**Affected Permissions**:
+- `edit_own_tasks` - MEMBER can only edit tasks they created or are assigned to
+- `close_own_tasks` - MEMBER can only close tasks they created or are assigned to
+
+**Implementation**:
+```typescript
+// ✅ CORRECT - Backend implementation in checkPermission()
+if (permission === 'close_own_tasks' && context.taskId) {
+  const task = await prisma.task.findUnique({
+    where: { id: context.taskId },
+    select: {
+      creatorUserId: true,
+      assigneeUserId: true,
+      assignees: { select: { userId: true } }
+    },
+  });
+
+  if (!task) return false;
+
+  // Check if user is creator or assignee (support multi-assignee)
+  const isAssignee = task.assigneeUserId === userId ||
+                     task.assignees.some(a => a.userId === userId);
+
+  return task.creatorUserId === userId || isAssignee;
+}
+```
+
+### Permission Verification Checklist
+
+When implementing any permission-protected feature:
+
+1. ✅ **Frontend Check**: Hide/disable UI elements based on permissions
+   ```typescript
+   const permissions = useTaskPermissions(task);
+   if (!permissions.canClose) return null; // Don't show button
+   ```
+
+2. ✅ **Backend Check**: ALWAYS verify permissions in API route
+   ```typescript
+   const canClose = await canUserCloseTask(req.session.userId, taskId);
+   if (!canClose) return errorResponse('FORBIDDEN', 'No permission', 403);
+   ```
+
+3. ✅ **Context Validation**: For `*_own_*` permissions, check ownership
+   ```typescript
+   // Must check if user is creator OR assignee
+   const isOwner = task.creatorUserId === userId || isAssignee;
+   ```
+
+4. ✅ **Multi-Assignee Support**: Check both legacy and new assignee fields
+   ```typescript
+   const isAssignee = task.assigneeUserId === userId ||
+                      task.assignees.some(a => a.userId === userId);
+   ```
+
+### Common Security Pitfalls
+
+❌ **DON'T**: Rely only on frontend permission checks
+```typescript
+// BAD - User can bypass this via API
+if (permissions.canClose) {
+  await closeTask(taskId); // No backend validation!
+}
+```
+
+❌ **DON'T**: Forget to check context for `*_own_*` permissions
+```typescript
+// BAD - MEMBER would be able to edit ANY task
+if (permissions.includes('edit_own_tasks')) {
+  return true; // Missing ownership check!
+}
+```
+
+❌ **DON'T**: Use only `assigneeUserId` (legacy field)
+```typescript
+// BAD - Misses multi-assignee support
+const isAssignee = task.assigneeUserId === userId;
+```
+
+✅ **DO**: Always validate on both frontend and backend
+```typescript
+// GOOD - Defense in depth
+// Frontend:
+if (!permissions.canClose) return null;
+
+// Backend:
+const canClose = await canUserCloseTask(userId, taskId);
+if (!canClose) return errorResponse('FORBIDDEN', ...);
+```
+
+### Testing Security Fixes
+
+After implementing permission checks, use the test script:
+
+```bash
+node test-close-task-permission.js
+```
+
+This tests:
+- MEMBER can close own task (creator) ✅
+- MEMBER can close assigned task ✅
+- MEMBER CANNOT close other's task ❌ (should return 403)
+- HEAD can close any task in department ✅
+
+---
+
 ## Testing Permissions
 
 ### Frontend Testing
