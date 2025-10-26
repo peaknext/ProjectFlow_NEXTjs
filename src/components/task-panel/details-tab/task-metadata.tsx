@@ -9,27 +9,35 @@ interface Creator {
   email: string;
 }
 
+interface Department {
+  id: string;
+  name: string;
+}
+
 interface TaskMetadataProps {
   creator?: Creator | null;
   createdAt?: string;
+  department?: Department | null;
 }
 
 /**
  * TaskMetadata Component
  *
- * Displays task creator and creation date.
+ * Displays task creator, creation date, and department.
  * Features:
  * - Creator name (from task creator object)
  * - Date created (formatted with Thai locale)
+ * - Department name (helps identify cross-department tasks)
  * - Small text, muted color
  *
  * @example
  * <TaskMetadata
  *   creator={task.creator}
  *   createdAt={task.createdAt}
+ *   department={task.project.department}
  * />
  */
-export function TaskMetadata({ creator, createdAt }: TaskMetadataProps) {
+export function TaskMetadata({ creator, createdAt, department }: TaskMetadataProps) {
   // Format date with Thai Buddhist Era (พ.ศ.)
   const formattedDate = createdAt
     ? (() => {
@@ -41,17 +49,32 @@ export function TaskMetadata({ creator, createdAt }: TaskMetadataProps) {
     : '-';
 
   return (
-    <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground">
-      <div className="flex items-center gap-1.5">
-        <span>สร้างโดย:</span>
-        <span className="font-medium text-foreground">
-          {creator?.fullName || '-'}
-        </span>
+    <div className="flex flex-col gap-2">
+      {/* Creator and Date Row */}
+      <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <span>สร้างโดย:</span>
+          <span className="font-medium text-foreground">
+            {creator?.fullName || '-'}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span>วันที่สร้าง:</span>
+          <span className="font-medium text-foreground">{formattedDate}</span>
+        </div>
       </div>
-      <div className="flex items-center gap-1.5">
-        <span>วันที่สร้าง:</span>
-        <span className="font-medium text-foreground">{formattedDate}</span>
-      </div>
+
+      {/* Department Row */}
+      {department && (
+        <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span>หน่วยงาน:</span>
+            <span className="font-medium text-foreground">
+              {department.name}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

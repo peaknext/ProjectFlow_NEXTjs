@@ -40,6 +40,14 @@ interface Task {
     email: string;
   };
   createdAt?: string;
+  project?: {
+    id: string;
+    name: string;
+    department?: {
+      id: string;
+      name: string;
+    };
+  };
 }
 
 interface User {
@@ -312,6 +320,7 @@ export function DetailsTab({
       <TaskMetadata
         creator={task.creator}
         createdAt={task.createdAt}
+        department={task.project?.department}
       />
 
       {/* Subtasks Section */}

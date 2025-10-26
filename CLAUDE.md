@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.15.0 (2025-10-26)
-**Last Major Update**: Profile Settings page implementation with password change functionality
+**Version**: 2.17.0 (2025-10-26)
+**Last Major Update**: Cross-department task identification - Department badges in Dashboard widgets + Task Panel metadata
 
 ---
 
@@ -35,6 +35,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 **DO NOT REVERT ANYTHING IF I DON'T REQUEST**
+**DO NOT GIT COMMIT ANYTHING IF I DON'T REQUEST**
+**DO NOT UPDATE CLAUDE.md IF I DON'T REQUEST**
 **Never use any emoji in this project except in .md files**
 
 **ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system migrated from Google Apps Script to Next.js 15 + PostgreSQL. Designed for healthcare organizations with hierarchical role-based access control.
@@ -42,6 +44,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Tech Stack**: Next.js 15 (App Router), TypeScript, PostgreSQL, Prisma ORM, React Query, Zustand, Tailwind CSS, shadcn/ui
 
 **Current Status**:
+
 - Backend: 100% Complete (81+ API endpoints)
 - Frontend: ~70% Complete (45+/55+ major components)
 - **NOT PRODUCTION-READY** - Active development, testing phase
@@ -59,6 +62,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Current Task**: Continue implementing remaining UI components
 
 **Dashboard Implementation Status**: ✅ **COMPLETE WITH UI/UX REFINEMENT** (7/7 widgets)
+
 - ✅ Stats Cards (4 cards) - permission-based, animated numbers
 - ✅ Overdue Tasks Alert - red theme, assignee avatars top-right, 5 tasks max
 - ✅ Pinned Tasks Widget - amber theme, assignee avatars top-right, expand/collapse
@@ -68,6 +72,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ My Checklist Widget - progress bar in header, task name as tooltip on hover
 
 **UI/UX Refinements Completed** (2025-10-26):
+
 - Consistent padding (pl-6/pl-8) across all task list widgets
 - Assignee avatars repositioned to top-right with overlap style
 - **Profile images**: All avatars now display real profile photos from `profileImageUrl`
@@ -83,11 +88,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Next Phase**: Comprehensive testing and documentation
 
 **Remaining Components (~18)**:
+
 - Additional Modals (2: Close Task, Bulk Actions)
 - Selectors (9 types: various pickers and multi-selects)
 - Advanced Features (7: global search, inline editor, batch operations UI)
 
 **Recently Completed** (Last 7 days):
+
+- ✅ **Cross-Department Task Identification (2025-10-26)** - Added department badges to Dashboard widgets (Overdue Tasks, My Tasks) and department info to Task Panel. Changed Recent Activities API to personal activity feed (shows all tasks user is involved with, not just department tasks). Badge size: text-lg (18px), positioned top-right with backdrop blur. Assignee avatars moved down to avoid overlap. See CROSS_DEPARTMENT_TASK_IDENTIFICATION_COMPLETE.md
+- ✅ **Permission System Security Fixes (2025-10-26)** - Fixed critical security bug where MEMBER could close/edit other people's tasks. Backend: Added context validation for `close_own_tasks` permission. Frontend: Added permission checks to all inline editors in List View and Task Row. Documentation: Added Multi-Layer Security Strategy to PERMISSION_GUIDELINE.md v1.1.0 (527 new lines, Defense in Depth approach)
 - ✅ **Profile Settings Page (2025-10-26)** - Complete user profile management with password change, avatar selection (16 presets), form validation, dirty checking, unsaved changes warning
 - ✅ **Permission System Bug Fixes (2025-10-26)** - Fixed multi-assignee support & creatorUserId field mismatch, MEMBER can now edit own tasks
 - ✅ **Dashboard Optimistic UI (2025-10-26)** - All widgets now have instant response (0ms), fixed query key mismatch
@@ -102,6 +111,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Known Critical Issues**: None (all resolved as of 2025-10-26)
 
 **Thai Terminology** (Use correct terms):
+
 - ✅ **หน่วยงาน** (Department) - NOT "แผนก"
 - ✅ **กลุ่มงาน** (Division) - NOT "กอง"
 - ✅ **กลุ่มภารกิจ** (Mission Group)
@@ -141,6 +151,7 @@ node tests/api/test-runner.js      # Run API tests directly
 ```
 
 **Test Environment**:
+
 - Dev server must be running on port 3010
 - Database must be seeded with test data from `prisma/seed.sql`
 - Test credentials: `admin@hospital.test` / `SecurePass123!`
@@ -161,11 +172,13 @@ The database uses Prisma ORM with PostgreSQL. **Key architectural decisions**:
 4. **JSON Fields**: Used for flexible data (e.g., `pinnedTasks`, `additionalRoles`, `mentions`)
 
 **Import Prisma Client**:
+
 ```typescript
 import { prisma } from "@/lib/db";
 ```
 
 **Core Schema Patterns**:
+
 - **Users**: 6-level role hierarchy (ADMIN → CHIEF → LEADER → HEAD → MEMBER → USER)
 - **Projects**: Belong to departments, have custom workflow statuses
 - **Tasks**: Support subtasks, checklists, comments with @mentions, priority 1-4
@@ -205,16 +218,19 @@ export const GET = withAuth(handler);
 ```
 
 **Critical Performance Endpoints**:
+
 - `/api/projects/[projectId]/board` - Single-query board view (no N+1 queries)
 - `/api/batch` - Batch operations (up to 100 operations)
 - `/api/projects/progress/batch` - Batch progress calculation (up to 50 projects)
 
 **Authentication**:
+
 - All routes require Bearer token: `Authorization: Bearer {sessionToken}`
 - Use `withAuth()` middleware to attach `req.session` object
 - For testing: Set `BYPASS_AUTH=true` in `.env`
 
 **Permission System**:
+
 - Use `checkPermission(userId, permission, context)` for access control
 - Permissions cascade through organizational hierarchy
 - See `src/lib/permissions.ts` (621 lines, 11 functions)
@@ -247,7 +263,10 @@ export const GET = withAuth(handler);
      onMutate: async ({ id, data }) => {
        await queryClient.cancelQueries({ queryKey: keys.detail(id) });
        const previousData = queryClient.getQueryData(keys.detail(id));
-       queryClient.setQueryData(keys.detail(id), (old: any) => ({ ...old, ...data }));
+       queryClient.setQueryData(keys.detail(id), (old: any) => ({
+         ...old,
+         ...data,
+       }));
        return { previousData };
      },
      onError: (error, { id }, context) => {
@@ -256,7 +275,9 @@ export const GET = withAuth(handler);
        }
      },
      onSettled: (response) => {
-       queryClient.invalidateQueries({ queryKey: keys.detail(response.resource.id) });
+       queryClient.invalidateQueries({
+         queryKey: keys.detail(response.resource.id),
+       });
      },
    });
    ```
@@ -288,6 +309,7 @@ export const GET = withAuth(handler);
    ```
 
 **Component Organization**:
+
 ```
 src/
 ├── app/
@@ -315,6 +337,7 @@ src/
 ```
 
 **Theme System**:
+
 - Uses `next-themes` with `ThemeProvider`
 - Access: `const { theme, setTheme } = useTheme();`
 - Dark mode colors in `src/lib/calendar-colors.ts`
@@ -377,6 +400,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for links
 ```
 
 **⚠️ PRODUCTION WARNING**:
+
 - **CRITICAL**: Ensure `BYPASS_AUTH=false` and `BYPASS_EMAIL=false` in production
 - Never commit real API keys or credentials to version control
 - Use environment variable management service (Vercel, Railway, etc.)
@@ -388,6 +412,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for links
 ### Adding a New View (Board/Calendar/List Pattern)
 
 1. **Create page component** (`src/app/(dashboard)/[route]/page.tsx`):
+
    ```typescript
    export default function NewViewPage() {
      return <NewViewComponent />;
@@ -395,6 +420,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for links
    ```
 
 2. **Create view component** (`src/components/views/new-view/index.tsx`):
+
    ```typescript
    import { useProject } from "@/hooks/use-projects";
    import { useTasks } from "@/hooks/use-tasks";
@@ -426,6 +452,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for links
 ### Adding a New API Endpoint
 
 1. **Create route file** (`src/app/api/[resource]/route.ts`):
+
    ```typescript
    import { withAuth } from "@/lib/api-middleware";
    import { successResponse, errorResponse } from "@/lib/api-response";
@@ -436,7 +463,9 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for links
      const userId = req.session.userId;
 
      // Check permissions
-     const hasAccess = await checkPermission(userId, "resource.read", { resourceId });
+     const hasAccess = await checkPermission(userId, "resource.read", {
+       resourceId,
+     });
      if (!hasAccess) return errorResponse("FORBIDDEN", "No access", 403);
 
      // Perform database operation
@@ -462,6 +491,7 @@ Tasks can be closed with two types: `COMPLETED` or `ABORTED`.
 **API Endpoint**: `POST /api/tasks/:taskId/close`
 
 **Request Body**:
+
 ```typescript
 // Close as completed
 {
@@ -477,6 +507,7 @@ Tasks can be closed with two types: `COMPLETED` or `ABORTED`.
 ```
 
 **Frontend Usage**:
+
 ```typescript
 import { useCloseTask } from "@/hooks/use-tasks";
 
@@ -497,6 +528,7 @@ closeTaskMutation.mutate({
 ```
 
 **Database Changes**:
+
 - Sets `task.isClosed = true`
 - Sets `task.closeType` to "COMPLETED" or "ABORTED"
 - Sets `task.closedAt` to current timestamp
@@ -504,6 +536,7 @@ closeTaskMutation.mutate({
 - Creates history entry with type "TASK_CLOSED"
 
 **UI Behavior**:
+
 - Closed tasks are filtered from default views (unless "Show Closed" enabled)
 - Closed tasks show with strikethrough in List View
 - Close button is disabled for already-closed tasks
@@ -531,6 +564,7 @@ npm test
 ### Common Test Scenarios
 
 **Test User Creation (ADMIN only)**:
+
 ```bash
 curl -X POST http://localhost:3010/api/users \
   -H "Content-Type: application/json" \
@@ -546,6 +580,7 @@ curl -X POST http://localhost:3010/api/users \
 ```
 
 **Test Multi-Assignee Update**:
+
 ```bash
 curl -X PATCH http://localhost:3010/api/tasks/task001 \
   -H "Content-Type: application/json" \
@@ -553,6 +588,7 @@ curl -X PATCH http://localhost:3010/api/tasks/task001 \
 ```
 
 **Test Task Closing (Completed)**:
+
 ```bash
 curl -X POST http://localhost:3010/api/tasks/task001/close \
   -H "Content-Type: application/json" \
@@ -560,6 +596,7 @@ curl -X POST http://localhost:3010/api/tasks/task001/close \
 ```
 
 **Test Task Closing (Aborted)**:
+
 ```bash
 curl -X POST http://localhost:3010/api/tasks/task002/close \
   -H "Content-Type: application/json" \
@@ -567,6 +604,7 @@ curl -X POST http://localhost:3010/api/tasks/task002/close \
 ```
 
 **Test Project Board Performance**:
+
 ```bash
 # Should return < 200ms with all tasks, statuses, and assignees
 curl -s -w "\nTime: %{time_total}s\n" \
@@ -574,6 +612,7 @@ curl -s -w "\nTime: %{time_total}s\n" \
 ```
 
 **Test Batch Operations**:
+
 ```bash
 curl -X POST http://localhost:3010/api/batch \
   -H "Content-Type: application/json" \
@@ -587,6 +626,7 @@ curl -X POST http://localhost:3010/api/batch \
 ```
 
 **Test Department Tasks (Role-based)**:
+
 ```bash
 # LEADER sees division scope, HEAD sees department scope
 curl http://localhost:3010/api/departments/DEPT-058/tasks?view=grouped
@@ -623,6 +663,7 @@ curl http://localhost:3010/api/departments/DEPT-058/tasks?view=grouped
 **Symptom**: `Error: listen EADDRINUSE :::3000`
 
 **Solution**:
+
 ```bash
 # Option 1: Use different port
 PORT=3010 npm run dev  # Unix/Mac
@@ -642,6 +683,7 @@ lsof -ti:3010 | xargs kill -9
 **Symptom**: `Cannot find module '@prisma/client'`
 
 **Solution**:
+
 ```bash
 # Regenerate Prisma client
 npm run prisma:generate
@@ -656,6 +698,7 @@ npm run prisma:generate
 **Symptom**: `401 Unauthorized` on all requests
 
 **Solution**:
+
 ```bash
 # Use bypass mode for development
 # Add to .env: BYPASS_AUTH=true
@@ -671,6 +714,7 @@ curl -X POST http://localhost:3010/api/auth/login \
 **Symptom**: `Can't reach database server`
 
 **Solution**:
+
 ```bash
 # 1. Check DATABASE_URL in .env
 # 2. Test connection
@@ -686,6 +730,7 @@ npx prisma db execute --file ./prisma/seed.sql --schema ./prisma/schema.prisma
 ### Hot Reload Not Working
 
 **Solution**:
+
 ```bash
 # 1. Hard refresh browser (Ctrl+Shift+R)
 
@@ -703,6 +748,7 @@ sudo sysctl -p
 **Symptom**: `Rendered more hooks than during the previous render` or hooks order errors
 
 **Solution**:
+
 ```typescript
 // ❌ WRONG - Conditional hook call
 if (condition) {
@@ -717,6 +763,7 @@ if (condition && data) {
 ```
 
 **Common causes**:
+
 - Calling hooks inside conditions
 - Calling hooks inside loops
 - Calling hooks after early returns
@@ -727,12 +774,14 @@ if (condition && data) {
 ### Webpack/Build Cache Errors
 
 **Symptom**:
+
 - `TypeError: __webpack_modules__[moduleId] is not a function`
 - `timeout of 30000ms exceeded` when navigating to pages
 - `ENOENT: no such file or directory, open '.next/routes-manifest.json'`
 - React Client Manifest errors
 
 **Solution**:
+
 ```bash
 # 1. Kill the dev server
 # Windows:
@@ -750,6 +799,7 @@ PORT=3010 npm run dev
 ```
 
 **Root Cause**: Next.js webpack cache corruption, often happens after:
+
 - Multiple rapid code changes
 - Interrupted builds
 - File system issues
@@ -764,6 +814,7 @@ PORT=3010 npm run dev
 ### ⚠️ Critical Information
 
 **PROJECT STATUS**:
+
 - ✅ Backend: 100% Complete (78+ API endpoints)
 - 🔄 Frontend: ~68% Complete (44+/55+ components)
 - ❌ **NOT READY FOR DEPLOYMENT** - Active development
@@ -780,6 +831,7 @@ PORT=3010 npm run dev
 ### What You're Being Asked To Do
 
 **If implementing a new feature**:
+
 1. Check if design exists in documentation files (see Documentation Index)
 2. Follow "Common Workflows" patterns
 3. Use optimistic updates for interactive UI (see OPTIMISTIC_UPDATE_PATTERN.md)
@@ -787,6 +839,7 @@ PORT=3010 npm run dev
 5. Check recently completed features for similar patterns
 
 **If fixing a bug**:
+
 1. Check "Troubleshooting" section first
 2. Look for recent `*_BUG_FIX*.md` or `*_COMPLETE.md` files
 3. Use `git log --oneline --since="7 days ago"` to see recent changes
@@ -794,6 +847,7 @@ PORT=3010 npm run dev
 5. Read related context `.md` files
 
 **If debugging an issue**:
+
 1. Check recent .md files in project root (sorted by date in git status)
 2. Review `*_COMPLETE.md` files for implementation details
 3. Check `*_BUG_FIX*.md` files for known issues and solutions
@@ -802,6 +856,7 @@ PORT=3010 npm run dev
 6. Clear Next.js cache if experiencing module resolution errors
 
 **If adding an API endpoint**:
+
 1. Follow API endpoint pattern in "Common Workflows"
 2. Use `withAuth()` middleware for authentication
 3. Check permissions with `checkPermission()` or `canManageTargetUser()`
@@ -811,6 +866,7 @@ PORT=3010 npm run dev
 7. Create corresponding React Query hook in src/hooks/
 
 **If asked about the codebase**:
+
 1. Check CLAUDE.md (this file) for overview and current status
 2. Check `PROJECT_STATUS.md` for detailed progress (may be outdated)
 3. Check documentation files (see "Documentation Index" below)
@@ -880,6 +936,7 @@ npm run prisma:generate  # Always run after schema changes
 ### Migration Context
 
 This project migrated from Google Apps Script. Preserved for backward compatibility:
+
 - Field names like `dateDeleted` (inconsistent with `deletedAt`)
 - Priority levels 1-4 (1 = Urgent, 2 = High, 3 = Normal, 4 = Low)
 - Color schemes matching GAS implementation
@@ -901,6 +958,7 @@ This project is a complete rewrite from Google Apps Script (GAS) to Next.js. The
 ### When to Reference old_project/
 
 **DO reference when**:
+
 - Understanding business logic for features not yet documented in Next.js version
 - Comparing UI/UX for visual consistency
 - Clarifying requirements or expected behavior
@@ -908,6 +966,7 @@ This project is a complete rewrite from Google Apps Script (GAS) to Next.js. The
 - Understanding complex calculations or algorithms
 
 **DON'T reference when**:
+
 - Looking for implementation patterns (use Next.js best practices instead)
 - Finding API structure (completely redesigned as REST)
 - Understanding database schema (completely redesigned with Prisma)
@@ -915,6 +974,7 @@ This project is a complete rewrite from Google Apps Script (GAS) to Next.js. The
 ### Key Migration Decisions
 
 **Preserved from GAS:**
+
 - Field naming conventions (e.g., `dateDeleted`, `dateCreated`)
 - Priority levels 1-4 (1=Urgent, 2=High, 3=Normal, 4=Low)
 - Thai language UI text and terminology
@@ -923,6 +983,7 @@ This project is a complete rewrite from Google Apps Script (GAS) to Next.js. The
 - Organizational hierarchy structure
 
 **Modernized in Next.js:**
+
 - REST API architecture (vs. GAS server functions)
 - PostgreSQL with Prisma (vs. Google Sheets)
 - TypeScript with full type safety (vs. JavaScript)
@@ -933,6 +994,7 @@ This project is a complete rewrite from Google Apps Script (GAS) to Next.js. The
 ### Migration Progress
 
 See `migration_plan/` folder for detailed migration documentation:
+
 - `00_MIGRATION_OVERVIEW.md` - High-level migration strategy
 - `01_DATABASE_MIGRATION.md` - Database schema migration
 - `02_API_MIGRATION.md` - API endpoints migration (✅ Complete)
@@ -945,13 +1007,16 @@ See `migration_plan/` folder for detailed migration documentation:
 ## Documentation Index
 
 ### Main Documentation
+
 - `README.md` - Project overview and quick start
 - `CLAUDE.md` - This file ⭐ **PRIMARY REFERENCE**
 - `PROJECT_STATUS.md` - Detailed status (⚠️ May be outdated - check CLAUDE.md for current status)
 
 ### Frontend Development
+
 - `OPTIMISTIC_UPDATE_PATTERN.md` - Standard pattern for UI updates (600+ lines) ⭐ **MUST READ**
-- `DASHBOARD_UI_UX_REFINEMENT_COMPLETE.md` - Dashboard refinements summary (14 changes) ⭐ **NEW**
+- `CROSS_DEPARTMENT_TASK_IDENTIFICATION_COMPLETE.md` - Cross-department task badges in Dashboard + Task Panel ⭐ **NEW**
+- `DASHBOARD_UI_UX_REFINEMENT_COMPLETE.md` - Dashboard refinements summary (14 changes)
 - `SYNC_ANIMATION_SYSTEM.md` - Sync footer animation
 - `TASK_PANEL_V1.0_COMPLETE.md` - Task panel completion summary
 - `PROJECT_MANAGEMENT_IMPLEMENTATION_SUMMARY.md` - Project management
@@ -961,16 +1026,18 @@ See `migration_plan/` folder for detailed migration documentation:
 - `WORKSPACE_NAVIGATION_REDESIGN.md` - Workspace navigation
 
 ### Backend & API
+
 - `AUTHENTICATION_IMPLEMENTATION_COMPLETE.md` - Auth system summary
 - `PASSWORD_RESET_IMPLEMENTATION.md` - Password reset flow
 - `EMAIL_SETUP_GUIDE.md` - Email configuration
-- `PERMISSION_GUIDELINE.md` - Comprehensive permission system guide (23+ permissions) ⭐ **IMPORTANT**
+- `PERMISSION_GUIDELINE.md` - Comprehensive permission system guide (23+ permissions, v1.1.0 with Multi-Layer Security Strategy - Defense in Depth approach) ⭐ **IMPORTANT**
 - `MULTI_ASSIGNEE_IMPLEMENTATION.md` - Multi-assignee system ⭐ **IMPORTANT**
 - `ACTIVITYLOG_TO_HISTORY_MIGRATION.md` - History table migration context
 - `HYBRID_PROGRESS_CALCULATION.md` - Progress calculation algorithm
 - `NOTIFICATION_SYSTEM_IMPLEMENTATION.md` - Notification system details
 
 ### Testing & Security
+
 - `DASHBOARD_TESTING_PLAN.md` - User Dashboard comprehensive test plan (110+ test cases) ⭐ **NEW**
 - `TESTING_COMPLETE_2025-10-24.md` - Permission system test report (1,200+ lines)
 - `PERMISSION_SYSTEM_REVIEW_2025-10-24.md` - Security audit
@@ -980,12 +1047,14 @@ See `migration_plan/` folder for detailed migration documentation:
 - `tests/api/phase*-test.md` - API test documentation (6 phases)
 
 ### Migration Plans
+
 - `migration_plan/01_DATABASE_MIGRATION.md` - Database schema
 - `migration_plan/02_API_MIGRATION.md` - API endpoints
 - `migration_plan/03_FRONTEND_MIGRATION_COMPLETE.md` - Frontend components
 - `migration_plan/05_ROLLOUT_PLAN.md` - Deployment strategy
 
 ### Feature Planning & Design
+
 - `NEXT_GOAL_DEPARTMENT_TASKS.md` - Department tasks (completed)
 - `DEPARTMENT_TASKS_VIEW_DESIGN.md` - Department tasks design
 - `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md` - Gantt chart plan (future)
@@ -993,6 +1062,7 @@ See `migration_plan/` folder for detailed migration documentation:
 - `EDIT_PROJECT_MODAL_IMPLEMENTATION_PLAN.md` - Edit project modal design
 
 ### Recent Bug Fixes & Improvements (2025-10-24 to 2025-10-26)
+
 - `PROJECT_BOARD_PERFORMANCE_COMPLETE.md` - Project Board API optimization (25% faster) - Phase 4 FINAL ⭐ **NEW**
 - `REPORTS_PERFORMANCE_COMPLETE.md` - Reports API optimization (55% faster) - Phase 3 ⭐ **NEW**
 - `DEPARTMENT_TASKS_PERFORMANCE_COMPLETE.md` - Department Tasks API (65% faster) - Phase 2 ⭐ **NEW**
@@ -1012,6 +1082,7 @@ See `migration_plan/` folder for detailed migration documentation:
 ### API Performance (All Critical Endpoints Optimized) ✅
 
 **Optimization Status**: All 4 phases complete (2025-10-26)
+
 - ✅ Phase 1: Dashboard API - 72% faster (11 parallel queries)
 - ✅ Phase 2: Department Tasks API - 65% faster (4 parallel queries)
 - ✅ Phase 3: Reports API - 55% faster (3 parallel queries)
@@ -1057,12 +1128,14 @@ npm run prisma:studio
 ## Deployment Checklist
 
 **Backend**: ✅ 100% Complete
+
 - [x] 78+ API endpoints implemented and tested
 - [x] Database schema complete (21 tables)
 - [x] Authentication & authorization
 - [x] Permission system with 6 roles + additionalRoles
 
 **Frontend**: 🔄 ~68% Complete
+
 - [x] Core infrastructure (Layout, Theme, Auth)
 - [x] 3 Project views (Board, Calendar, List)
 - [x] Task detail panel
@@ -1078,6 +1151,7 @@ npm run prisma:studio
 **Critical Bugs**: ✅ All resolved
 
 **Deployment Infrastructure**: ❌ Not ready
+
 - [ ] Production database setup
 - [ ] Environment variables configured
 - [ ] CI/CD pipeline
@@ -1098,6 +1172,7 @@ npm run prisma:studio
 **Location**: `src/app/(dashboard)/reports/page.tsx`
 
 **Features**:
+
 - 5 interactive charts (Chart.js with dark mode support)
 - Organization filters (2-layer permission: ADMIN sees all, others see scope)
 - Date range filtering (7d/30d/90d/custom)
@@ -1105,12 +1180,14 @@ npm run prisma:studio
 - Real-time data from API endpoints
 
 **Key Components**:
+
 - `src/components/reports/task-completion-chart.tsx` - Completion rate over time
 - `src/components/reports/task-priority-chart.tsx` - Priority distribution
 - `src/components/reports/task-status-chart.tsx` - Status breakdown
 - `src/components/reports/organization-filter.tsx` - Mission/Division/Dept selector
 
 **Data Fetching**:
+
 ```typescript
 import { useReports } from "@/hooks/use-reports";
 
@@ -1124,6 +1201,7 @@ const { data, isLoading } = useReports({
 ```
 
 **Permission Logic**:
+
 - ADMIN/CHIEF: Can filter by any Mission Group, Division, or Department
 - LEADER: Can only see their Division
 - HEAD: Can only see their Department
@@ -1134,12 +1212,14 @@ const { data, isLoading } = useReports({
 **Location**: `src/app/(dashboard)/users/page.tsx`
 
 **Features**:
+
 - User list with search, filter, and pagination
 - Create/Edit/Delete users (ADMIN only)
 - Status toggle (Active/Suspended) for management roles
 - Role-based permissions (see USER_MANAGEMENT_PERMISSIONS_COMPLETE.md)
 
 **Key Components**:
+
 - `src/components/users/users-view.tsx` - Main container with access control
 - `src/components/users/users-table.tsx` - Table with conditional Actions column
 - `src/components/users/user-row.tsx` - Row with permission checks
@@ -1147,11 +1227,13 @@ const { data, isLoading } = useReports({
 - `src/components/modals/edit-user-modal.tsx` - User editing (ADMIN only)
 
 **Permission Matrix**:
+
 - ADMIN: Full CRUD on all non-ADMIN users
 - HEAD/LEADER/CHIEF: View + Status toggle for users in scope
 - MEMBER/USER: No access (page shows "Access Denied")
 
 **Important**:
+
 - Users are scoped by organizational hierarchy
 - ADMIN cannot edit/delete other ADMIN users
 - Actions column hidden for non-ADMIN roles
@@ -1159,4 +1241,4 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.14.0**
+**End of CLAUDE.md v2.16.0**
