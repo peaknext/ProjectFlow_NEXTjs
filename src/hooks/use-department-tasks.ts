@@ -54,6 +54,7 @@ export interface TaskItem {
   commentsCount: number;
   checklistProgress: ChecklistProgress;
   subtasksCount: number;
+  projectId: string; // IMPORTANT: Needed to find correct project statuses
 }
 
 export interface ProjectStats {
@@ -73,6 +74,7 @@ export interface ProjectGroup {
   stats: ProjectStats;
   assignedUsers: TaskAssignee[];
   owner: TaskAssignee;
+  statuses: TaskStatus[]; // IMPORTANT: Workflow statuses for this project
   tasks: TaskItem[];
 }
 

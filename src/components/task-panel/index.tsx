@@ -4,8 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useTask } from '@/hooks/use-tasks';
 import { useProject } from '@/hooks/use-projects';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { TaskPanelHeader } from './task-panel-header';
 import { TaskPanelFooter } from './task-panel-footer';
@@ -84,20 +82,9 @@ export function TaskPanel() {
   );
   const project = projectResponse?.project;
   const statuses = projectResponse?.statuses || [];
+  const users = projectResponse?.users || []; // Use users from board API (already includes all users)
 
-  // Fetch department users (users who can be assigned tasks in this project)
-  const { data: usersResponse, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['users', 'department', project?.department?.id],
-    queryFn: async () => {
-      if (!project?.department?.id) return null;
-      return api.get<{ users: any[] }>(`/api/users?departmentId=${project.department.id}&limit=100`);
-    },
-    enabled: !!project?.department?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-  const users = usersResponse?.users || [];
-
-  const isLoading = isLoadingTask || isLoadingProject || isLoadingUsers;
+  const isLoading = isLoadingTask || isLoadingProject;
 
   // Form state management (lifted from DetailsTab for Footer access)
   const [formState, setFormState] = useState({
@@ -106,15 +93,19 @@ export function TaskPanel() {
     currentStatusId: task?.statusId || '',
   });
 
-  // Reset form state when taskId changes
+  // Reset form state when taskId changes (new task opened)
+  // IMPORTANT: Only depend on taskId (not task?.statusId) to avoid race condition
+  // where form state gets reset during re-renders caused by optimistic updates
+  // in Board/List/Calendar views
+  // Note: currentStatusId will be synced from DetailsTab via updateFormState callback
   useEffect(() => {
     setFormState({
       isDirty: false,
       isSubmitting: false,
       currentStatusId: task?.statusId || '',
     });
-    setHandleSave(null);
-  }, [taskId, task?.statusId]);
+    // Don't reset handleSave here - DetailsTab will re-register when taskId changes
+  }, [taskId]);
 
   // Callback for DetailsTab to update form state
   const updateFormState = useCallback((updates: Partial<typeof formState>) => {

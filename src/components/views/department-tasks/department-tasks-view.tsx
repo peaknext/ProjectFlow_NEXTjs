@@ -184,6 +184,18 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
     return Array.from(statusMap.values());
   }, [projects]);
 
+  // Create project statuses map for pinned tasks
+  // Each task should only see statuses from its own project
+  const projectStatusesMap = useMemo(() => {
+    const map = new Map();
+    projects.forEach((project) => {
+      if (project.statuses && Array.isArray(project.statuses)) {
+        map.set(project.id, project.statuses);
+      }
+    });
+    return map;
+  }, [projects]);
+
   // Get unique statuses for filter
   const uniqueStatuses = useMemo(() => {
     return allStatuses;
@@ -517,7 +529,7 @@ export function DepartmentTasksView({ departmentId, projects, allUsers }: Depart
                     <TaskRow
                       key={task.id}
                       task={task}
-                      statuses={allStatuses}
+                      statuses={projectStatusesMap.get(task.projectId) || []}
                       users={allUsers}
                       isSelected={selectedTasks.has(task.id)}
                       onToggleSelect={toggleSelectTask}

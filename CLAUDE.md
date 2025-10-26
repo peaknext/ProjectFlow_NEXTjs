@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.19.0 (2025-10-26)
-**Last Major Update**: Critical security fix - React Query cache isolation on login (data leakage prevention)
+**Version**: 2.20.0 (2025-10-26)
+**Last Major Update**: Bug fixes - Task Panel save button & Department Tasks status popover (Session 3)
 
 ---
 
@@ -95,6 +95,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Bug Fixes: Task Panel & Status Popover (2025-10-26 Session 3)** - Fixed Task Panel save button remaining disabled in Board/List/Calendar/Department Tasks views. Root cause: Race condition where `setHandleSave(null)` was called on every re-render due to `task?.statusId` in dependencies. Solution: Removed unnecessary state reset and changed dependencies to `[taskId]` only. Fixed Department Tasks Pinned Tasks table showing aggregated statuses from all projects instead of task's own project. Added `projectStatusesMap` lookup and fixed undefined `projectData` variable. See PROGRESS_2025-10-26_SESSION3.md
 - ✅ **CRITICAL SECURITY FIX: Data Leakage Prevention (2025-10-26 Session 3)** - Fixed critical bug where notifications and other cached data from User A would persist and be visible to User B after logout→login session switch. Root cause: React Query cache not cleared on login, only on logout. Solution: Added `queryClient.clear()` in login mutation's `onMutate` hook to clear all cached data BEFORE new user session starts. Verified localStorage items (only sessionToken needs clearing, UI preferences are non-sensitive). **REQUIRES USER TESTING**. See DATA_LEAKAGE_SECURITY_FIX.md
 - ✅ **Modal UX & Permission Improvements (2025-10-26 Session 2)** - Implemented dirty check system for Edit Project Modal and Edit User Modal (disabled save button when no changes, unsaved changes warning dialog, removed cancel button). Fixed MEMBER permission bug by adding creatorUserId field to Board and Department Tasks APIs. Added project info button (?) in Department Tasks view to open Edit Project Modal. Fixed Edit Project Modal 403 error with read-only mode for MEMBER/USER roles. Updated fullName format to Thai convention (no space between title prefix and first name). See PROGRESS_2025-10-26_SESSION2.md
 - ✅ **Cross-Department Task Identification (2025-10-26)** - Added department badges to Dashboard widgets (Overdue Tasks, My Tasks) and department info to Task Panel. Changed Recent Activities API to personal activity feed (shows all tasks user is involved with, not just department tasks). Badge size: text-lg (18px), positioned top-right with backdrop blur. Assignee avatars moved down to avoid overlap. See CROSS_DEPARTMENT_TASK_IDENTIFICATION_COMPLETE.md
