@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.18.0 (2025-10-26)
-**Last Major Update**: Permission fixes, Modal UX improvements (dirty check + unsaved warning), Thai fullName format update
+**Version**: 2.19.0 (2025-10-26)
+**Last Major Update**: Critical security fix - React Query cache isolation on login (data leakage prevention)
 
 ---
 
@@ -95,6 +95,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **CRITICAL SECURITY FIX: Data Leakage Prevention (2025-10-26 Session 3)** - Fixed critical bug where notifications and other cached data from User A would persist and be visible to User B after logout→login session switch. Root cause: React Query cache not cleared on login, only on logout. Solution: Added `queryClient.clear()` in login mutation's `onMutate` hook to clear all cached data BEFORE new user session starts. Verified localStorage items (only sessionToken needs clearing, UI preferences are non-sensitive). **REQUIRES USER TESTING**. See DATA_LEAKAGE_SECURITY_FIX.md
 - ✅ **Modal UX & Permission Improvements (2025-10-26 Session 2)** - Implemented dirty check system for Edit Project Modal and Edit User Modal (disabled save button when no changes, unsaved changes warning dialog, removed cancel button). Fixed MEMBER permission bug by adding creatorUserId field to Board and Department Tasks APIs. Added project info button (?) in Department Tasks view to open Edit Project Modal. Fixed Edit Project Modal 403 error with read-only mode for MEMBER/USER roles. Updated fullName format to Thai convention (no space between title prefix and first name). See PROGRESS_2025-10-26_SESSION2.md
 - ✅ **Cross-Department Task Identification (2025-10-26)** - Added department badges to Dashboard widgets (Overdue Tasks, My Tasks) and department info to Task Panel. Changed Recent Activities API to personal activity feed (shows all tasks user is involved with, not just department tasks). Badge size: text-lg (18px), positioned top-right with backdrop blur. Assignee avatars moved down to avoid overlap. See CROSS_DEPARTMENT_TASK_IDENTIFICATION_COMPLETE.md
 - ✅ **Permission System Security Fixes (2025-10-26)** - Fixed critical security bug where MEMBER could close/edit other people's tasks. Backend: Added context validation for `close_own_tasks` permission. Frontend: Added permission checks to all inline editors in List View and Task Row. Documentation: Added Multi-Layer Security Strategy to PERMISSION_GUIDELINE.md v1.1.0 (527 new lines, Defense in Depth approach)
@@ -1064,12 +1065,15 @@ See `migration_plan/` folder for detailed migration documentation:
 
 ### Recent Bug Fixes & Improvements (2025-10-24 to 2025-10-26)
 
-- `PROJECT_BOARD_PERFORMANCE_COMPLETE.md` - Project Board API optimization (25% faster) - Phase 4 FINAL ⭐ **NEW**
-- `REPORTS_PERFORMANCE_COMPLETE.md` - Reports API optimization (55% faster) - Phase 3 ⭐ **NEW**
-- `DEPARTMENT_TASKS_PERFORMANCE_COMPLETE.md` - Department Tasks API (65% faster) - Phase 2 ⭐ **NEW**
-- `DASHBOARD_PERFORMANCE_IMPROVEMENTS_COMPLETE.md` - Dashboard API optimization (72% faster) - Phase 1 ⭐ **NEW**
-- `APP_WIDE_PERFORMANCE_OPTIMIZATION_PLAN.md` - Complete roadmap (62 endpoints) ⭐ **NEW**
-- `DASHBOARD_PERFORMANCE_ANALYSIS.md` - Performance analysis & recommendations ⭐ **NEW**
+- `DATA_LEAKAGE_SECURITY_FIX.md` - Critical security fix for session isolation (React Query cache clearing on login) ⭐ **NEW - CRITICAL**
+- `CROSS_DEPARTMENT_TASK_IDENTIFICATION_COMPLETE.md` - Department badges in Dashboard widgets, personal activity feed ⭐ **NEW**
+- `PROGRESS_2025-10-26_SESSION2.md` - Modal UX improvements, permission fixes, Thai fullName format ⭐ **NEW**
+- `PROJECT_BOARD_PERFORMANCE_COMPLETE.md` - Project Board API optimization (25% faster) - Phase 4 FINAL
+- `REPORTS_PERFORMANCE_COMPLETE.md` - Reports API optimization (55% faster) - Phase 3
+- `DEPARTMENT_TASKS_PERFORMANCE_COMPLETE.md` - Department Tasks API (65% faster) - Phase 2
+- `DASHBOARD_PERFORMANCE_IMPROVEMENTS_COMPLETE.md` - Dashboard API optimization (72% faster) - Phase 1
+- `APP_WIDE_PERFORMANCE_OPTIMIZATION_PLAN.md` - Complete roadmap (62 endpoints)
+- `DASHBOARD_PERFORMANCE_ANALYSIS.md` - Performance analysis & recommendations
 - `REPORTS_DASHBOARD_BUG_FIXES_2025-10-26.md` - Reports fixes (8 bugs resolved)
 - `NOTIFICATION_BUG_FIX.md` - Notification system fixes
 - `DELETE_CONFIRMATION_IMPLEMENTATION_COMPLETE.md` - Delete confirmation modal

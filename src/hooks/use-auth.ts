@@ -6,12 +6,35 @@ import { useToast } from '@/hooks/use-toast';
 interface User {
   id: string;
   email: string;
+  titlePrefix?: string | null;
+  firstName?: string;
+  lastName?: string;
   fullName: string;
   role: string;
+  profileImageUrl: string | null;
+  departmentId: string | null;
+  jobTitleId?: string | null;
+  jobTitle?: string | null;
+  jobLevel: string | null;
+  workLocation?: string | null;
+  internalPhone?: string | null;
+  pinnedTasks: string[];
+  additionalRoles: any;
+  createdAt: string;
   department?: {
     id: string;
     name: string;
+    tel: string | null;
+    division: {
+      id: string;
+      name: string;
+      missionGroup: {
+        id: string;
+        name: string;
+      };
+    };
   };
+  permissions?: string[];
 }
 
 interface LoginRequest {
@@ -21,9 +44,12 @@ interface LoginRequest {
 }
 
 interface RegisterRequest {
-  fullName: string;
+  titlePrefix?: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
+  departmentId?: string;
 }
 
 interface LoginResponse {
@@ -61,9 +87,9 @@ export function useAuth() {
       }
 
       try {
-        const response = await api.get<{ user: User }>('/api/users/me');
-        // Ensure we always return a value (null if undefined)
-        return response?.user ?? null;
+        const response = await api.get<User>('/api/users/me');
+        // api.get already extracts .data field, so response is the user object
+        return response ?? null;
       } catch (error) {
         // Token invalid or expired
         localStorage.removeItem('sessionToken');
@@ -81,11 +107,16 @@ export function useAuth() {
       const response = await api.post<LoginResponse>('/api/auth/login', data);
       return response;
     },
+    onMutate: async () => {
+      // CRITICAL: Clear all cached data from previous user session
+      // This prevents data leakage between user sessions (notifications, tasks, etc.)
+      queryClient.clear();
+    },
     onSuccess: (data) => {
       // Store session token
       localStorage.setItem('sessionToken', data.sessionToken);
 
-      // Update query cache
+      // Update query cache with new user data
       queryClient.setQueryData(authKeys.user(), data.user);
 
       toast({
