@@ -123,7 +123,8 @@ export interface DashboardData {
   stats: DashboardStats;
   overdueTasks: DashboardTask[];
   pinnedTasks: DashboardTask[];
-  myTasks: MyTasksData;
+  myCreatedTasks: MyTasksData;
+  assignedToMeTasks: MyTasksData;
   calendarTasks: DashboardTask[];
   recentActivities: RecentActivity[];
   myChecklists: MyChecklistGroup[];

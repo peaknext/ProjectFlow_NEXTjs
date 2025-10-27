@@ -2,6 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useSyncMutation } from "@/lib/use-sync-mutation";
 import { departmentTasksKeys } from "./use-department-tasks";
+import { taskKeys } from "./use-tasks";
+import { dashboardKeys } from "./use-dashboard";
+import { projectKeys } from "./use-projects";
 
 // ============================================
 // TYPES
@@ -60,12 +63,18 @@ export function useBulkUpdateTasks(departmentId: string) {
         queryKey: departmentTasksKeys.list(departmentId),
       });
 
-      // Also invalidate individual task queries
+      // Invalidate individual task queries (use proper taskKeys)
       data.tasks.forEach((task) => {
         queryClient.invalidateQueries({
-          queryKey: ["tasks", "detail", task.id],
+          queryKey: taskKeys.detail(task.id),
         });
       });
+
+      // Invalidate dashboard widgets (My Tasks, Overdue, Pinned)
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+
+      // Invalidate project boards (tasks may appear in multiple views)
+      queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
     onError: (error) => {
       console.error("Bulk update failed:", error);

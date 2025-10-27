@@ -219,6 +219,7 @@ export function useCreateTask() {
       queryClient.invalidateQueries({ queryKey: projectKeys.board(projectId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
       queryClient.invalidateQueries({ queryKey: departmentTasksKeys.lists() }); // Department Tasks view
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all }); // Dashboard widgets (My Tasks, Pinned Tasks, etc.)
     },
 
     onError: (error, variables, context) => {
@@ -320,6 +321,8 @@ export function useUpdateTask() {
         });
         // Refetch history to show changes
         queryClient.invalidateQueries({ queryKey: taskKeys.history(response.task.id) });
+        // Refetch dashboard widgets (My Tasks, Overdue, Pinned)
+        queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
       }
     },
   });
@@ -452,17 +455,19 @@ export function useDeleteTask() {
         projectId = taskData.task.projectId;
       }
 
-      // Cancel outgoing refetches
+      // Cancel outgoing refetches for ALL affected caches
       await queryClient.cancelQueries({ queryKey: taskKeys.detail(taskId) });
+      await queryClient.cancelQueries({ queryKey: departmentTasksKeys.all });
       if (projectId) {
         await queryClient.cancelQueries({ queryKey: projectKeys.board(projectId) });
       }
 
-      // Save previous data
+      // Save previous data for ALL caches
       const previousTask = queryClient.getQueryData(taskKeys.detail(taskId));
       const previousBoard = projectId ? queryClient.getQueryData(projectKeys.board(projectId)) : null;
+      const previousDepartmentTasks = queryClient.getQueriesData({ queryKey: departmentTasksKeys.all });
 
-      // Optimistically remove task from board cache
+      // Optimistically remove task from board cache (for Board/List/Calendar views)
       if (projectId) {
         queryClient.setQueryData(projectKeys.board(projectId), (old: any) => {
           if (!old?.tasks) return old;
@@ -473,21 +478,47 @@ export function useDeleteTask() {
         });
       }
 
-      return { previousTask, previousBoard, projectId };
+      // Optimistically remove task from ALL department tasks caches
+      queryClient.setQueriesData({ queryKey: departmentTasksKeys.all }, (old: any) => {
+        if (!old?.projects) return old;
+
+        return {
+          ...old,
+          projects: old.projects.map((project: any) => ({
+            ...project,
+            tasks: project.tasks.filter((task: any) => task.id !== taskId),
+          })),
+        };
+      });
+
+      return { previousTask, previousBoard, previousDepartmentTasks, projectId };
     },
     onError: (error, taskId, context) => {
-      // Rollback on error
+      // Rollback task detail cache
       if (context?.previousTask) {
         queryClient.setQueryData(taskKeys.detail(taskId), context.previousTask);
       }
+
+      // Rollback board cache
       if (context?.previousBoard && context?.projectId) {
         queryClient.setQueryData(projectKeys.board(context.projectId), context.previousBoard);
       }
+
+      // Rollback ALL department tasks caches
+      if (context?.previousDepartmentTasks) {
+        context.previousDepartmentTasks.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
     },
-    onSettled: (_, __, taskId) => {
+    onSettled: (response, error, taskId) => {
       // Sync with server
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
+      // Refetch dashboard widgets (My Tasks, Overdue, Pinned)
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      // Refetch department tasks view
+      queryClient.invalidateQueries({ queryKey: departmentTasksKeys.lists() });
     },
   });
 }
@@ -605,11 +636,13 @@ export function useCreateChecklistItem(taskId: string) {
       // Snapshot previous value
       const previousData = queryClient.getQueryData(taskKeys.checklists(taskId));
 
+      // Generate tempId for tracking
+      const tempId = `temp-${Date.now()}`;
+
       // Optimistically add new item
       queryClient.setQueryData(taskKeys.checklists(taskId), (old: any) => {
         if (!old) return old;
 
-        const tempId = `temp-${Date.now()}`;
         const optimisticItem = {
           id: tempId,
           taskId,
@@ -625,7 +658,22 @@ export function useCreateChecklistItem(taskId: string) {
         };
       });
 
-      return { previousData };
+      return { previousData, tempId };
+    },
+    onSuccess: (response, _variables, context) => {
+      // Replace temporary item with real item from server
+      const tempId = context?.tempId;
+
+      queryClient.setQueryData(taskKeys.checklists(taskId), (old: any) => {
+        if (!old || !old.items) return old;
+
+        return {
+          ...old,
+          items: old.items.map((item: any) =>
+            item.id === tempId ? response.item : item
+          ),
+        };
+      });
     },
     onError: (error, newItem, context) => {
       // Rollback on error
@@ -759,6 +807,7 @@ export function useTogglePinTask() {
 
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: taskKeys.detail(taskId) });
+      await queryClient.cancelQueries({ queryKey: dashboardKeys.detail() });
       if (projectId) {
         await queryClient.cancelQueries({ queryKey: projectKeys.board(projectId) });
       }
@@ -766,6 +815,7 @@ export function useTogglePinTask() {
       // Save previous data
       const previousTask = queryClient.getQueryData(taskKeys.detail(taskId));
       const previousBoard = projectId ? queryClient.getQueryData(projectKeys.board(projectId)) : null;
+      const previousDashboard = queryClient.getQueryData(dashboardKeys.detail());
 
       // Optimistically update task detail
       queryClient.setQueryData(taskKeys.detail(taskId), (old: any) => {
@@ -792,7 +842,42 @@ export function useTogglePinTask() {
         });
       }
 
-      return { previousTask, previousBoard, projectId };
+      // Optimistically update dashboard cache
+      queryClient.setQueryData(dashboardKeys.detail(), (old: any) => {
+        if (!old) return old;
+
+        if (isPinned) {
+          // Unpinning: Remove from pinnedTasks, add to myTasks
+          const unpinnedTask = old.pinnedTasks?.find((t: any) => t.id === taskId);
+          if (unpinnedTask) {
+            return {
+              ...old,
+              pinnedTasks: old.pinnedTasks.filter((t: any) => t.id !== taskId),
+              myTasks: {
+                ...old.myTasks,
+                tasks: [{ ...unpinnedTask, isPinned: false }, ...(old.myTasks?.tasks || [])],
+              },
+            };
+          }
+        } else {
+          // Pinning: Remove from myTasks, add to pinnedTasks
+          const pinnedTask = old.myTasks?.tasks?.find((t: any) => t.id === taskId);
+          if (pinnedTask) {
+            return {
+              ...old,
+              pinnedTasks: [{ ...pinnedTask, isPinned: true }, ...(old.pinnedTasks || [])],
+              myTasks: {
+                ...old.myTasks,
+                tasks: old.myTasks.tasks.filter((t: any) => t.id !== taskId),
+              },
+            };
+          }
+        }
+
+        return old;
+      });
+
+      return { previousTask, previousBoard, previousDashboard, projectId };
     },
     onError: (error, { taskId }, context) => {
       // Rollback on error
@@ -802,12 +887,16 @@ export function useTogglePinTask() {
       if (context?.previousBoard && context?.projectId) {
         queryClient.setQueryData(projectKeys.board(context.projectId), context.previousBoard);
       }
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(dashboardKeys.detail(), context.previousDashboard);
+      }
     },
     onSettled: (response, error, { taskId }) => {
       // Sync with server
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
       queryClient.invalidateQueries({ queryKey: ['users', 'me', 'pinned-tasks'] });
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all }); // Dashboard widgets (Pinned Tasks, My Tasks)
     },
   });
 }

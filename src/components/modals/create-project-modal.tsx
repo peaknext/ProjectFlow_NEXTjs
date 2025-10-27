@@ -315,6 +315,9 @@ export function CreateProjectModal() {
       statusType: status.statusType,
     })) as any;
 
+    // Close modal immediately (optimistic)
+    handleClose();
+
     // Create project with optimistic update
     createProjectMutation.mutate(
       {
@@ -329,7 +332,6 @@ export function CreateProjectModal() {
       {
         onSuccess: () => {
           toast.success(`สร้างโปรเจกต์ "${data.name}" สำเร็จ`);
-          handleClose();
         },
         onError: (error: any) => {
           console.error("[CreateProjectModal] Error creating project:", error);

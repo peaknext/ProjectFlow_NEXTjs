@@ -166,6 +166,24 @@ async function postHandler(
       }
     }
 
+    // ✅ TASK OWNER NOTIFICATION: Notify task creator about all comments (not just mentions)
+    const taskCreatorId = task.creatorUserId;
+    if (
+      taskCreatorId &&
+      taskCreatorId !== req.session.userId && // Owner is not the one commenting
+      !mentionedUserIds.includes(taskCreatorId) // Owner is not already mentioned (avoid duplicate)
+    ) {
+      await prisma.notification.create({
+        data: {
+          userId: taskCreatorId,
+          type: 'COMMENT_MENTION',
+          message: `${req.session.user.fullName} แสดงความคิดเห็นในงาน "${task.name}" ของคุณ`,
+          taskId,
+          triggeredByUserId: req.session.userId,
+        },
+      });
+    }
+
     return successResponse(
       {
         comment: {

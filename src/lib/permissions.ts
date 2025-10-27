@@ -51,6 +51,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'view_tasks',
     'create_tasks',
     'edit_tasks',
+    'delete_tasks',
     'close_tasks',
     'view_users',
     'view_reports',
@@ -65,6 +66,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'view_tasks',
     'create_tasks',
     'edit_tasks',
+    'delete_tasks',
     'close_tasks',
     'view_reports',
   ],
@@ -74,6 +76,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'view_tasks',
     'create_tasks',
     'edit_own_tasks',
+    'delete_own_tasks',
     'close_own_tasks',
   ],
 
@@ -167,6 +170,64 @@ export async function checkPermission(
                           task.assignees.some(a => a.userId === userId);
 
         return task.creatorUserId === userId || isAssignee;
+      }
+
+      // Check if deleting own tasks
+      if (permission === 'delete_own_tasks' && context.taskId) {
+        const task = await prisma.task.findUnique({
+          where: { id: context.taskId },
+          select: {
+            creatorUserId: true,
+          },
+        });
+
+        if (!task) return false;
+
+        // ✅ SECURITY: Only task creator can delete (NOT assignees)
+        // Prevents attack: Member A assigns self to Member B's task → then deletes it
+        return task.creatorUserId === userId;
+      }
+
+      // Check if deleting tasks (scope verification)
+      if (permission === 'delete_tasks' && context.taskId) {
+        const task = await prisma.task.findUnique({
+          where: { id: context.taskId },
+          select: {
+            projectId: true,
+            project: {
+              select: {
+                departmentId: true,
+                department: {
+                  select: {
+                    divisionId: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!task) return false;
+
+        // ADMIN can delete any task (already checked above with '*' permission)
+
+        // CHIEF can delete tasks in their mission group
+        if (user.role === 'CHIEF') {
+          return await isInScope(userId, 'CHIEF', task.project.departmentId);
+        }
+
+        // LEADER can delete tasks in their division
+        if (user.role === 'LEADER') {
+          return await isInScope(userId, 'LEADER', task.project.departmentId);
+        }
+
+        // HEAD can delete tasks in their department
+        if (user.role === 'HEAD') {
+          return user.departmentId === task.project.departmentId;
+        }
+
+        // Other roles should not reach here (no delete_tasks permission)
+        return false;
       }
 
       // Check department-level access
@@ -354,7 +415,20 @@ export async function canUserDeleteTask(
   userId: string,
   taskId: string
 ): Promise<boolean> {
-  return checkPermission(userId, 'delete_tasks', { taskId });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+
+  if (!user) return false;
+
+  // High-level roles can delete all tasks (with scope verification)
+  if (['ADMIN', 'CHIEF', 'LEADER', 'HEAD'].includes(user.role)) {
+    return checkPermission(userId, 'delete_tasks', { taskId });
+  }
+
+  // MEMBER can only delete own tasks
+  return checkPermission(userId, 'delete_own_tasks', { taskId });
 }
 
 /**

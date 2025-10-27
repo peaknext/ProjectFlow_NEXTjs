@@ -158,8 +158,13 @@ async function postHandler(
 
     const data = createTaskSchema.parse(body);
 
-    // Determine assignee: use first from array if provided, otherwise use single assignee
-    const assigneeUserId = data.assigneeUserIds?.[0] || data.assigneeUserId || null;
+    // Determine assignees: use array if provided, otherwise fallback to single assignee
+    const assigneeUserIds = data.assigneeUserIds && data.assigneeUserIds.length > 0
+      ? data.assigneeUserIds
+      : (data.assigneeUserId ? [data.assigneeUserId] : []);
+
+    // For backward compatibility: store first assignee in legacy assigneeUserId field
+    const assigneeUserId = assigneeUserIds[0] || null;
 
     // Validate status belongs to project
     const status = await prisma.status.findUnique({
@@ -170,14 +175,14 @@ async function postHandler(
       return errorResponse('INVALID_STATUS', 'Status does not belong to this project', 400);
     }
 
-    // Validate assignee exists
-    if (assigneeUserId) {
-      const assignee = await prisma.user.findUnique({
-        where: { id: assigneeUserId },
+    // Validate all assignees exist
+    if (assigneeUserIds.length > 0) {
+      const assignees = await prisma.user.findMany({
+        where: { id: { in: assigneeUserIds } },
       });
 
-      if (!assignee) {
-        return errorResponse('USER_NOT_FOUND', 'Assignee user not found', 404);
+      if (assignees.length !== assigneeUserIds.length) {
+        return errorResponse('USER_NOT_FOUND', 'One or more assignee users not found', 404);
       }
     }
 
@@ -192,63 +197,101 @@ async function postHandler(
       }
     }
 
-    // Create task
+    // Create task with assignees in a transaction
 
-    const task = await prisma.task.create({
-      data: {
-        name: data.name,
-        description: data.description || null,
-        projectId,
-        assigneeUserId: assigneeUserId,
-        statusId: data.statusId,
-        priority: data.priority,
-        startDate: data.startDate ? new Date(data.startDate) : null,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        difficulty: data.difficulty || null,
-        parentTaskId: data.parentTaskId || null,
-        creatorUserId: req.session.userId,
-      },
-      include: {
-        assignee: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            profileImageUrl: true,
-          },
-        },
-        status: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
-          },
-        },
-      },
-    });
-
-
-    // Create history log
-    await prisma.history.create({
-      data: {
-        taskId: task.id,
-        userId: req.session.userId,
-        historyText: `สร้างงาน "${task.name}"`,
-      },
-    });
-
-    // Send notification to assignee (if assigned and not self)
-    if (assigneeUserId && assigneeUserId !== req.session.userId) {
-      await prisma.notification.create({
+    const task = await prisma.$transaction(async (tx) => {
+      // Create task
+      const newTask = await tx.task.create({
         data: {
-          userId: assigneeUserId,
-          type: 'TASK_ASSIGNED',
-          message: `คุณได้รับมอบหมายงาน: ${task.name}`,
-          taskId: task.id,
-          triggeredByUserId: req.session.userId,
+          name: data.name,
+          description: data.description || null,
+          projectId,
+          assigneeUserId: assigneeUserId, // Legacy field (stores first assignee)
+          statusId: data.statusId,
+          priority: data.priority,
+          startDate: data.startDate ? new Date(data.startDate) : null,
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
+          difficulty: data.difficulty || null,
+          parentTaskId: data.parentTaskId || null,
+          creatorUserId: req.session.userId,
+        },
+        include: {
+          assignee: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              profileImageUrl: true,
+            },
+          },
+          status: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+            },
+          },
         },
       });
-    }
+
+      // Create task_assignees records for all assignees
+      if (assigneeUserIds.length > 0) {
+        await tx.taskAssignee.createMany({
+          data: assigneeUserIds.map((userId) => ({
+            taskId: newTask.id,
+            userId: userId,
+            assignedBy: req.session.userId,
+          })),
+        });
+      }
+
+      // Create history log
+      await tx.history.create({
+        data: {
+          taskId: newTask.id,
+          userId: req.session.userId,
+          historyText: `สร้างงาน "${newTask.name}"`,
+        },
+      });
+
+      // Send notifications to all assignees (except creator)
+      const notificationData = assigneeUserIds
+        .filter((userId) => userId !== req.session.userId)
+        .map((userId) => ({
+          userId: userId,
+          type: 'TASK_ASSIGNED' as const,
+          message: `คุณได้รับมอบหมายงาน: ${newTask.name}`,
+          taskId: newTask.id,
+          triggeredByUserId: req.session.userId,
+        }));
+
+      if (notificationData.length > 0) {
+        await tx.notification.createMany({
+          data: notificationData,
+        });
+      }
+
+      // Fetch assignees array for response
+      const taskAssignees = await tx.taskAssignee.findMany({
+        where: { taskId: newTask.id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              profileImageUrl: true,
+            },
+          },
+        },
+      });
+
+      return {
+        ...newTask,
+        assignees: taskAssignees.map((ta) => ta.user),
+        assigneeUserIds: taskAssignees.map((ta) => ta.userId),
+      };
+    });
 
     return successResponse(
       {

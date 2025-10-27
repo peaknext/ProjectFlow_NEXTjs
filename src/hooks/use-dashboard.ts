@@ -89,8 +89,8 @@ export function useLoadMoreTasks() {
       return { newTasks: response.myTasks.tasks, hasMore: response.myTasks.hasMore, newOffset };
     },
     onSuccess: ({ newTasks, hasMore }) => {
-      // Append new tasks to existing dashboard data
-      queryClient.setQueryData(dashboardKeys.detail(), (old: any) => {
+      // Append new tasks to ALL existing dashboard caches (future-proof)
+      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (old: any) => {
         if (!old) return old;
         return {
           ...old,
@@ -146,11 +146,11 @@ export function useToggleChecklistItem() {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: dashboardKeys.all });
 
-      // Snapshot the previous value
-      const previousData = queryClient.getQueryData(dashboardKeys.detail());
+      // Snapshot ALL previous dashboard caches (future-proof)
+      const previousData = queryClient.getQueriesData({ queryKey: dashboardKeys.all });
 
-      // Optimistically update the checklist
-      queryClient.setQueryData(dashboardKeys.detail(), (old: any) => {
+      // Optimistically update ALL dashboard caches
+      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (old: any) => {
         if (!old?.myChecklists) return old;
         return {
           ...old,
@@ -166,12 +166,11 @@ export function useToggleChecklistItem() {
       return { previousData };
     },
     onError: (error, variables, context) => {
-      // Rollback on error
+      // Rollback ALL dashboard caches on error
       if (context?.previousData) {
-        queryClient.setQueryData(
-          dashboardKeys.detail(),
-          context.previousData
-        );
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
     },
     onSettled: () => {

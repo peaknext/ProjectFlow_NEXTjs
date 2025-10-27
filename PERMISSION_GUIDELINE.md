@@ -1,7 +1,7 @@
 # Permission System Guideline
 
-**Version**: 1.1.0
-**Last Updated**: 2025-10-26
+**Version**: 1.3.0
+**Last Updated**: 2025-10-27
 **Reference**: `src/lib/permissions.ts`
 
 This document provides comprehensive guidelines for implementing and using the permission system in ProjectFlows. It covers both frontend (UI/UX) and backend (API) implementations.
@@ -665,7 +665,8 @@ const handleClose = () => {
 | `create_tasks` | Create new tasks | ADMIN, CHIEF, LEADER, HEAD, MEMBER | Hide "New Task" button | Reject POST request |
 | `edit_tasks` | Edit all tasks | ADMIN, CHIEF, LEADER, HEAD | Enable task editing | Allow PATCH request |
 | `edit_own_tasks` | Edit own tasks only | MEMBER | Enable if creator/assignee | Check ownership |
-| `delete_tasks` | Delete tasks | ADMIN, CHIEF | Hide delete button | Reject DELETE request |
+| `delete_tasks` | Delete tasks | ADMIN, CHIEF, LEADER, HEAD | Hide delete button | Reject DELETE request with scope check |
+| `delete_own_tasks` | Delete own tasks only | MEMBER | Show delete button if creator/assignee | Check ownership |
 | `close_tasks` | Close all tasks | ADMIN, CHIEF, LEADER, HEAD | Show close button | Allow close request |
 | `close_own_tasks` | Close own tasks only | MEMBER | Show if creator/assignee | Check ownership |
 
@@ -1521,6 +1522,22 @@ MEMBER/USER → Own Department (limited)
 ---
 
 ## Version History
+
+- **1.3.0** (2025-10-27): Task Owner Delete Permission
+  - Added `delete_own_tasks` permission to MEMBER role
+  - Task creators and assignees can now delete their own tasks
+  - Updated `canUserDeleteTask` function to check role-specific permissions
+  - Updated permission matrix table
+
+- **1.2.0** (2025-10-27): Delete Task Permission Fix
+  - Added `delete_tasks` permission to LEADER and HEAD roles
+  - Added scope verification for delete_tasks (checks division/department access)
+  - Updated permission matrix table
+
+- **1.1.0** (2025-10-26): Multi-Layer Security Strategy
+  - Added Defense in Depth philosophy
+  - Added comprehensive frontend/backend patterns
+  - Added context-based permission examples
 
 - **1.0.0** (2025-10-26): Initial documentation
   - Complete permission list

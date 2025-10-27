@@ -7,37 +7,23 @@ import { RefreshCw } from "lucide-react";
 import { DashboardStatsCards } from "@/components/dashboard/dashboard-stats-cards";
 import { OverdueTasksAlert } from "@/components/dashboard/overdue-tasks-alert";
 import { PinnedTasksWidget } from "@/components/dashboard/pinned-tasks-widget";
+import { MyCreatedTasksWidget } from "@/components/dashboard/my-created-tasks-widget";
 import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
 import { DashboardCalendarWidget } from "@/components/dashboard/dashboard-calendar-widget";
 import { RecentActivitiesWidget } from "@/components/dashboard/recent-activities-widget";
 import { MyChecklistWidget } from "@/components/dashboard/my-checklist-widget";
-import { useDashboard, useRefreshDashboard, useLoadMoreTasks } from "@/hooks/use-dashboard";
+import { useDashboard, useRefreshDashboard } from "@/hooks/use-dashboard";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
-  // State for pagination
-  const [currentOffset, setCurrentOffset] = useState(0);
-
   // Fetch dashboard data
   const { data, isLoading, refetch } = useDashboard();
   const refresh = useRefreshDashboard();
-  const loadMoreMutation = useLoadMoreTasks();
 
   // Handle refresh
   const handleRefresh = () => {
     refresh();
     refetch();
-    setCurrentOffset(0); // Reset offset on refresh
-  };
-
-  // Handle load more tasks
-  const handleLoadMore = () => {
-    if (loadMoreMutation.isPending) return;
-    loadMoreMutation.mutate(currentOffset, {
-      onSuccess: ({ newOffset }) => {
-        setCurrentOffset(newOffset);
-      },
-    });
   };
 
   return (
@@ -94,14 +80,24 @@ export default function DashboardPage() {
             isLoading={isLoading}
           />
 
-          {/* My Tasks Widget */}
-          <MyTasksWidget
-            myTasks={
-              data?.myTasks || { tasks: [], total: 0, hasMore: false }
+          {/* My Created Tasks Widget */}
+          <MyCreatedTasksWidget
+            myCreatedTasks={
+              data?.myCreatedTasks || { tasks: [], total: 0, hasMore: false }
             }
             isLoading={isLoading}
-            onLoadMore={handleLoadMore}
-            isLoadingMore={loadMoreMutation.isPending}
+            onLoadMore={() => {}}
+            isLoadingMore={false}
+          />
+
+          {/* Assigned to Me Tasks Widget */}
+          <MyTasksWidget
+            myTasks={
+              data?.assignedToMeTasks || { tasks: [], total: 0, hasMore: false }
+            }
+            isLoading={isLoading}
+            onLoadMore={() => {}}
+            isLoadingMore={false}
           />
         </div>
 

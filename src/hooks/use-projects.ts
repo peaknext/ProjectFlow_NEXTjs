@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { useSyncMutation } from '@/lib/use-sync-mutation';
+import { projectsListKeys } from './use-projects-list';
 import type { Project } from '@/stores/use-app-store';
 import type { Task } from '@/hooks/use-tasks';
 
@@ -179,55 +180,60 @@ export function useCreateProject() {
     mutationFn: (data: CreateProjectInput) =>
       api.post<{ project: Project }>('/api/projects', data),
     onMutate: async (newProject) => {
-      // Cancel outgoing refetches
+      // Cancel outgoing refetches for both query keys
       await queryClient.cancelQueries({ queryKey: projectKeys.lists() });
+      await queryClient.cancelQueries({ queryKey: projectsListKeys.list() });
 
-      // Snapshot previous value
+      // Snapshot previous values
       const previousProjects = queryClient.getQueriesData({ queryKey: projectKeys.lists() });
+      const previousProjectsList = queryClient.getQueryData(projectsListKeys.list());
 
-      // Optimistically add new project to all list caches
+      // Generate tempId for tracking
+      const tempId = `temp-${Date.now()}`;
+
+      // Create temporary project object
+      const tempProject: any = {
+        id: tempId,
+        name: newProject.name,
+        description: newProject.description || null,
+        departmentId: newProject.departmentId,
+        actionPlanId: newProject.actionPlanId || null,
+        status: 'ACTIVE',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        dateDeleted: null,
+        // Add phases array for correct phase display
+        phases: newProject.phases?.map((phase, index) => ({
+          id: `temp-phase-${Date.now()}-${index}`,
+          name: phase.name,
+          phaseOrder: phase.phaseOrder,
+          startDate: phase.startDate || null,
+          endDate: phase.endDate || null,
+          projectId: tempId,
+        })) || [],
+        // Add empty arrays for required relations
+        statuses: [],
+        tasks: [],
+        owner: {
+          id: 'temp-owner',
+          fullName: 'Loading...',
+          email: '',
+          profileImageUrl: null,
+        },
+        department: {
+          id: newProject.departmentId,
+          name: 'Loading...',
+        },
+        _count: {
+          tasks: 0,
+          statuses: newProject.statuses?.length || 0,
+          phases: newProject.phases?.length || 0,
+        },
+      };
+
+      // Update projectKeys.lists() caches (for useProjects)
       queryClient.setQueriesData({ queryKey: projectKeys.lists() }, (old: any) => {
         if (!old) return old;
-
-        // Create temporary project object with phases data
-        const tempProject: any = {
-          id: `temp-${Date.now()}`,
-          name: newProject.name,
-          description: newProject.description || null,
-          departmentId: newProject.departmentId,
-          actionPlanId: newProject.actionPlanId || null,
-          status: 'ACTIVE',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          dateDeleted: null,
-          // Add phases array for correct phase display
-          phases: newProject.phases?.map((phase, index) => ({
-            id: `temp-phase-${Date.now()}-${index}`,
-            name: phase.name,
-            phaseOrder: phase.phaseOrder,
-            startDate: phase.startDate || null,
-            endDate: phase.endDate || null,
-            projectId: `temp-${Date.now()}`,
-          })) || [],
-          // Add empty arrays for required relations
-          statuses: [],
-          tasks: [],
-          owner: {
-            id: 'temp-owner',
-            fullName: 'Loading...',
-            email: '',
-            profileImageUrl: null,
-          },
-          department: {
-            id: newProject.departmentId,
-            name: 'Loading...',
-          },
-          _count: {
-            tasks: 0,
-            statuses: newProject.statuses?.length || 0,
-            phases: newProject.phases?.length || 0,
-          },
-        };
 
         // Add to beginning of list
         if (old.projects) {
@@ -244,19 +250,67 @@ export function useCreateProject() {
         return old;
       });
 
-      return { previousProjects };
+      // Update projectsListKeys.list() cache (for useProjectsList - Project Management page)
+      queryClient.setQueryData(projectsListKeys.list(), (old: any) => {
+        if (!old) return [tempProject];
+        return [tempProject, ...old];
+      });
+
+      return { previousProjects, previousProjectsList, tempId };
+    },
+    onSuccess: (response, _variables, context) => {
+      // Replace temporary project with real project from server
+      const tempId = context?.tempId;
+
+      // Update projectKeys.lists() caches
+      queryClient.setQueriesData({ queryKey: projectKeys.lists() }, (old: any) => {
+        if (!old || !old.projects) return old;
+
+        return {
+          ...old,
+          projects: old.projects.map((p: any) => {
+            if (p.id === tempId) {
+              // Merge server response with temp project's _count (server doesn't return _count)
+              return {
+                ...response.project,
+                _count: p._count, // Preserve _count from temp project
+              };
+            }
+            return p;
+          }),
+        };
+      });
+
+      // Update projectsListKeys.list() cache (Project Management page)
+      queryClient.setQueryData(projectsListKeys.list(), (old: any) => {
+        if (!old) return old;
+        return old.map((p: any) => {
+          if (p.id === tempId) {
+            // Merge server response with temp project's _count (server doesn't return _count)
+            return {
+              ...response.project,
+              _count: p._count, // Preserve _count from temp project
+            };
+          }
+          return p;
+        });
+      });
+
+      // Note: No invalidate here - we already have the latest data from server response
+      // Invalidating would cause unnecessary refetch and overwrite our optimistic update
     },
     onError: (_error, _newProject, context) => {
-      // Rollback on error
+      // Rollback on error for projectKeys.lists()
       if (context?.previousProjects) {
         context.previousProjects.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-    },
-    onSettled: () => {
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+
+      // Rollback on error for projectsListKeys.list()
+      if (context?.previousProjectsList) {
+        queryClient.setQueryData(projectsListKeys.list(), context.previousProjectsList);
+      }
     },
   });
 }
@@ -288,13 +342,15 @@ export function useDeleteProject() {
     mutationFn: (projectId: string) =>
       api.delete(`/api/projects/${projectId}`),
     onMutate: async (projectId) => {
-      // Cancel outgoing refetches
+      // Cancel outgoing refetches for both query keys
       await queryClient.cancelQueries({ queryKey: projectKeys.lists() });
+      await queryClient.cancelQueries({ queryKey: projectsListKeys.list() });
 
-      // Snapshot previous value
+      // Snapshot previous values
       const previousProjects = queryClient.getQueriesData({ queryKey: projectKeys.lists() });
+      const previousProjectsList = queryClient.getQueryData(projectsListKeys.list());
 
-      // Optimistically remove project from all list caches
+      // Optimistically remove project from projectKeys.lists() caches
       queryClient.setQueriesData({ queryKey: projectKeys.lists() }, (old: any) => {
         if (!old || !old.projects) return old;
 
@@ -308,19 +364,31 @@ export function useDeleteProject() {
         };
       });
 
-      return { previousProjects };
+      // Optimistically remove project from projectsListKeys.list() cache (Project Management page)
+      queryClient.setQueryData(projectsListKeys.list(), (old: any) => {
+        if (!old) return old;
+        return old.filter((p: any) => p.id !== projectId);
+      });
+
+      return { previousProjects, previousProjectsList };
     },
     onError: (_error, _projectId, context) => {
-      // Rollback on error
+      // Rollback on error for projectKeys.lists()
       if (context?.previousProjects) {
         context.previousProjects.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
+
+      // Rollback on error for projectsListKeys.list()
+      if (context?.previousProjectsList) {
+        queryClient.setQueryData(projectsListKeys.list(), context.previousProjectsList);
+      }
     },
     onSettled: () => {
       // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: projectsListKeys.list() });
     },
   });
 }

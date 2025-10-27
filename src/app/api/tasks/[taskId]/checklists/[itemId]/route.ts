@@ -43,10 +43,10 @@ async function patchHandler(
       },
     });
 
-    // Get task name for history
+    // Get task name and creator for history and notification
     const task = await prisma.task.findUnique({
       where: { id: taskId },
-      select: { name: true },
+      select: { name: true, creatorUserId: true },
     });
 
     if (!existingItem) {
@@ -95,6 +95,19 @@ async function patchHandler(
           historyText: `แก้ไข "${existingItem.name}" เป็น "${updates.name}" ในรายการสิ่งที่ต้องทำ ของงาน "${task?.name}"`,
         },
       });
+
+      // ✅ TASK OWNER NOTIFICATION: Notify about checklist name change
+      if (task?.creatorUserId && task.creatorUserId !== req.session.userId) {
+        await prisma.notification.create({
+          data: {
+            userId: task.creatorUserId,
+            type: 'TASK_UPDATED',
+            message: `${req.session.user.fullName} แก้ไขรายการ "${existingItem.name}" ในงาน "${task.name}" ของคุณ`,
+            taskId,
+            triggeredByUserId: req.session.userId,
+          },
+        });
+      }
     }
 
     // Log checkbox toggle
@@ -107,6 +120,20 @@ async function patchHandler(
           historyText: `${action} "${existingItem.name}" ในรายการสิ่งที่ต้องทำ ของงาน "${task?.name}"`,
         },
       });
+
+      // ✅ TASK OWNER NOTIFICATION: Notify about checklist checkbox toggle
+      if (task?.creatorUserId && task.creatorUserId !== req.session.userId) {
+        const actionText = updates.isChecked ? 'ทำเครื่องหมาย' : 'ยกเลิกการทำเครื่องหมาย';
+        await prisma.notification.create({
+          data: {
+            userId: task.creatorUserId,
+            type: 'TASK_UPDATED',
+            message: `${req.session.user.fullName} ${actionText} "${existingItem.name}" ในงาน "${task.name}" ของคุณ`,
+            taskId,
+            triggeredByUserId: req.session.userId,
+          },
+        });
+      }
     }
 
     return successResponse({
@@ -142,10 +169,10 @@ async function deleteHandler(
     },
   });
 
-  // Get task name for history
+  // Get task name and creator for history and notification
   const task = await prisma.task.findUnique({
     where: { id: taskId },
-    select: { name: true },
+    select: { name: true, creatorUserId: true },
   });
 
   if (!existingItem) {
@@ -177,6 +204,19 @@ async function deleteHandler(
       historyText: `ลบ "${existingItem.name}" จากรายการสิ่งที่ต้องทำ ของงาน "${task?.name}"`,
     },
   });
+
+  // ✅ TASK OWNER NOTIFICATION: Notify task creator about checklist deletion
+  if (task?.creatorUserId && task.creatorUserId !== req.session.userId) {
+    await prisma.notification.create({
+      data: {
+        userId: task.creatorUserId,
+        type: 'TASK_UPDATED',
+        message: `${req.session.user.fullName} ลบรายการ "${existingItem.name}" จากงาน "${task.name}" ของคุณ`,
+        taskId,
+        triggeredByUserId: req.session.userId,
+      },
+    });
+  }
 
   return successResponse({
     message: 'Checklist item deleted successfully',

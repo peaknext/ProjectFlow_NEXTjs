@@ -127,7 +127,7 @@ export function ProjectRow({ project }: ProjectRowProps) {
                 </span>
               </div>
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                จำนวนงาน: {project._count.tasks}
+                จำนวนงาน: {project._count?.tasks ?? 0}
               </span>
             </div>
           </div>
@@ -200,7 +200,7 @@ export function ProjectRow({ project }: ProjectRowProps) {
                 การลบโปรเจกต์จะลบข้อมูลต่อไปนี้ออกจากระบบ:
               </p>
               <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
-                <li>งานทั้งหมด ({project._count.tasks} งาน)</li>
+                <li>งานทั้งหมด ({project._count?.tasks ?? 0} งาน)</li>
                 <li>สถานะและ Phase ของโปรเจกต์</li>
                 <li>ความคิดเห็นและ Checklist ในงาน</li>
                 <li>ประวัติการดำเนินงานทั้งหมด</li>

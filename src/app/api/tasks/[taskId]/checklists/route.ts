@@ -82,7 +82,7 @@ async function postHandler(
     // Check if task exists
     const task = await prisma.task.findUnique({
       where: { id: taskId, deletedAt: null },
-      select: { id: true, name: true, projectId: true },
+      select: { id: true, name: true, projectId: true, creatorUserId: true },
     });
 
     if (!task) {
@@ -124,6 +124,19 @@ async function postHandler(
         historyText: `เพิ่ม "${data.name}" ในรายการสิ่งที่ต้องทำ ของงาน "${task.name}"`,
       },
     });
+
+    // ✅ TASK OWNER NOTIFICATION: Notify task creator about checklist addition
+    if (task.creatorUserId && task.creatorUserId !== req.session.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: task.creatorUserId,
+          type: 'TASK_UPDATED',
+          message: `${req.session.user.fullName} เพิ่มรายการ "${data.name}" ในงาน "${task.name}" ของคุณ`,
+          taskId,
+          triggeredByUserId: req.session.userId,
+        },
+      });
+    }
 
     return successResponse(
       {

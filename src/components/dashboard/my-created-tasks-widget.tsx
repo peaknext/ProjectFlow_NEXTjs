@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { ClipboardList, Folder, Calendar, Plus, Loader2, UserCheck } from "lucide-react";
+import { ClipboardList, Folder, Calendar, Plus, Loader2, PenSquare } from "lucide-react";
 import { useUIStore } from "@/stores/use-ui-store";
 import { useCompleteTask } from "@/hooks/use-tasks";
 import { format, isPast } from "date-fns";
@@ -15,8 +15,8 @@ import { th } from "date-fns/locale";
 import type { MyTasksData, DashboardTask } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
 
-interface MyTasksWidgetProps {
-  myTasks: MyTasksData;
+interface MyCreatedTasksWidgetProps {
+  myCreatedTasks: MyTasksData;
   isLoading: boolean;
   onLoadMore: () => void;
   isLoadingMore?: boolean;
@@ -24,17 +24,17 @@ interface MyTasksWidgetProps {
 
 type FilterType = "all" | "in_progress" | "not_started" | "done";
 
-export function MyTasksWidget({
-  myTasks,
+export function MyCreatedTasksWidget({
+  myCreatedTasks,
   isLoading,
   onLoadMore,
   isLoadingMore = false,
-}: MyTasksWidgetProps) {
+}: MyCreatedTasksWidgetProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [hideClosedTasks, setHideClosedTasks] = useState(() => {
     // Load from localStorage on mount
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dashboard.myTasks.hideClosedTasks");
+      const saved = localStorage.getItem("dashboard.myCreatedTasks.hideClosedTasks");
       return saved === "true";
     }
     return false;
@@ -45,18 +45,18 @@ export function MyTasksWidget({
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
-        "dashboard.myTasks.hideClosedTasks",
+        "dashboard.myCreatedTasks.hideClosedTasks",
         String(hideClosedTasks)
       );
     }
   }, [hideClosedTasks]);
 
   if (isLoading) {
-    return <MyTasksSkeleton />;
+    return <MyCreatedTasksSkeleton />;
   }
 
   // Client-side filtering
-  const filteredTasks = myTasks.tasks.filter((task) => {
+  const filteredTasks = myCreatedTasks.tasks.filter((task) => {
     // Filter by status
     let matchesFilter = true;
     if (activeFilter === "all") matchesFilter = true;
@@ -81,19 +81,19 @@ export function MyTasksWidget({
         <CardHeader className="border-b">
           <div className="flex items-center justify-between gap-4">
             <CardTitle className="flex items-center gap-2">
-              <UserCheck className="h-5 w-5 text-green-600 dark:text-green-500" />
-              งานที่มอบหมายให้ฉัน
+              <PenSquare className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+              งานที่ฉันสร้าง
             </CardTitle>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-2 mr-2">
                 <label
-                  htmlFor="hide-closed-tasks"
+                  htmlFor="hide-closed-tasks-created"
                   className="text-sm text-muted-foreground cursor-pointer"
                 >
                   ซ่อนงานที่ปิดแล้ว
                 </label>
                 <Switch
-                  id="hide-closed-tasks"
+                  id="hide-closed-tasks-created"
                   checked={hideClosedTasks}
                   onCheckedChange={setHideClosedTasks}
                 />
@@ -118,7 +118,7 @@ export function MyTasksWidget({
                 isActive={activeFilter === "done"}
                 onClick={() => setActiveFilter("done")}
               />
-              <Badge variant="secondary">{myTasks.total} งาน</Badge>
+              <Badge variant="secondary">{myCreatedTasks.total} งาน</Badge>
             </div>
           </div>
         </CardHeader>
@@ -128,7 +128,7 @@ export function MyTasksWidget({
             <ClipboardList className="h-12 w-12 text-muted-foreground" />
             <div>
               <p className="font-medium text-muted-foreground">
-                ไม่มีงานที่มอบหมาย
+                ยังไม่มีงานที่สร้าง
               </p>
               <p className="text-sm text-muted-foreground mt-1">
                 สร้างงานใหม่เพื่อเริ่มต้น
@@ -149,19 +149,19 @@ export function MyTasksWidget({
       <CardHeader className="border-b">
         <div className="flex items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
-            <UserCheck className="h-5 w-5 text-green-600 dark:text-green-500" />
-            งานที่มอบหมายให้ฉัน
+            <PenSquare className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+            งานที่ฉันสร้าง
           </CardTitle>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 mr-2">
               <label
-                htmlFor="hide-closed-tasks"
+                htmlFor="hide-closed-tasks-created"
                 className="text-sm text-muted-foreground cursor-pointer"
               >
                 ซ่อนงานที่ปิดแล้ว
               </label>
               <Switch
-                id="hide-closed-tasks"
+                id="hide-closed-tasks-created"
                 checked={hideClosedTasks}
                 onCheckedChange={setHideClosedTasks}
               />
@@ -198,7 +198,7 @@ export function MyTasksWidget({
           ))}
 
           {/* Load More Section */}
-          {myTasks.hasMore && (
+          {myCreatedTasks.hasMore && (
             <div className="p-4 border-t bg-muted/20">
               <Button
                 variant="outline"
@@ -326,7 +326,7 @@ function TaskRow({ task }: { task: DashboardTask }) {
   );
 }
 
-function MyTasksSkeleton() {
+function MyCreatedTasksSkeleton() {
   return (
     <Card>
       <CardHeader className="border-b">

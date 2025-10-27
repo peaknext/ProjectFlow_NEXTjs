@@ -142,8 +142,10 @@ async function handler(req: AuthenticatedRequest) {
       thisWeekTasks,
       overdueTasks,
       pinnedTasks,
-      myTasksData,
-      myTasksTotal,
+      myCreatedTasksData,
+      myCreatedTasksTotal,
+      assignedToMeTasksData,
+      assignedToMeTasksTotal,
       calendarTasks,
       recentActivities,
       myChecklists,
@@ -246,12 +248,10 @@ async function handler(req: AuthenticatedRequest) {
           })
         : Promise.resolve([]),
 
-      // 7. MY TASKS - Get assigned tasks with pagination
+      // 7. MY CREATED TASKS - Get tasks user created with pagination
       prisma.task.findMany({
         where: {
-          assignees: {
-            some: { userId },
-          },
+          creatorUserId: userId,
           deletedAt: null,
         },
         include: {
@@ -279,17 +279,60 @@ async function handler(req: AuthenticatedRequest) {
         take: limit,
       }),
 
-      // 8. MY TASKS - Count total for pagination
+      // 8. MY CREATED TASKS - Count total for pagination
+      prisma.task.count({
+        where: {
+          creatorUserId: userId,
+          deletedAt: null,
+        },
+      }),
+
+      // 9. ASSIGNED TO ME TASKS - Get tasks assigned to user (exclude tasks they created)
+      prisma.task.findMany({
+        where: {
+          assignees: {
+            some: { userId },
+          },
+          creatorUserId: { not: userId }, // Exclude tasks user created
+          deletedAt: null,
+        },
+        include: {
+          assignees: {
+            include: {
+              user: {
+                select: userSelect,
+              },
+            },
+          },
+          project: {
+            select: projectSelect,
+          },
+          status: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+              type: true,
+            },
+          },
+        },
+        orderBy: [{ dueDate: "asc" }, { priority: "asc" }],
+        skip: offset,
+        take: limit,
+      }),
+
+      // 10. ASSIGNED TO ME TASKS - Count total for pagination (exclude tasks user created)
       prisma.task.count({
         where: {
           assignees: {
             some: { userId },
           },
+          creatorUserId: { not: userId }, // Exclude tasks user created
           deletedAt: null,
         },
       }),
 
-      // 9. CALENDAR TASKS - Get tasks with due dates (OPTIMIZED: date range + limit)
+      // 11. CALENDAR TASKS - Get tasks with due dates (OPTIMIZED: date range + limit)
       prisma.task.findMany({
         where: {
           assignees: {
@@ -325,7 +368,7 @@ async function handler(req: AuthenticatedRequest) {
         take: 100, // Safety limit
       }),
 
-      // 10. RECENT ACTIVITIES - Get recent activities from team
+      // 12. RECENT ACTIVITIES - Get recent activities from team
       prisma.history.findMany({
         where: {
           task: {
@@ -356,7 +399,7 @@ async function handler(req: AuthenticatedRequest) {
         take: 5,
       }),
 
-      // 11. MY CHECKLISTS - Get checklists from assigned tasks
+      // 13. MY CHECKLISTS - Get checklists from assigned tasks
       prisma.checklist.findMany({
         where: {
           task: {
@@ -385,7 +428,8 @@ async function handler(req: AuthenticatedRequest) {
       }),
     ]);
 
-    const hasMore = offset + limit < myTasksTotal;
+    const myCreatedTasksHasMore = offset + limit < myCreatedTasksTotal;
+    const assignedToMeTasksHasMore = offset + limit < assignedToMeTasksTotal;
 
     // Group checklists by task
     const checklistsByTask = myChecklists.reduce((acc, checklist) => {
@@ -418,10 +462,15 @@ async function handler(req: AuthenticatedRequest) {
       },
       overdueTasks,
       pinnedTasks,
-      myTasks: {
-        tasks: myTasksData,
-        total: myTasksTotal,
-        hasMore,
+      myCreatedTasks: {
+        tasks: myCreatedTasksData,
+        total: myCreatedTasksTotal,
+        hasMore: myCreatedTasksHasMore,
+      },
+      assignedToMeTasks: {
+        tasks: assignedToMeTasksData,
+        total: assignedToMeTasksTotal,
+        hasMore: assignedToMeTasksHasMore,
       },
       calendarTasks,
       recentActivities,

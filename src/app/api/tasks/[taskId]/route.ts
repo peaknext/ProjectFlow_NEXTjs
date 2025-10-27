@@ -224,6 +224,34 @@ async function patchHandler(
     }
 
     // Handle assignee updates (support both old single and new multi-assignee)
+    if (updates.assigneeUserIds !== undefined || updates.assigneeUserId !== undefined) {
+      // ✅ SECURITY: Check assignment permission
+      const currentUser = await prisma.user.findUnique({
+        where: { id: req.session.userId },
+        select: { role: true },
+      });
+
+      const isCreator = existingTask.creatorUserId === req.session.userId;
+      const isManagement = currentUser && ['ADMIN', 'CHIEF', 'LEADER', 'HEAD'].includes(currentUser.role);
+
+      const currentAssignees = await prisma.taskAssignee.findMany({
+        where: { taskId },
+        select: { userId: true },
+      });
+      const isCurrentAssignee = existingTask.assigneeUserId === req.session.userId ||
+        currentAssignees.some(a => a.userId === req.session.userId);
+
+      // Only creator, management, or current assignee can assign/re-assign
+      if (!isCreator && !isManagement && !isCurrentAssignee) {
+        return errorResponse(
+          'FORBIDDEN',
+          'Only task creator, management roles, or current assignees can assign this task',
+          403
+        );
+      }
+    }
+
+    // Handle assignee updates (support both old single and new multi-assignee)
     if (updates.assigneeUserIds !== undefined) {
       // New multi-assignee approach
       const currentAssignees = await prisma.taskAssignee.findMany({
@@ -415,6 +443,27 @@ async function patchHandler(
             triggeredByUserId: req.session.userId,
           }));
 
+        // ✅ TASK OWNER NOTIFICATION: Notify task creator about assignment
+        const taskCreatorId = existingTask.creatorUserId;
+        if (
+          taskCreatorId &&
+          taskCreatorId !== req.session.userId && // Owner is not the one assigning
+          !added.includes(taskCreatorId) // Owner is not in the newly assigned list (avoid duplicate)
+        ) {
+          const assigneeNames = await prisma.user.findMany({
+            where: { id: { in: added } },
+            select: { fullName: true },
+          });
+          const names = assigneeNames.map(u => u.fullName).join(', ');
+          notificationData.push({
+            userId: taskCreatorId,
+            type: 'TASK_ASSIGNED',
+            message: `${currentUserFullName} ได้มอบหมายงาน "${updatedTask.name}" ของคุณให้กับ ${names}`,
+            taskId,
+            triggeredByUserId: req.session.userId,
+          });
+        }
+
         if (notificationData.length > 0) {
           await prisma.notification.createMany({
             data: notificationData,
@@ -469,6 +518,24 @@ async function patchHandler(
             },
           });
         }
+
+        // ✅ TASK OWNER NOTIFICATION: Notify task creator about assignment (legacy)
+        const taskCreatorId = existingTask.creatorUserId;
+        if (
+          taskCreatorId &&
+          taskCreatorId !== req.session.userId && // Owner is not the one assigning
+          taskCreatorId !== changes.after.assigneeUserId // Owner is not the newly assigned user (avoid duplicate)
+        ) {
+          await prisma.notification.create({
+            data: {
+              userId: taskCreatorId,
+              type: 'TASK_ASSIGNED',
+              message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ของคุณให้กับ ${assigneeAfter?.fullName}`,
+              taskId,
+              triggeredByUserId: req.session.userId,
+            },
+          });
+        }
       } else if (assigneeBefore && !assigneeAfter) {
         historyEntries.push({
           taskId,
@@ -489,6 +556,24 @@ async function patchHandler(
               userId: changes.after.assigneeUserId,
               type: 'TASK_ASSIGNED',
               message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ให้กับคุณ`,
+              taskId,
+              triggeredByUserId: req.session.userId,
+            },
+          });
+        }
+
+        // ✅ TASK OWNER NOTIFICATION: Notify task creator about reassignment (legacy)
+        const taskCreatorId = existingTask.creatorUserId;
+        if (
+          taskCreatorId &&
+          taskCreatorId !== req.session.userId && // Owner is not the one reassigning
+          taskCreatorId !== changes.after.assigneeUserId // Owner is not the newly assigned user (avoid duplicate)
+        ) {
+          await prisma.notification.create({
+            data: {
+              userId: taskCreatorId,
+              type: 'TASK_ASSIGNED',
+              message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ของคุณให้กับ ${assigneeAfter?.fullName}`,
               taskId,
               triggeredByUserId: req.session.userId,
             },
@@ -611,6 +696,33 @@ async function patchHandler(
     // Removed duplicate notification creation to fix bug where users received 2 notifications:
     // 1. "ชื่อผู้ใช้ ได้มอบหมายงาน ... ให้กับคุณ" (from history logging section)
     // 2. "คุณได้รับมอบหมายงาน: ..." (from this section - now removed)
+
+    // ✅ TASK OWNER NOTIFICATION: Notify task creator about non-assignment updates
+    const taskCreatorId = existingTask.creatorUserId;
+    const hasNonAssignmentChanges =
+      updates.name !== undefined ||
+      updates.description !== undefined ||
+      updates.statusId !== undefined ||
+      updates.priority !== undefined ||
+      updates.difficulty !== undefined ||
+      updates.startDate !== undefined ||
+      updates.dueDate !== undefined;
+
+    if (
+      taskCreatorId &&
+      taskCreatorId !== req.session.userId && // Owner is not the one updating
+      hasNonAssignmentChanges // Only for non-assignment changes (assignment has its own notification)
+    ) {
+      await prisma.notification.create({
+        data: {
+          userId: taskCreatorId,
+          type: 'TASK_UPDATED',
+          message: `${req.session.user.fullName} ได้อัปเดตงาน "${updatedTask.name}" ของคุณ`,
+          taskId,
+          triggeredByUserId: req.session.userId,
+        },
+      });
+    }
 
     return successResponse({
       task: {

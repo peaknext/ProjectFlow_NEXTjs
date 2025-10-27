@@ -120,6 +120,29 @@ async function handler(
       });
     }
 
+    // ✅ TASK OWNER NOTIFICATION: Notify task creator about task closure
+    const taskCreatorId = existingTask.creatorUserId;
+    if (
+      taskCreatorId &&
+      taskCreatorId !== req.session.userId && // Owner is not the one closing
+      taskCreatorId !== existingTask.assigneeUserId // Owner is not the assignee (avoid duplicate)
+    ) {
+      const notificationMessage =
+        closeType === 'COMPLETED'
+          ? `${req.session.user.fullName} ได้ปิดงาน "${existingTask.name}" ของคุณ (เสร็จสมบูรณ์)`
+          : `${req.session.user.fullName} ได้ยกเลิกงาน "${existingTask.name}" ของคุณ${reason ? ` เหตุผล: ${reason}` : ''}`;
+
+      await prisma.notification.create({
+        data: {
+          userId: taskCreatorId,
+          type: 'TASK_CLOSED',
+          message: notificationMessage,
+          taskId,
+          triggeredByUserId: req.session.userId,
+        },
+      });
+    }
+
     return successResponse({
       task: {
         ...closedTask,
