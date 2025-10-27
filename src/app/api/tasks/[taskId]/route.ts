@@ -353,7 +353,24 @@ async function patchHandler(
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: updateData,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        projectId: true, // ✅ BUG FIX: Include projectId for cache invalidation
+        statusId: true,
+        priority: true,
+        difficulty: true,
+        startDate: true,
+        dueDate: true,
+        assigneeUserId: true,
+        creatorUserId: true,
+        parentTaskId: true,
+        isClosed: true,
+        closeType: true,
+        closeDate: true,
+        createdAt: true,
+        updatedAt: true,
         assignee: {
           select: {
             id: true,

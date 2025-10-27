@@ -405,14 +405,23 @@ async function handler(req: AuthenticatedRequest) {
         take: 5,
       }),
 
-      // 13. MY CHECKLISTS - Get checklists from assigned tasks
+      // 13. MY CHECKLISTS - Get checklists from assigned tasks OR created tasks
       prisma.checklist.findMany({
         where: {
-          deletedAt: null, // ✅ BUG FIX: Filter out deleted checklist items
+          deletedAt: null, // Filter out deleted checklist items
           task: {
-            assignees: {
-              some: { userId },
-            },
+            OR: [
+              {
+                // Tasks where user is assigned
+                assignees: {
+                  some: { userId },
+                },
+              },
+              {
+                // Tasks created by user
+                creatorUserId: userId,
+              },
+            ],
             deletedAt: null,
           },
         },

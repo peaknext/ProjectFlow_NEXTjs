@@ -74,15 +74,16 @@ export default function DashboardPage() {
   }, [data?.assignedToMeTasks?.tasks, assignedToMeTasksOffset]);
 
   // Handle refresh
-  const handleRefresh = () => {
-    // Reset offsets and accumulated tasks
+  const handleRefresh = async () => {
+    // Reset pagination first
     setMyCreatedTasksOffset(0);
     setAssignedToMeTasksOffset(0);
-    setAccumulatedCreatedTasks([]);
-    setAccumulatedAssignedTasks([]);
 
-    refresh();
-    refetch();
+    // ✅ BUG FIX: Don't clear accumulated tasks immediately
+    // Let refetch complete first, then useEffect will update with fresh data
+
+    // Refetch dashboard data
+    await refetch();
   };
 
   // Handle load more for "งานที่ฉันสร้าง"
