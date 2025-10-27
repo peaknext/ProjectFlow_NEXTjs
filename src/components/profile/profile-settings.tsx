@@ -144,10 +144,43 @@ export function ProfileSettings() {
   // Load user data and set initial values
   useEffect(() => {
     if (user) {
+      // Debug: log user data
+      console.log('Profile page loaded user:', {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        titlePrefix: user.titlePrefix,
+        fullName: user.fullName,
+      });
+
+      // If firstName or lastName is missing, try to split from fullName
+      let firstName = user.firstName || "";
+      let lastName = user.lastName || "";
+
+      if ((!firstName || !lastName) && user.fullName) {
+        console.warn('firstName or lastName missing, splitting from fullName:', user.fullName);
+        // Remove title prefix from fullName
+        let name = user.fullName;
+        const prefixes = ["นาย", "นาง", "นางสาว", "ดร.", "พญ.", "นพ.", "รศ.", "ศ.", "ผศ."];
+        for (const prefix of prefixes) {
+          if (name.startsWith(prefix)) {
+            name = name.substring(prefix.length).trim();
+            break;
+          }
+        }
+
+        // Split by space (assume first part is firstName, rest is lastName)
+        const parts = name.split(" ");
+        if (parts.length > 0) {
+          firstName = firstName || parts[0];
+          lastName = lastName || parts.slice(1).join(" ");
+        }
+        console.log('Split result:', { firstName, lastName });
+      }
+
       const values = {
         titlePrefix: user.titlePrefix || "",
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
+        firstName,
+        lastName,
         jobTitleId: user.jobTitleId || "",
         jobLevel: user.jobLevel || "",
         workLocation: user.workLocation || "",
@@ -532,6 +565,7 @@ export function ProfileSettings() {
               onChange={(e) => setCurrentPassword(e.target.value)}
               className="mt-1.5 h-10 text-base bg-muted/30"
               placeholder="กรอกรหัสผ่านปัจจุบัน"
+              autoComplete="current-password"
             />
           </div>
 
@@ -550,6 +584,7 @@ export function ProfileSettings() {
               }
               className="mt-1.5 h-10 text-base bg-muted/30"
               placeholder="ตั้งรหัสผ่านใหม่"
+              autoComplete="new-password"
             />
 
             {/* Password Requirements Popover */}
@@ -649,6 +684,7 @@ export function ProfileSettings() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="mt-1.5 h-10 text-base bg-muted/30 pr-10"
                 placeholder="กรอกรหัสผ่านอีกครั้ง"
+                autoComplete="new-password"
               />
               {confirmPassword && (
                 <span className="absolute top-1/2 right-3 -translate-y-1/2">

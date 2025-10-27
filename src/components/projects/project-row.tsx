@@ -11,7 +11,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -191,25 +190,25 @@ export function ProjectRow({ project }: ProjectRowProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>ยืนยันการลบโปรเจกต์</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>
-                คุณแน่ใจหรือไม่ที่จะลบโปรเจกต์{" "}
-                <strong className="text-foreground">{project.name}</strong>?
-              </p>
-              <p className="text-sm text-muted-foreground">
-                การลบโปรเจกต์จะลบข้อมูลต่อไปนี้ออกจากระบบ:
-              </p>
-              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
-                <li>งานทั้งหมด ({project._count?.tasks ?? 0} งาน)</li>
-                <li>สถานะและ Phase ของโปรเจกต์</li>
-                <li>ความคิดเห็นและ Checklist ในงาน</li>
-                <li>ประวัติการดำเนินงานทั้งหมด</li>
-              </ul>
-              <p className="text-sm font-medium text-destructive">
-                ⚠️ การกระทำนี้ไม่สามารถย้อนกลับได้
-              </p>
-            </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2 px-6">
+            <div className="text-sm text-muted-foreground">
+              คุณแน่ใจหรือไม่ที่จะลบโปรเจกต์{" "}
+              <strong className="text-foreground">{project.name}</strong>?
+            </div>
+            <div className="text-sm text-muted-foreground">
+              การลบโปรเจกต์จะลบข้อมูลต่อไปนี้ออกจากระบบ:
+            </div>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
+              <li>งานทั้งหมด ({project._count?.tasks ?? 0} งาน)</li>
+              <li>สถานะและ Phase ของโปรเจกต์</li>
+              <li>ความคิดเห็นและ Checklist ในงาน</li>
+              <li>ประวัติการดำเนินงานทั้งหมด</li>
+            </ul>
+            <div className="text-sm font-medium text-destructive">
+              ⚠️ การกระทำนี้ไม่สามารถย้อนกลับได้
+            </div>
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>
               ยกเลิก

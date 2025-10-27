@@ -42,6 +42,7 @@ async function handler(
           id: true,
           fullName: true,
           email: true,
+          profileImageUrl: true,
         },
       },
       department: {

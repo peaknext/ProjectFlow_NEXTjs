@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DateInput } from "@/components/ui/date-picker-popover";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUIStore } from "@/stores/use-ui-store";
 import { useProjectEditDetails, useEditProject } from "@/hooks/use-projects";
 import { useSession } from "@/hooks/use-session";
@@ -218,7 +219,8 @@ export function EditProjectModal() {
       });
 
       toast.success(`แก้ไขโปรเจกต์ "${project?.name}" สำเร็จ`);
-      handleClose();
+      // Close modal directly without dirty check (already saved successfully)
+      closeEditProjectModal();
     } catch (error: any) {
       console.error("[EditProjectModal] Error saving:", error);
       toast.error(
@@ -354,6 +356,17 @@ export function EditProjectModal() {
               <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <span>สร้างโดย:</span>
+                  {(project as any).creator && (
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage
+                        src={(project as any).creator.profileImageUrl || undefined}
+                        alt={(project as any).creator.fullName}
+                      />
+                      <AvatarFallback className="text-[10px]">
+                        {((project as any).creator.fullName || '').charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                   <span className="font-medium text-foreground">
                     {(project as any).creator?.fullName || "-"}
                   </span>
@@ -361,9 +374,9 @@ export function EditProjectModal() {
                 <div className="flex items-center gap-1.5">
                   <span>วันที่สร้าง:</span>
                   <span className="font-medium text-foreground">
-                    {project.dateCreated
+                    {(project as any).createdAt
                       ? (() => {
-                          const date = new Date(project.dateCreated);
+                          const date = new Date((project as any).createdAt);
                           const thaiYear = date.getFullYear() + 543;
                           const dateStr = format(date, "d MMMM yyyy, HH:mm", {
                             locale: th,

@@ -35,7 +35,7 @@ export function SyncStatusFooter() {
           )}
         >
           <div className="text-xs text-center text-muted-foreground space-y-0.5">
-            <div className="font-medium">ProjectFlows version 1.0.0</div>
+            <div className="font-medium">ProjectFlows version 1.0.1</div>
             <div>©2025 นพ.เกียรติศักดิ์ พรหมเสนสา</div>
           </div>
         </div>
