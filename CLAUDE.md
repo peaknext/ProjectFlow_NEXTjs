@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.27.0 (2025-10-28)
-**Last Major Update**: Dashboard Checklist Sync + Profile Settings UX Fixes
+**Version**: 2.28.0 (2025-10-28)
+**Last Major Update**: Department Tasks View Assignee Selector Sync Fix
 
 ---
 
@@ -154,6 +154,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Department Tasks View Assignee Selector Sync (2025-10-28 Session 3)** - Fixed critical bug where Task Panel assignee changes didn't sync to Department Tasks View inline editor. Root cause: Task Panel uses `useUpdateTask` which only invalidated `projectKeys.board` (for List/Board/Calendar views) but NOT `departmentTasksKeys.all` (for Department Tasks view). List View worked because it shares the same `projectKeys.board` cache. Solution: (1) Added `departmentTasksKeys.all` invalidation to `useUpdateTask.onSettled` in use-tasks.ts for Task Panel → Department Tasks sync, (2) Added comprehensive cache invalidation to 3 department mutations (`useUpdateDepartmentTask`, `useToggleDepartmentTaskPin`, `useCloseDepartmentTask`) in use-department-tasks.ts for bidirectional sync. Lesson learned: **Different views may use different query caches** - always check which cache keys each view uses and invalidate ALL relevant caches in mutation hooks. Files modified: 2 files (use-tasks.ts, use-department-tasks.ts). All view combinations now sync correctly: Task Panel ↔ List View ✅, Task Panel ↔ Department Tasks View ✅, Dashboard widgets ✅. 🎉
 - ✅ **Profile Settings UX Improvements (2025-10-28 Session 2)** - Fixed 2 critical UX issues on Profile Settings page: (1) Browser autofill filling in old password - Added proper `autocomplete` attributes (`current-password` for current, `new-password` for new/confirm fields). (2) firstName/lastName fields empty on first load - Root cause: Seed data only has `fullName` field without split firstName/lastName. Solution: Added automatic name splitting logic that removes title prefix (นาย, นาง, ดร., etc.) and splits by space (first part = firstName, rest = lastName). Added console.log for debugging. Files modified: 1 file (profile-settings.tsx). Users can now properly change password and see their names correctly. ✅
 - ✅ **Dashboard Checklist Widget Sync Fixes (2025-10-28 Session 2)** - Fixed 3 synchronization issues between Task Panel and Dashboard Checklist Widget: (1) Delete checklist item in Task Panel → widget doesn't update, (2) Check/uncheck item in Task Panel → widget doesn't update, (3) Deleted items persist even after refresh. Root cause: Task Panel checklist mutations (`useCreateChecklistItem`, `useUpdateChecklistItem`, `useDeleteChecklistItem`) only invalidated task-specific caches (`taskKeys.checklists`, `taskKeys.history`) but NOT dashboard cache (`dashboardKeys.all`). Solution: Added `dashboardKeys.all` invalidation to all 3 mutation hooks in `use-tasks.ts`. Verified API routes properly filter `deletedAt: null`. Dashboard widget now updates instantly when checklist items are created/updated/deleted in Task Panel. Files modified: 1 file (use-tasks.ts). ✅
 - ✅ **Assignee Selector Bug Fixes (2025-10-28 Session 1)** - Fixed 2 critical bugs with assignee selector display: (1) Task Panel assignee selector showing incorrect values after save - Root cause: PATCH API not returning `assigneeUserIds` in response. Solution: Added `assignees` relation to query and extracted `assigneeUserIds` for consistency with GET endpoint. (2) Inline editor (List/Board View) assignee selector not updating optimistically - Root cause: `handleQuickAssigneeChange` sending unnecessary full user objects causing cache conflicts. Solution: Simplified to send only `assigneeUserIds` array. Files modified: 2 files (task API route, task-row component). Both Task Panel and inline editors now display assignees correctly in real-time. 🎉
@@ -2026,9 +2027,46 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.25.0** (2025-10-27)
+**End of CLAUDE.md v2.28.0** (2025-10-28)
 
 ## Changelog
+
+### v2.28.0 (2025-10-28) - Department Tasks View Assignee Selector Sync Fix
+
+**Major changes:**
+- ✅ Fixed critical cache invalidation bug in Department Tasks View
+- ✅ Task Panel assignee changes now sync to all views (List, Board, Calendar, Department Tasks, Dashboard)
+- ✅ Added `departmentTasksKeys.all` invalidation to `useUpdateTask` in use-tasks.ts
+- ✅ Added comprehensive cache invalidation to 3 department mutations in use-department-tasks.ts
+- ✅ Documented lesson: Different views use different query caches - must invalidate ALL relevant caches
+
+**Lesson Learned:**
+When mutations don't sync between views, check which query cache each view uses:
+- List/Board/Calendar Views → `projectKeys.board`
+- Department Tasks View → `departmentTasksKeys.list`
+- Dashboard Widgets → `dashboardKeys.all`
+- Task Panel → `taskKeys.detail`
+
+Mutation hooks must invalidate ALL relevant caches, not just the one used by the current view.
+
+**Files Modified:**
+- src/hooks/use-tasks.ts (added departmentTasksKeys.all invalidation)
+- src/hooks/use-department-tasks.ts (added taskKeys/projectKeys/dashboardKeys invalidation)
+
+### v2.27.0 (2025-10-28) - Dashboard Checklist Sync + Profile Settings UX
+
+**Major changes:**
+- ✅ Fixed Dashboard Checklist Widget not syncing with Task Panel checklist mutations
+- ✅ Fixed Profile Settings page autocomplete issues and name splitting logic
+- ✅ All dashboard widgets now update instantly when checklist items change
+
+### v2.26.0 (2025-10-28) - Assignee Selector Bug Fixes + Refresh Fix + Checklist Widget
+
+**Major changes:**
+- ✅ Fixed Task Panel assignee selector showing incorrect values after save
+- ✅ Fixed inline editor assignee selector not updating optimistically
+- ✅ Fixed refresh button making dashboard content disappear
+- ✅ Fixed checklist widget showing empty (missing created tasks)
 
 ### v2.25.0 (2025-10-27) - Critical Development Rules Reorganization
 

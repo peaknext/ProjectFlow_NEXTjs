@@ -326,6 +326,8 @@ export function useUpdateTask() {
         queryClient.invalidateQueries({ queryKey: taskKeys.history(response.task.id) });
         // Refetch dashboard widgets (My Tasks, Overdue, Pinned)
         queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+        // ✅ BUG FIX: Refetch department tasks view
+        queryClient.invalidateQueries({ queryKey: departmentTasksKeys.all });
       }
     },
   });
