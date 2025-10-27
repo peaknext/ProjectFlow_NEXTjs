@@ -164,7 +164,7 @@ export function getNotificationMessage(
     case "TASK_CLOSED":
       return `${triggeredByName} ได้ปิดงาน "${taskName}"`;
     case "PROJECT_UPDATED":
-      return `${triggeredByName} ได้อัพเดทโปรเจค`;
+      return `${triggeredByName} ได้อัพเดทโปรเจกต์`;
     default:
       return "คุณมีการแจ้งเตือนใหม่";
   }

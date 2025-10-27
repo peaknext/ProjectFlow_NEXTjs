@@ -84,7 +84,9 @@ export function ProjectsView() {
     setCurrentPage(1);
   };
 
-  const openCreateProjectModal = useUIStore((state) => state.openCreateProjectModal);
+  const openCreateProjectModal = useUIStore(
+    (state) => state.openCreateProjectModal
+  );
 
   const handleCreateProject = () => {
     openCreateProjectModal();
@@ -98,7 +100,7 @@ export function ProjectsView() {
         </span>
         <h3 className="text-xl font-semibold mb-2">เกิดข้อผิดพลาด</h3>
         <p className="text-muted-foreground text-center max-w-md">
-          ไม่สามารถโหลดข้อมูลโปรเจคได้
+          ไม่สามารถโหลดข้อมูลโปรเจกต์ได้
         </p>
       </div>
     );
@@ -109,15 +111,19 @@ export function ProjectsView() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>
-          <h1 className="text-3xl font-bold">จัดการโปรเจค</h1>
+          <h1 className="text-3xl font-bold">จัดการโปรเจกต์</h1>
           <p className="text-muted-foreground mt-1">
-            จัดการและติดตามความคืบหน้าของโปรเจคทั้งหมด
+            จัดการและติดตามความคืบหน้าของโปรเจกต์ทั้งหมด
           </p>
         </div>
         {canCreateProject && (
-          <Button onClick={handleCreateProject} size="lg" className="px-8 py-6 text-lg">
+          <Button
+            onClick={handleCreateProject}
+            size="lg"
+            className="px-8 py-6 text-lg"
+          >
             <Plus className="mr-2 h-6 w-6" />
-            สร้างโปรเจค
+            สร้างโปรเจกต์
           </Button>
         )}
       </div>

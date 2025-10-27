@@ -10,6 +10,7 @@
 ## 📋 Executive Summary
 
 หน้า "Department Tasks View" เป็นหน้าที่แสดงภาพรวมงานทั้งหมดใน Department โดยจัดกลุ่มตาม Project เหมาะสำหรับ:
+
 - **หัวหน้าแผนก (HEAD):** ดูภาพรวมงานทั้ง department
 - **สมาชิกแผนก (MEMBER):** ดูงานที่เกี่ยวข้องกับตนเองและทีม
 
@@ -18,10 +19,12 @@
 ## 🎯 Use Cases
 
 ### Use Case 1: หัวหน้าแผนกต้องการดูภาพรวม
+
 **Actor:** HEAD
 **Goal:** เห็นงานทั้งหมดใน department จัดกลุ่มตาม project
 
 **Flow:**
+
 1. คลิกเมนู "งานในแผนก" หรือ "Department Tasks"
 2. เห็นรายการ projects ทั้งหมดใน department
 3. แต่ละ project แสดง:
@@ -33,10 +36,12 @@
 5. คลิกที่งานเพื่อดูรายละเอียด
 
 ### Use Case 2: สมาชิกต้องการเห็นงานในแผนก
+
 **Actor:** MEMBER
 **Goal:** เห็นงานที่ตนเองมีส่วนเกี่ยวข้องและงานอื่นๆ ในแผนก
 
 **Flow:**
+
 1. เข้าหน้า Department Tasks
 2. เห็น projects ที่ตนเองมีงานอยู่ (highlighted)
 3. เห็น projects อื่นๆ ในแผนก (dimmed)
@@ -119,6 +124,7 @@
 ```
 
 **Features:**
+
 - แสดงชื่อ department ที่ user อยู่
 - Search box: ค้นหาชื่องาน, assignee, description
 - Filter dropdown:
@@ -134,8 +140,8 @@
   - Status
   - Created Date
 - View options:
-  - Compact: หัวโปรเจคย่อ + รายการงานแบบย่อ
-  - Expanded: หัวโปรเจคเต็ม + รายการงานแบบ table (default)
+  - Compact: หัวโปรเจกต์ย่อ + รายการงานแบบย่อ
+  - Expanded: หัวโปรเจกต์เต็ม + รายการงานแบบ table (default)
   - Detailed: แสดงรายละเอียดเยอะขึ้น (subtasks, comments count, etc.)
 
 ---
@@ -159,6 +165,7 @@
 ```
 
 **Metrics:**
+
 - งานทั้งหมด (Total Tasks)
 - งานที่เสร็จแล้ว (Completed)
 - งานที่เลยกำหนด (Overdue) - สีแดง
@@ -210,6 +217,7 @@
 **Features:**
 
 **Project Header:**
+
 - เปิด/ปิดแสดงงาน (▼/►)
 - ไอคอน project (📁 หรือตามสถานะ)
 - ชื่อ project
@@ -220,6 +228,7 @@
 - Status badge (ACTIVE, ON_HOLD, COMPLETED)
 
 **Task Table:**
+
 - Checkbox: เลือกหลายงานพร้อมกัน (สำหรับ bulk actions)
 - Task name: คลิกเพื่อเปิด Task Panel
   - มี icon บ่งบอกประเภท (📌 pinned, 📄 normal, 🎨 design, etc.)
@@ -242,6 +251,7 @@
   - สีเขียวถ้ายังไกล
 
 **Actions:**
+
 - "Show All Tasks" - ขยายดูงานทั้งหมด (ถ้ามีเยอะ)
 - "View Board" - ไปหน้า Board view ของ project นี้
 - "Go Project" - ไปหน้ารายละเอียด project
@@ -262,6 +272,7 @@
 ```
 
 **Features:**
+
 - แสดงข้อมูลสรุปแบบย่อ
 - คลิกเพื่อขยาย
 - เห็นภาพรวมได้รวดเร็ว
@@ -285,6 +296,7 @@
 ```
 
 **Features:**
+
 - แสดงข้อมูลแบบกระทัดรัด
 - เห็นได้เยอะในหน้าเดียว
 - เหมาะกับการสแกนอย่างรวดเร็ว
@@ -338,6 +350,7 @@
 ```
 
 **Features:**
+
 - แสดงข้อมูลแบบละเอียดที่สุด
 - รวมถึง: Description, Comments count, Attachments, Checklist progress, Subtasks
 - เหมาะสำหรับการวิเคราะห์เชิงลึก
@@ -347,12 +360,14 @@
 ## 🎨 Color Scheme & Visual Indicators
 
 ### Priority Colors
+
 - 🔴 **Priority 1 (Urgent):** `bg-red-500` - ด่วนที่สุด
 - 🟠 **Priority 2 (High):** `bg-orange-500` - สำคัญ
 - 🟡 **Priority 3 (Normal):** `bg-yellow-500` - ปกติ
 - ⚪ **Priority 4 (Low):** `bg-gray-400` - ต่ำ
 
 ### Status Colors
+
 - ✅ **COMPLETED:** `bg-green-500 text-green-700` - เสร็จแล้ว
 - 🔵 **IN_PROGRESS:** `bg-blue-500 text-blue-700` - กำลังทำ
 - ⚫ **TODO:** `bg-gray-500 text-gray-700` - ยังไม่เริ่ม
@@ -360,11 +375,13 @@
 - 🔴 **CANCELLED:** `bg-red-500 text-red-700` - ยกเลิก
 
 ### Due Date Indicators
+
 - 🔥 **Overdue:** `text-red-600 font-bold` - เลยกำหนด
 - ⏰ **Due Soon (within 3 days):** `text-orange-600` - ใกล้กำหนด
 - 📅 **Normal:** `text-gray-600` - ปกติ
 
 ### Project Status
+
 - **ACTIVE:** สีเขียว
 - **ON_HOLD:** สีเหลือง
 - **COMPLETED:** สีน้ำเงิน
@@ -383,7 +400,7 @@ interface DepartmentTasksFilters {
 
   // Project filters
   projectIds?: string[]; // Filter by specific projects
-  projectStatus?: 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'ARCHIVED';
+  projectStatus?: "ACTIVE" | "ON_HOLD" | "COMPLETED" | "ARCHIVED";
 
   // Task filters
   taskStatus?: TaskStatus[]; // Multiple status selection
@@ -392,7 +409,13 @@ interface DepartmentTasksFilters {
   showMyTasksOnly?: boolean; // Quick filter for current user
 
   // Date filters
-  dueDateFilter?: 'all' | 'overdue' | 'today' | 'this_week' | 'this_month' | 'custom';
+  dueDateFilter?:
+    | "all"
+    | "overdue"
+    | "today"
+    | "this_week"
+    | "this_month"
+    | "custom";
   customDateRange?: {
     start: Date;
     end: Date;
@@ -411,15 +434,15 @@ interface DepartmentTasksFilters {
 ```typescript
 interface DepartmentTasksSort {
   field:
-    | 'projectName'
-    | 'taskName'
-    | 'dueDate'
-    | 'priority'
-    | 'status'
-    | 'createdAt'
-    | 'updatedAt'
-    | 'assignee';
-  direction: 'asc' | 'desc';
+    | "projectName"
+    | "taskName"
+    | "dueDate"
+    | "priority"
+    | "status"
+    | "createdAt"
+    | "updatedAt"
+    | "assignee";
+  direction: "asc" | "desc";
 }
 ```
 
@@ -428,7 +451,7 @@ interface DepartmentTasksSort {
 ```typescript
 interface DepartmentTasksViewState {
   // View mode
-  viewMode: 'compact' | 'expanded' | 'detailed';
+  viewMode: "compact" | "expanded" | "detailed";
 
   // Expanded projects (which projects are showing their tasks)
   expandedProjectIds: Set<string>;
@@ -450,6 +473,7 @@ interface DepartmentTasksViewState {
 ### 4. Bulk Actions
 
 เมื่อเลือกหลายงาน สามารถทำ:
+
 - ✅ Mark as completed
 - 📌 Pin/Unpin tasks
 - 🗑️ Delete tasks
@@ -467,6 +491,7 @@ interface DepartmentTasksViewState {
 **Purpose:** Fetch all tasks in department, grouped by projects
 
 **Request:**
+
 ```typescript
 GET /api/departments/DEPT-001/tasks?
   view=grouped&
@@ -477,6 +502,7 @@ GET /api/departments/DEPT-001/tasks?
 ```
 
 **Query Parameters:**
+
 ```typescript
 {
   view?: 'flat' | 'grouped'; // Default: 'grouped'
@@ -493,6 +519,7 @@ GET /api/departments/DEPT-001/tasks?
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true,
@@ -579,6 +606,7 @@ Already exists - use for quick updates
 **Purpose:** Update multiple tasks at once
 
 **Request:**
+
 ```typescript
 POST /api/tasks/bulk-update
 {
@@ -594,6 +622,7 @@ POST /api/tasks/bulk-update
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true,
@@ -610,16 +639,19 @@ POST /api/tasks/bulk-update
 ## 📱 Responsive Design
 
 ### Desktop (>= 1024px)
+
 - แสดง sidebar + content
 - Project cards แบบเต็มความกว้าง
 - Table แสดงทุกคอลัมน์
 
 ### Tablet (768px - 1023px)
+
 - Sidebar ซ่อนได้
 - Project cards ปรับขนาด
 - Table อาจซ่อนบางคอลัมน์ (เช่น Created Date)
 
 ### Mobile (< 768px)
+
 - Sidebar เป็น drawer
 - Project cards แบบ stack
 - Table เปลี่ยนเป็น card list แนวตั้ง
@@ -630,12 +662,14 @@ POST /api/tasks/bulk-update
 ## 🎯 User Interactions
 
 ### 1. Project Card Interactions
+
 - **Click project header:** Expand/collapse tasks
 - **Click "View Board":** Navigate to project board view
 - **Click "Go Project":** Navigate to project detail page
 - **Hover project card:** Show quick actions (pin, favorite, etc.)
 
 ### 2. Task Row Interactions
+
 - **Click task name:** Open task detail panel (slide from right)
 - **Click checkbox:** Select task for bulk actions
 - **Click assignee:** Filter by that assignee
@@ -644,6 +678,7 @@ POST /api/tasks/bulk-update
 - **Right-click task:** Context menu (pin, delete, etc.)
 
 ### 3. Bulk Actions Bar
+
 ```tsx
 ┌────────────────────────────────────────────────────────────┐
 │ ✓ 3 tasks selected                                          │
@@ -658,27 +693,32 @@ Appears when tasks are selected
 ## 🚀 Performance Considerations
 
 ### 1. Virtual Scrolling
+
 - Use `react-window` or `react-virtual` for large lists
 - Render only visible project cards + tasks
 
 ### 2. Pagination
+
 - Load projects in batches (10-20 per page)
 - Load tasks per project (default: show 5, expand to show all)
 
 ### 3. Optimistic Updates
+
 - Use same pattern as List View
 - Instant feedback for all actions
 - Rollback on error
 
 ### 4. Caching Strategy
+
 ```typescript
 // React Query cache times
-queryKeys.departmentTasks(departmentId, filters)
+queryKeys.departmentTasks(departmentId, filters);
 // staleTime: 2 minutes
 // cacheTime: 5 minutes
 ```
 
 ### 5. Data Fetching
+
 - Initial load: Fetch overview stats + first 10 projects
 - Lazy load: Fetch task details when project is expanded
 - Prefetch: Fetch next page when user scrolls near bottom
@@ -688,6 +728,7 @@ queryKeys.departmentTasks(departmentId, filters)
 ## 🎨 Animation & Transitions
 
 ### 1. Project Expand/Collapse
+
 ```css
 .project-tasks {
   max-height: 0;
@@ -701,11 +742,13 @@ queryKeys.departmentTasks(departmentId, filters)
 ```
 
 ### 2. Task Panel Slide-in
+
 - Same as current Task Panel
 - Slide from right: 300ms ease-in-out
 - Overlay fade: 200ms
 
 ### 3. Stats Update
+
 - Number increment animation (countup.js)
 - Progress bar fill animation
 
@@ -714,6 +757,7 @@ queryKeys.departmentTasks(departmentId, filters)
 ## 📊 Analytics & Tracking
 
 Track user actions:
+
 - Page view: Department Tasks
 - Filter applied: {filterType, value}
 - Sort changed: {field, direction}
@@ -727,6 +771,7 @@ Track user actions:
 ## 🔐 Permissions & Access Control
 
 ### HEAD Role
+
 - ✅ View all projects in department
 - ✅ View all tasks
 - ✅ Edit tasks
@@ -736,6 +781,7 @@ Track user actions:
 - ✅ Delete tasks (own department)
 
 ### MEMBER Role
+
 - ✅ View all projects in department
 - ✅ View all tasks (but highlights own tasks)
 - ✅ Edit own tasks
@@ -745,11 +791,12 @@ Track user actions:
 - ⚠️ Create tasks (if project member)
 
 ### Permission Check
+
 ```typescript
 // In component
 const canEditTask = (task: Task) => {
-  if (userRole === 'HEAD') return true;
-  if (userRole === 'ADMIN') return true;
+  if (userRole === "HEAD") return true;
+  if (userRole === "ADMIN") return true;
   if (task.assigneeId === currentUserId) return true;
   if (task.collaboratorIds?.includes(currentUserId)) return true;
   return false;
@@ -761,16 +808,19 @@ const canEditTask = (task: Task) => {
 ## 🎯 Success Metrics
 
 ### User Experience Metrics
+
 - Time to find a task: < 10 seconds
 - Page load time: < 2 seconds
 - Interaction response time: < 100ms (optimistic updates)
 
 ### Functional Metrics
+
 - % of users using filters: > 60%
 - % of users using bulk actions: > 30%
 - Average tasks viewed per session: > 15
 
 ### Technical Metrics
+
 - API response time: < 500ms
 - Client-side rendering: < 100ms
 - Virtual scroll FPS: > 50fps
@@ -782,6 +832,7 @@ const canEditTask = (task: Task) => {
 ### 🎯 MVP (Minimum Viable Product) - 8-12 days
 
 #### Phase 1: Basic View (2-3 days)
+
 - [ ] Create route: `/department/tasks` or `/departments/[departmentId]/tasks`
 - [ ] Basic page layout (header + sidebar)
 - [ ] Department overview stats (4 metrics + progress bar)
@@ -792,6 +843,7 @@ const canEditTask = (task: Task) => {
 - [ ] Loading states
 
 #### Phase 2: Filtering & Sorting (1-2 days)
+
 - [ ] Filter panel component
 - [ ] Sort dropdown
 - [ ] Search functionality
@@ -799,6 +851,7 @@ const canEditTask = (task: Task) => {
 - [ ] Clear filters button
 
 #### Phase 3: Table View & Interactions (2-3 days)
+
 - [ ] Task table component (Expanded view mode)
 - [ ] Expand/collapse animation
 - [ ] Click task → open panel
@@ -807,6 +860,7 @@ const canEditTask = (task: Task) => {
 - [ ] Optimistic updates
 
 #### Phase 4: Bulk Actions (1 day)
+
 - [ ] Bulk actions bar
 - [ ] Bulk status change
 - [ ] Bulk assign
@@ -814,6 +868,7 @@ const canEditTask = (task: Task) => {
 - [ ] API: POST /api/tasks/bulk-update
 
 #### Phase 5: View Modes (1 day)
+
 - [ ] Compact view
 - [ ] Expanded view (default) ⭐
 - [ ] Detailed view
@@ -821,6 +876,7 @@ const canEditTask = (task: Task) => {
 - [ ] Save preference
 
 #### Phase 6: Polish & Performance (1-2 days)
+
 - [ ] Virtual scrolling (for 100+ tasks)
 - [ ] Pagination
 - [ ] Skeleton loading
@@ -837,9 +893,11 @@ const canEditTask = (task: Task) => {
 ### 🚀 Enhanced Features - Additional 26-34 days
 
 #### Phase 7: Custom Grouping (7-9 days)
+
 See: `DEPARTMENT_TASKS_CUSTOM_GROUPING_DESIGN.md`
 
 **Sub-Phases:**
+
 - [ ] Phase 7.1: Basic single-level grouping (2-3 days)
   - [ ] Group by Project (default) ✅
   - [ ] Group by Assignee
@@ -878,9 +936,11 @@ See: `DEPARTMENT_TASKS_CUSTOM_GROUPING_DESIGN.md`
 **Phase 7 Total:** 7-9 days
 
 #### Phase 8: Gantt Chart View (11-16 days)
+
 See: `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md`
 
 **Sub-Phases:**
+
 - [ ] Phase 8.1: Basic Gantt (3-4 days)
   - [ ] Install dhtmlx-gantt library (~$500/year license)
   - [ ] Create GanttView component
@@ -935,6 +995,7 @@ See: `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md`
 **Phase 8 Total:** 11-16 days
 
 #### Phase 9: Additional Features (8-9 days)
+
 - [ ] Export to Excel/PDF (Table view) (1 day)
 - [ ] Print optimized view (1 day)
 - [ ] Department analytics dashboard (2-3 days)
@@ -948,14 +1009,15 @@ See: `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md`
 
 ### 📊 Complete Timeline Summary
 
-| Phase | Feature | Time | Cumulative | Priority |
-|-------|---------|------|------------|----------|
-| 1-6 | **MVP (Basic Department Tasks)** | 8-12 days | 8-12 days | ⭐⭐⭐ MUST |
-| 7 | Custom Grouping | 7-9 days | 15-21 days | ⭐⭐ SHOULD |
-| 8 | Gantt Chart View | 11-16 days | 26-37 days | ⭐⭐ SHOULD |
-| 9 | Additional Features | 8-9 days | 34-46 days | ⭐ NICE |
+| Phase | Feature                          | Time       | Cumulative | Priority    |
+| ----- | -------------------------------- | ---------- | ---------- | ----------- |
+| 1-6   | **MVP (Basic Department Tasks)** | 8-12 days  | 8-12 days  | ⭐⭐⭐ MUST |
+| 7     | Custom Grouping                  | 7-9 days   | 15-21 days | ⭐⭐ SHOULD |
+| 8     | Gantt Chart View                 | 11-16 days | 26-37 days | ⭐⭐ SHOULD |
+| 9     | Additional Features              | 8-9 days   | 34-46 days | ⭐ NICE     |
 
 **Recommended Approach:**
+
 1. **Sprint 1 (Weeks 1-2):** Implement MVP (Phases 1-6)
 2. **Sprint 2 (Weeks 3-4):** Add Custom Grouping (Phase 7)
 3. **Sprint 3-4 (Weeks 5-8):** Add Gantt Chart (Phase 8)
@@ -970,6 +1032,7 @@ See: `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md`
 For fastest time-to-market, implement **Phases 1-6 only** first:
 
 ✅ **Include in MVP:**
+
 - Basic view with project grouping
 - Department stats
 - Table view (Expanded mode as default)
@@ -980,6 +1043,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 - Responsive design
 
 ⏸️ **Defer to v2:**
+
 - Custom grouping (except Project)
 - Gantt chart
 - Export features
@@ -992,16 +1056,19 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 ### 🔄 Iterative Development Strategy
 
 **Week 1-2:** MVP
+
 - Deploy to staging
 - Gather feedback from HEAD users
 - Identify most-used features
 
 **Week 3-4:** Based on feedback
+
 - If users need workload view → Prioritize Grouping by Assignee
 - If users need timeline → Prioritize Gantt Chart
 - If users want more filters → Enhance filtering
 
 **Week 5+:** Advanced features
+
 - Implement based on actual usage data
 - A/B test features
 - Optimize performance
@@ -1011,15 +1078,18 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 ### 💰 Budget Considerations
 
 **Development Time:**
+
 - Developer cost: ~$50-100/hour
 - MVP (12 days): $4,800 - $9,600
 - Full implementation (46 days): $18,400 - $36,800
 
 **Third-Party Costs:**
+
 - dhtmlx-gantt Pro license: $500/year (for Gantt chart)
 - Total first year: $500
 
 **ROI:**
+
 - Time saved for department heads: ~2-4 hours/week
 - 10 department heads × 3 hours/week × 50 weeks = 1,500 hours/year
 - Value: $30,000 - $60,000/year (at $20-40/hour)
@@ -1072,6 +1142,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 ## 🔮 Future Enhancements
 
 ### Phase 7+ (Future)
+
 - [ ] Export to Excel/PDF
 - [ ] Print view
 - [ ] Gantt chart view
@@ -1100,6 +1171,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 ## ✅ Acceptance Criteria
 
 ### Must Have (MVP)
+
 - [x] แสดงงานทั้งหมดใน department จัดกลุ่มตาม project
 - [x] แสดง stats: total, completed, overdue, due soon
 - [x] กรองตาม: status, priority, assignee, due date
@@ -1111,6 +1183,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 - [x] Loading & error states
 
 ### Should Have
+
 - [x] Bulk actions (status, assign, delete)
 - [x] 3 view modes (compact, expanded, detailed)
 - [x] Search functionality
@@ -1119,6 +1192,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 - [x] Empty states with helpful messages
 
 ### Nice to Have
+
 - [ ] Export functionality
 - [ ] Saved filter presets
 - [ ] Custom grouping options
@@ -1132,6 +1206,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 **Page Name:** Department Tasks
 **Route:** `/department/tasks` or `/departments/[departmentId]/tasks`
 **Main Components:**
+
 1. Page Header (search, filter, sort, view switcher)
 2. Department Overview Stats (4 metrics + progress)
 3. Project Group Cards (collapsible, with task table)
@@ -1139,6 +1214,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 5. Bulk Actions Bar (when tasks selected)
 
 **Key Features:**
+
 - Group tasks by project
 - Multiple view modes
 - Advanced filtering
@@ -1152,6 +1228,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 **END OF DESIGN DOCUMENT**
 
 **Ready for:**
+
 - ✅ Developer review
 - ✅ Stakeholder approval
 - ✅ Implementation planning
@@ -1159,6 +1236,7 @@ For fastest time-to-market, implement **Phases 1-6 only** first:
 - ✅ Frontend development
 
 **Next Steps:**
+
 1. Review this design with team
 2. Get feedback and iterate
 3. Create API endpoints

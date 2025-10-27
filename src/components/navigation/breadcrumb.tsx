@@ -295,7 +295,7 @@ export function Breadcrumb({
                     <span className="sr-only">
                       {selectorType === "division" && "เลือกกลุ่มงาน"}
                       {selectorType === "department" && "เลือกหน่วยงาน"}
-                      {selectorType === "project" && "เลือกโปรเจค"}
+                      {selectorType === "project" && "เลือกโปรเจกต์"}
                     </span>
                   </Button>
                 </PopoverTrigger>
@@ -307,13 +307,13 @@ export function Breadcrumb({
                           ? "ค้นหากลุ่มงาน..."
                           : selectorType === "department"
                             ? "ค้นหาหน่วยงาน..."
-                            : "ค้นหาโปรเจค..."
+                            : "ค้นหาโปรเจกต์..."
                       }
                     />
                     <CommandEmpty>
                       {selectorType === "division" && "ไม่พบกลุ่มงาน"}
                       {selectorType === "department" && "ไม่พบหน่วยงาน"}
-                      {selectorType === "project" && "ไม่พบโปรเจค"}
+                      {selectorType === "project" && "ไม่พบโปรเจกต์"}
                     </CommandEmpty>
                     <CommandGroup className="max-h-[300px] overflow-y-auto">
                       {selectorType === "division" &&

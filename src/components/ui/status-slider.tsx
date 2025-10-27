@@ -125,7 +125,9 @@ export function StatusSlider({
 
   if (sortedStatuses.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground">กรุณาเลือกโปรเจคก่อน</div>
+      <div className="text-sm text-muted-foreground">
+        กรุณาเลือกโปรเจกต์ก่อน
+      </div>
     );
   }
 

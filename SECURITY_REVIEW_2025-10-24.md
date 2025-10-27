@@ -1,4 +1,5 @@
 # รายงานทบทวนความปลอดภัย ProjectFlows
+
 # Security Review Report - ProjectFlows
 
 **วันที่**: 2025-10-24
@@ -15,6 +16,7 @@ ProjectFlows มีระบบความปลอดภัยพื้นฐ�
 ### 📊 คะแนนความปลอดภัยโดยรวม: **6.5/10**
 
 **จุดแข็ง** (Strengths):
+
 - ✅ มีระบบ Authentication และ Authorization ที่ชัดเจน
 - ✅ ใช้ Prisma ORM ป้องกัน SQL Injection
 - ✅ มีการตรวจสอบสิทธิ์แบบ Role-based (6 ระดับ)
@@ -22,6 +24,7 @@ ProjectFlows มีระบบความปลอดภัยพื้นฐ�
 - ✅ ไม่พบการใช้ dangerouslySetInnerHTML (ป้องกัน XSS)
 
 **จุดอ่อนสำคัญ** (Critical Vulnerabilities):
+
 - 🔴 **CRITICAL (2 ประเด็น)**: Password hashing อ่อนแอ, BYPASS_AUTH ในโค้ด production
 - 🟡 **MEDIUM (9 ประเด็น)**: Rate limiting, CORS, CSRF, Session storage, และอื่นๆ
 - 🟠 **LOW (3 ประเด็น)**: Audit logging, Session token length, IP validation
@@ -55,12 +58,13 @@ ProjectFlows มีระบบความปลอดภัยพื้นฐ�
 **ไฟล์**: `src/lib/auth.ts` (lines 112-117)
 
 **ปัญหา**:
+
 ```typescript
 export function hashPassword(password: string, salt: string): string {
   return crypto
-    .createHash('sha256')
+    .createHash("sha256")
     .update(password + salt)
-    .digest('hex');
+    .digest("hex");
 }
 ```
 
@@ -70,41 +74,50 @@ export function hashPassword(password: string, salt: string): string {
 - Salt ถูกเก็บในรูปแบบ plaintext ในฐานข้อมูล
 
 **ความเสี่ยง**:
+
 - ⚠️ หากฐานข้อมูลรั่วไหล ผู้โจมตีสามารถ crack password ได้ภายใน **ไม่กี่นาที** ถึง **ไม่กี่ชั่วโมง**
 - 🔐 Password ที่อ่อนแอ (เช่น "Password123") สามารถถูก crack ได้ใน **ไม่กี่วินาที**
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // ❌ WRONG - SHA256
-import crypto from 'crypto';
+import crypto from "crypto";
 export function hashPassword(password: string, salt: string): string {
-  return crypto.createHash('sha256').update(password + salt).digest('hex');
+  return crypto
+    .createHash("sha256")
+    .update(password + salt)
+    .digest("hex");
 }
 
 // ✅ CORRECT - bcrypt (Recommended)
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 export async function hashPassword(password: string): Promise<string> {
   const saltRounds = 12; // Industry standard
   return await bcrypt.hash(password, saltRounds);
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hash: string
+): Promise<boolean> {
   return await bcrypt.compare(password, hash);
 }
 
 // หรือ ✅ CORRECT - Argon2 (More secure)
-import argon2 from 'argon2';
+import argon2 from "argon2";
 export async function hashPassword(password: string): Promise<string> {
   return await argon2.hash(password, {
     type: argon2.argon2id,
-    memoryCost: 65536,  // 64 MB
+    memoryCost: 65536, // 64 MB
     timeCost: 3,
-    parallelism: 4
+    parallelism: 4,
   });
 }
 ```
 
 **ขั้นตอนการแก้ไข**:
+
 1. ติดตั้ง: `npm install bcrypt @types/bcrypt`
 2. แก้ไข `src/lib/auth.ts` ให้ใช้ bcrypt
 3. **Migration**: Users เดิมต้องรีเซ็ต password หรือทำ gradual migration
@@ -119,6 +132,7 @@ export async function hashPassword(password: string): Promise<string> {
 **ไฟล์**: `src/lib/api-middleware.ts` (lines 28-66)
 
 **ปัญหา**:
+
 ```typescript
 export function withAuth<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
   return async (req: NextRequest, context: T) => {
@@ -130,11 +144,13 @@ export function withAuth<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
 ```
 
 **ความเสี่ยง**:
+
 - ⚠️ หากลืมปิด `BYPASS_AUTH=true` ใน production → **ทุกคนเข้าได้โดยไม่ต้อง login**
 - 🔐 ไม่มีกลไกตรวจสอบว่าอยู่ใน development environment
 - 📝 Developer อาจ commit `.env` ที่มี `BYPASS_AUTH=true` โดยไม่ตั้งใจ
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // ✅ CORRECT - ตรวจสอบ NODE_ENV ด้วย
 export function withAuth<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
@@ -154,6 +170,7 @@ export function withAuth<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
 ```
 
 **ขั้นตอนการแก้ไข**:
+
 1. เพิ่มเงื่อนไข `NODE_ENV === 'development'`
 2. เพิ่มเตือนใน console เมื่อ BYPASS_AUTH ถูกเปิด
 3. เพิ่ม pre-deployment check script:
@@ -177,6 +194,7 @@ export function withAuth<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
 **ไฟล์**: `src/lib/api-client.ts` (lines 38-44)
 
 **ปัญหา**:
+
 ```typescript
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -189,11 +207,13 @@ axiosInstance.interceptors.request.use(
 ```
 
 **ความเสี่ยง**:
+
 - 🔐 localStorage สามารถถูกอ่านได้จาก JavaScript → เสี่ยงต่อ **XSS attacks**
 - ⚠️ หากมีช่องโหว่ XSS ในส่วนใดของแอพ ผู้โจมตีสามารถขโมย session token ได้
 - 📝 Token ไม่หายไปแม้ปิด browser (persistent storage)
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // ✅ BETTER - ใช้ httpOnly cookies
 // 1. แก้ไข API เพื่อส่ง session token เป็น cookie
@@ -205,12 +225,12 @@ export async function POST(req: NextRequest) {
   const response = successResponse({ user, expiresAt }, 200);
 
   // Set httpOnly cookie (JavaScript ไม่สามารถอ่านได้)
-  response.cookies.set('sessionToken', sessionToken, {
-    httpOnly: true,  // ป้องกัน JavaScript access
-    secure: true,     // HTTPS only
-    sameSite: 'lax',  // CSRF protection
+  response.cookies.set("sessionToken", sessionToken, {
+    httpOnly: true, // ป้องกัน JavaScript access
+    secure: true, // HTTPS only
+    sameSite: "lax", // CSRF protection
     expires: expiresAt,
-    path: '/'
+    path: "/",
   });
 
   return response;
@@ -218,13 +238,14 @@ export async function POST(req: NextRequest) {
 
 // 2. API middleware อ่านจาก cookie แทน header
 export async function getSession(req: NextRequest): Promise<Session | null> {
-  const sessionToken = req.cookies.get('sessionToken')?.value;
+  const sessionToken = req.cookies.get("sessionToken")?.value;
   if (!sessionToken) return null;
   // ... rest of logic
 }
 ```
 
 **ทางเลือก** (หาก httpOnly cookies ไม่ได้):
+
 - ใช้ **sessionStorage** แทน localStorage (หายเมื่อปิด tab)
 - Encrypt token ก่อนเก็บใน localStorage
 - Implement **token rotation** (สร้าง token ใหม่ทุก 15-30 นาที)
@@ -238,22 +259,24 @@ export async function getSession(req: NextRequest): Promise<Session | null> {
 **ปัญหา**: API endpoints ทุกตัวไม่มีการจำกัดจำนวน requests
 
 **ความเสี่ยง**:
+
 - ⚠️ **Brute Force Attacks** บน `/api/auth/login` (ลอง password ได้ไม่จำกัด)
 - 🔐 **DoS Attacks** (ส่ง requests จำนวนมากทำให้ server ล่ม)
 - 📝 **Credential Stuffing** (ใช้ username/password ที่รั่วไหลจากเว็บอื่นมาลอง)
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // ติดตั้ง: npm install express-rate-limit
 
 // src/lib/rate-limiter.ts
-import rateLimit from 'express-rate-limit';
+import rateLimit from "express-rate-limit";
 
 // Rate limiter สำหรับ login endpoint
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // ลองได้ 5 ครั้ง ต่อ 15 นาที
-  message: 'ลองเข้าสู่ระบบมากเกินไป กรุณารอ 15 นาที',
+  message: "ลองเข้าสู่ระบบมากเกินไป กรุณารอ 15 นาที",
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -262,12 +285,12 @@ export const loginRateLimiter = rateLimit({
 export const apiRateLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 100, // 100 requests ต่อนาที
-  message: 'ส่ง requests มากเกินไป กรุณารอสักครู่',
+  message: "ส่ง requests มากเกินไป กรุณารอสักครู่",
 });
 
 // ใช้งานใน API route
 // src/app/api/auth/login/route.ts
-import { loginRateLimiter } from '@/lib/rate-limiter';
+import { loginRateLimiter } from "@/lib/rate-limiter";
 
 export async function POST(req: NextRequest) {
   // Apply rate limiter
@@ -278,6 +301,7 @@ export async function POST(req: NextRequest) {
 ```
 
 **ทางเลือกอื่น**:
+
 - ใช้ **Vercel Edge Config** (สำหรับ rate limiting แบบ distributed)
 - ใช้ **Upstash Redis** + `@upstash/ratelimit` package
 - ใช้ **Cloudflare Rate Limiting** (ระดับ CDN)
@@ -291,44 +315,52 @@ export async function POST(req: NextRequest) {
 **ปัญหา**: ไม่มีการกำหนด CORS policy
 
 **ความเสี่ยง**:
+
 - 🔐 เว็บไซต์ไหนก็ได้สามารถเรียก API ของคุณได้ (cross-origin requests)
 - ⚠️ เสี่ยงต่อ **CSRF attacks** และ **data theft**
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // src/middleware.ts
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // CORS headers
   const allowedOrigins = [
-    'https://projectflows.yourcompany.com',
-    'https://admin.projectflows.yourcompany.com',
+    "https://projectflows.yourcompany.com",
+    "https://admin.projectflows.yourcompany.com",
   ];
 
-  const origin = request.headers.get('origin');
+  const origin = request.headers.get("origin");
 
   if (origin && allowedOrigins.includes(origin)) {
-    response.headers.set('Access-Control-Allow-Origin', origin);
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set("Access-Control-Allow-Origin", origin);
+    response.headers.set(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PATCH, DELETE, OPTIONS"
+    );
+    response.headers.set(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+    response.headers.set("Access-Control-Allow-Credentials", "true");
   }
 
   // Development only - allow localhost
-  if (process.env.NODE_ENV === 'development' && origin?.includes('localhost')) {
-    response.headers.set('Access-Control-Allow-Origin', origin);
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
+  if (process.env.NODE_ENV === "development" && origin?.includes("localhost")) {
+    response.headers.set("Access-Control-Allow-Origin", origin);
+    response.headers.set("Access-Control-Allow-Credentials", "true");
   }
 
   return response;
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: "/api/:path*",
 };
 ```
 
@@ -341,35 +373,37 @@ export const config = {
 **ปัญหา**: API endpoints ที่ทำการเปลี่ยนแปลงข้อมูล (POST/PATCH/DELETE) ไม่มีการป้องกัน CSRF
 
 **ความเสี่ยง**:
-- 🔐 ผู้โจมตีสามารถหลอกให้ผู้ใช้ที่ล็อกอินอยู่ทำคำสั่งที่ไม่ได้ตั้งใจ (เช่น ลบโปรเจค, สร้างงาน)
+
+- 🔐 ผู้โจมตีสามารถหลอกให้ผู้ใช้ที่ล็อกอินอยู่ทำคำสั่งที่ไม่ได้ตั้งใจ (เช่น ลบโปรเจกต์, สร้างงาน)
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // Option 1: ใช้ SameSite cookies (ง่ายที่สุด)
 // เมื่อใช้ httpOnly cookies แล้ว เพิ่ม sameSite: 'lax' หรือ 'strict'
-response.cookies.set('sessionToken', token, {
+response.cookies.set("sessionToken", token, {
   httpOnly: true,
   secure: true,
-  sameSite: 'lax', // ป้องกัน CSRF
+  sameSite: "lax", // ป้องกัน CSRF
 });
 
 // Option 2: ใช้ CSRF Token
 // src/lib/csrf.ts
-import { randomBytes } from 'crypto';
+import { randomBytes } from "crypto";
 
 export function generateCsrfToken(): string {
-  return randomBytes(32).toString('hex');
+  return randomBytes(32).toString("hex");
 }
 
 // Middleware ตรวจสอบ CSRF token
 export function withCsrf<T>(handler: ApiHandler<T>): ApiHandler<T> {
   return async (req: NextRequest, context: T) => {
-    if (['POST', 'PATCH', 'DELETE'].includes(req.method)) {
-      const csrfToken = req.headers.get('x-csrf-token');
-      const sessionCsrfToken = req.cookies.get('csrf-token')?.value;
+    if (["POST", "PATCH", "DELETE"].includes(req.method)) {
+      const csrfToken = req.headers.get("x-csrf-token");
+      const sessionCsrfToken = req.cookies.get("csrf-token")?.value;
 
       if (!csrfToken || csrfToken !== sessionCsrfToken) {
-        return errorResponse('CSRF_TOKEN_INVALID', 'Invalid CSRF token', 403);
+        return errorResponse("CSRF_TOKEN_INVALID", "Invalid CSRF token", 403);
       }
     }
 
@@ -387,33 +421,35 @@ export function withCsrf<T>(handler: ApiHandler<T>): ApiHandler<T> {
 **ปัญหา**: ไม่มี security headers เช่น CSP, HSTS, X-Frame-Options
 
 **ความเสี่ยง**:
+
 - 🔐 เสี่ยงต่อ **Clickjacking attacks** (iframe injection)
 - ⚠️ เสี่ยงต่อ **XSS attacks** (ไม่มี Content Security Policy)
 - 📝 Connection ไม่ถูกบังคับให้ใช้ HTTPS
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // src/middleware.ts
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // Security Headers
-  response.headers.set('X-Frame-Options', 'DENY'); // ป้องกัน Clickjacking
-  response.headers.set('X-Content-Type-Options', 'nosniff'); // ป้องกัน MIME sniffing
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set("X-Frame-Options", "DENY"); // ป้องกัน Clickjacking
+  response.headers.set("X-Content-Type-Options", "nosniff"); // ป้องกัน MIME sniffing
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
 
   // HSTS - บังคับใช้ HTTPS (production only)
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     response.headers.set(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains; preload"
     );
   }
 
   // Content Security Policy (CSP)
   response.headers.set(
-    'Content-Security-Policy',
+    "Content-Security-Policy",
     [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // แก้ตาม use case
@@ -422,7 +458,7 @@ export function middleware(request: NextRequest) {
       "font-src 'self' data:",
       "connect-src 'self' https://api.projectflows.com",
       "frame-ancestors 'none'",
-    ].join('; ')
+    ].join("; ")
   );
 
   return response;
@@ -430,17 +466,18 @@ export function middleware(request: NextRequest) {
 ```
 
 **หรือใช้ next-secure-headers package**:
+
 ```typescript
 // ติดตั้ง: npm install next-secure-headers
 
 // next.config.js
-const { createSecureHeaders } = require('next-secure-headers');
+const { createSecureHeaders } = require("next-secure-headers");
 
 module.exports = {
   async headers() {
     return [
       {
-        source: '/:path*',
+        source: "/:path*",
         headers: createSecureHeaders({
           contentSecurityPolicy: {
             directives: {
@@ -448,8 +485,11 @@ module.exports = {
               styleSrc: ["'self'", "'unsafe-inline'"],
             },
           },
-          forceHTTPSRedirect: [true, { maxAge: 60 * 60 * 24 * 360, includeSubDomains: true }],
-          referrerPolicy: 'same-origin',
+          forceHTTPSRedirect: [
+            true,
+            { maxAge: 60 * 60 * 24 * 360, includeSubDomains: true },
+          ],
+          referrerPolicy: "same-origin",
         }),
       },
     ];
@@ -466,30 +506,29 @@ module.exports = {
 **ปัญหา**: Password validation มีเฉพาะในฝั่ง client-side
 
 **ความเสี่ยง**:
+
 - ⚠️ ผู้โจมตีสามารถ bypass client validation และส่ง weak password ได้
 - 🔐 ไม่บังคับให้ใช้ password ที่แข็งแรงในระดับ server
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // src/lib/validations/password-schema.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 export const passwordSchema = z
   .string()
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password must not exceed 128 characters')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-  .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(/[^a-zA-Z0-9]/, 'Password must contain at least one special character')
-  .refine(
-    (password) => {
-      // Check common weak passwords
-      const commonPasswords = ['Password123!', 'Admin123!', '12345678'];
-      return !commonPasswords.includes(password);
-    },
-    'Password is too common'
-  );
+  .min(8, "Password must be at least 8 characters")
+  .max(128, "Password must not exceed 128 characters")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character")
+  .refine((password) => {
+    // Check common weak passwords
+    const commonPasswords = ["Password123!", "Admin123!", "12345678"];
+    return !commonPasswords.includes(password);
+  }, "Password is too common");
 
 // ใช้ในทุก API endpoints ที่เกี่ยวข้อง
 // src/app/api/auth/register/route.ts
@@ -509,26 +548,28 @@ const schema = z.object({
 **ปัญหา**: User input ไม่ถูก sanitize ก่อนแสดงผล
 
 **ความเสี่ยง**:
+
 - 🔐 เสี่ยงต่อ **Stored XSS** จาก task descriptions, comments
 - ⚠️ ผู้โจมตีอาจฝัง JavaScript ใน comment แล้วให้ผู้อื่น execute
 
 **แนะนำแก้ไข**:
+
 ```typescript
 // ติดตั้ง: npm install dompurify isomorphic-dompurify
 
 // src/lib/sanitize.ts
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from "isomorphic-dompurify";
 
 export function sanitizeHtml(dirty: string): string {
   return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
-    ALLOWED_ATTR: ['href'],
+    ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "p", "br"],
+    ALLOWED_ATTR: ["href"],
   });
 }
 
 export function sanitizeText(text: string): string {
   // Remove HTML tags entirely
-  return text.replace(/<[^>]*>/g, '');
+  return text.replace(/<[^>]*>/g, "");
 }
 
 // ใช้ใน API routes
@@ -554,6 +595,7 @@ await prisma.comment.create({
 **ปัญหา**: ไม่มีการบันทึก audit logs สำหรับ sensitive operations
 
 **แนะนำ**: เพิ่ม audit logging สำหรับ:
+
 - ✅ User login/logout
 - ✅ Password changes
 - ✅ Role changes
@@ -575,8 +617,8 @@ export async function logAuditEvent(
       action,
       resource,
       details: JSON.stringify(details),
-      ipAddress: req.headers.get('x-forwarded-for') || req.ip,
-      userAgent: req.headers.get('user-agent'),
+      ipAddress: req.headers.get("x-forwarded-for") || req.ip,
+      userAgent: req.headers.get("user-agent"),
       timestamp: new Date(),
     },
   });
@@ -593,7 +635,7 @@ export async function logAuditEvent(
 
 ```typescript
 export function generateSecureToken(): string {
-  return crypto.randomBytes(64).toString('hex'); // 128 chars
+  return crypto.randomBytes(64).toString("hex"); // 128 chars
 }
 ```
 
@@ -672,6 +714,7 @@ export function generateSecureToken(): string {
    - แนะนำ: เพิ่ม version prefix เพื่อ backward compatibility
 
 2. **Request Size Limit**
+
    ```typescript
    // next.config.js
    experimental: {
@@ -725,6 +768,7 @@ export function generateSecureToken(): string {
 ### 🟡 ข้อควรปรับปรุง
 
 1. **Environment Variables**
+
    ```bash
    # ✅ GOOD
    DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
@@ -771,23 +815,27 @@ export function generateSecureToken(): string {
 ## 🛠️ แผนการดำเนินงาน (Roadmap)
 
 ### Phase 1: Critical Security Fixes (Week 1)
+
 - [ ] แก้ไข VULN-001 (Password Hashing)
 - [ ] แก้ไข VULN-002 (BYPASS_AUTH)
 - [ ] แก้ไข VULN-003 (Session Storage)
 - [ ] เพิ่ม Rate Limiting (VULN-004)
 
 ### Phase 2: Essential Security (Week 2)
+
 - [ ] CORS Configuration (VULN-005)
 - [ ] CSRF Protection (VULN-006)
 - [ ] Security Headers (VULN-007)
 - [ ] Password Validation (VULN-008)
 
 ### Phase 3: Additional Security (Week 3)
+
 - [ ] Input Sanitization (VULN-009)
 - [ ] Audit Logging (VULN-010)
 - [ ] Session improvements (VULN-011, VULN-012)
 
 ### Phase 4: Production Readiness (Week 4)
+
 - [ ] Security testing (penetration testing)
 - [ ] Code review โดย security expert
 - [ ] Documentation update

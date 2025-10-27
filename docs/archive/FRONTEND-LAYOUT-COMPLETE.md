@@ -4,6 +4,7 @@
 **Status:** Layout components completed and ready for integration
 
 ## Overview
+
 Successfully implemented the complete frontend layout for ProjectFlow Next.js application, including dark mode support, responsive design, and all major UI components.
 
 ---
@@ -11,6 +12,7 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 ## Completed Features
 
 ### 1. Theme System
+
 - ✅ **Dark Mode Support**
   - Integrated `next-themes` for theme management
   - Created `ThemeProvider` component
@@ -19,12 +21,14 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
   - Applied theme to all components
 
 ### 2. Typography
+
 - ✅ **Font Configuration**
   - Installed and configured **Sarabun** font from Google Fonts
   - Applied to entire application (Thai + Latin subsets)
   - Font weights: 300, 400, 500, 600, 700
 
 ### 3. Color System
+
 - ✅ **Background Colors**
   - Light mode: `--background: 220 13% 96%` (gray-100)
   - Dark mode: `--background: 222.2 84% 4.9%` (gray-800)
@@ -38,9 +42,11 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
   - Used `!important` to override Badge component defaults
 
 ### 4. Top Navigation Bar (Navbar)
+
 **Location:** `src/components/layout/navbar.tsx`
 
 **Structure:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ [Logo] [Search + Quick Filters]  [Bell] [Avatar]       │
@@ -48,6 +54,7 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 ```
 
 **Features:**
+
 - ✅ Logo (left): ProjectFlowLogo.svg
 - ✅ Search bar (center) with search icon
 - ✅ Quick Filters dropdown (center) - consolidated 4 filters into one menu
@@ -58,6 +65,7 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 - ✅ Height: 64px (h-16)
 
 **Notification Dropdown:**
+
 - Width: 380px
 - Scrollable list (max-height: 400px)
 - Two types: Task notifications (bell icon) and User comments (avatar)
@@ -66,6 +74,7 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 - Footer link: "ข้อมูลการกำหนดทั้งหมด"
 
 **User Profile Dropdown:**
+
 - Width: 290px
 - Large avatar (56x56) with user info
 - Menu items with icons:
@@ -75,14 +84,16 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 - Proper padding: `py-3 px-4 pl-5`
 
 ### 5. Sidebar Menu
+
 **Location:** `src/components/layout/sidebar.tsx`
 
 **Structure:**
+
 ```
 ┌──────────────────┐
 │ แดชบอร์ด        │
 │ งาน             │
-│ โปรเจค          │
+│ โปรเจกต์          │
 │ รายงาน          │
 │ บุคลากร         │
 ├──────────────────┤
@@ -99,10 +110,11 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 ```
 
 **Features:**
+
 - ✅ Width: 256px (w-64)
 - ✅ Background: `bg-card` (white/dark gray)
 - ✅ Main Navigation (fixed, 5 items):
-  - แดชบอร์ด, งาน, โปรเจค, รายงาน, บุคลากร
+  - แดชบอร์ด, งาน, โปรเจกต์, รายงาน, บุคลากร
   - Button size: `h-12` with `text-base` and `font-medium`
   - Active state: Blue background with white text
   - Icons: LayoutDashboard, CheckSquare, FolderKanban, BarChart3, Users
@@ -121,9 +133,11 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
   - Light background (`bg-muted/30`)
 
 ### 6. Dashboard Layout
+
 **Location:** `src/app/(dashboard)/layout.tsx`
 
 **Structure:**
+
 ```
 ┌─────────────────────────────────┐
 │         Navbar (fixed)          │
@@ -137,6 +151,7 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 ```
 
 **Features:**
+
 - ✅ Full-height flex layout
 - ✅ Fixed navbar at top
 - ✅ Fixed sidebar on left
@@ -144,9 +159,11 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 - ✅ Background: `bg-muted/40` (light gray)
 
 ### 7. Dashboard Page
+
 **Location:** `src/app/(dashboard)/dashboard/page.tsx`
 
 **Features:**
+
 - ✅ Page header with title "แดชบอร์ดของฉัน"
 - ✅ Action buttons:
   - "ตัวกรอง" button (outline, small)
@@ -167,6 +184,7 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 ### 8. Global Styling Enhancements
 
 **Dropdown/Popover Styling:**
+
 ```css
 [data-radix-popper-content-wrapper] > div,
 [role="menu"],
@@ -179,6 +197,7 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 ```
 
 **Features:**
+
 - ✅ 90% opacity background
 - ✅ 8px backdrop blur effect
 - ✅ Border radius matching cards (0.5rem)
@@ -189,17 +208,20 @@ Successfully implemented the complete frontend layout for ProjectFlow Next.js ap
 ## Technical Stack
 
 ### Core Framework
+
 - **Next.js 15.5.6** (App Router)
 - **React 19** (Server Components)
 - **TypeScript**
 
 ### Styling
+
 - **Tailwind CSS** with custom configuration
 - **shadcn/ui** component library
 - **next-themes** for dark mode
 - **Lucide React** for icons
 
 ### Components Used
+
 - Button, Badge, Avatar, Card
 - DropdownMenu, ScrollArea, Switch
 - Input (with search functionality)
@@ -241,16 +263,19 @@ src/
 ## Design Decisions
 
 ### 1. Color Palette
+
 - Matched the existing GAS (Google Apps Script) application
 - Used HSL format for CSS variables for better theme control
 - Priority colors use `!important` to override component defaults
 
 ### 2. Layout Approach
+
 - Fixed navbar and sidebar for consistent navigation
 - Scrollable workspace section only (not entire sidebar)
 - Responsive grid system for dashboard content
 
 ### 3. User Experience
+
 - Prominent "Create Task" button for quick access
 - Notification badge with unread count
 - Smooth dark mode transitions
@@ -258,6 +283,7 @@ src/
 - Text wrapping for long workspace names
 
 ### 4. Performance
+
 - Server Components where possible
 - Client Components only when needed (theme, interactions)
 - Optimized font loading with `display: 'swap'`
@@ -268,22 +294,27 @@ src/
 ## Known Issues & Solutions
 
 ### Issue 1: Server Cache Errors
+
 **Problem:** React Client Manifest errors during development
 **Solution:** Clear `.next` cache: `rm -rf .next && npm run dev`
 
 ### Issue 2: Priority Badge Colors
+
 **Problem:** Badge component override custom colors
 **Solution:** Use `!important` in CSS classes with `!` prefix
 
 ### Issue 3: Text Overflow in Sidebar
+
 **Problem:** Long workspace names cut off
 **Solution:** Added `break-words`, `whitespace-normal`, and `min-w-0`
 
 ### Issue 4: Toggle Not Working
+
 **Problem:** Button wrapper prevented click events
 **Solution:** Changed from Button to native `<button>` element
 
 ### Issue 5: Dark Mode Text Color
+
 **Problem:** Primary button text was dark in dark mode
 **Solution:** Changed `--primary-foreground` from dark to light color
 
@@ -292,6 +323,7 @@ src/
 ## Mock Data
 
 Currently using mock data for:
+
 - User profile information
 - Workspace groups (8 groups)
 - Projects (25 projects across groups)
@@ -306,6 +338,7 @@ Currently using mock data for:
 ## Future Enhancements
 
 ### Phase 2: Core Functionality
+
 - [ ] Connect to backend API
 - [ ] Implement authentication flow
 - [ ] Create task form/modal
@@ -314,6 +347,7 @@ Currently using mock data for:
 - [ ] Real-time notifications
 
 ### Phase 3: Advanced Features
+
 - [ ] Search functionality
 - [ ] Filtering and sorting
 - [ ] User management
@@ -322,6 +356,7 @@ Currently using mock data for:
 - [ ] Comments and mentions
 
 ### Phase 4: Polish
+
 - [ ] Loading states
 - [ ] Error handling
 - [ ] Empty states
@@ -351,15 +386,18 @@ Currently using mock data for:
 ## Deployment Notes
 
 ### Environment Variables
+
 No environment variables required for layout components.
 
 ### Build Command
+
 ```bash
 npm run build
 npm run start
 ```
 
 ### Development Server
+
 ```bash
 npm run dev
 # Server runs on http://localhost:3000

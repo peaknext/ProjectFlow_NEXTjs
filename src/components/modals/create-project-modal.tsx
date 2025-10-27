@@ -283,7 +283,7 @@ export function CreateProjectModal() {
   const onSubmit = async (data: ProjectFormData) => {
     // Validate
     if (!data.name.trim()) {
-      toast.error("กรุณากรอกชื่อโปรเจค");
+      toast.error("กรุณากรอกชื่อโปรเจกต์");
       return;
     }
 
@@ -328,12 +328,12 @@ export function CreateProjectModal() {
       },
       {
         onSuccess: () => {
-          toast.success(`สร้างโปรเจค "${data.name}" สำเร็จ`);
+          toast.success(`สร้างโปรเจกต์ "${data.name}" สำเร็จ`);
           handleClose();
         },
         onError: (error: any) => {
           console.error("[CreateProjectModal] Error creating project:", error);
-          toast.error(error.message || "ไม่สามารถสร้างโปรเจคได้");
+          toast.error(error.message || "ไม่สามารถสร้างโปรเจกต์ได้");
         },
       }
     );
@@ -389,7 +389,7 @@ export function CreateProjectModal() {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 rounded-t-xl">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            สร้างโปรเจคใหม่
+            สร้างโปรเจกต์ใหม่
           </h2>
           <Button
             variant="ghost"
@@ -410,11 +410,11 @@ export function CreateProjectModal() {
             {/* Project Name */}
             <div>
               <Label htmlFor="name" className="text-sm font-medium">
-                ชื่อโปรเจค <span className="text-red-500">*</span>
+                ชื่อโปรเจกต์ <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
-                placeholder="ชื่อโปรเจคของคุณ..."
+                placeholder="ชื่อโปรเจกต์ของคุณ..."
                 {...register("name")}
                 className="mt-1 text-lg font-semibold h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
@@ -513,7 +513,7 @@ export function CreateProjectModal() {
               </Label>
               <Textarea
                 id="description"
-                placeholder="อธิบายวัตถุประสงค์และขอบเขตของโปรเจค..."
+                placeholder="อธิบายวัตถุประสงค์และขอบเขตของโปรเจกต์..."
                 {...register("description")}
                 rows={4}
                 className="mt-1 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
@@ -646,7 +646,7 @@ export function CreateProjectModal() {
               <h3 className="text-lg font-semibold">
                 ห้วงเวลาดำเนินงาน
                 <span className="text-sm font-normal text-muted-foreground ml-2">
-                  ห้วงระยะเวลาดำเนินงานในแต่ละช่วงของโปรเจค
+                  ห้วงระยะเวลาดำเนินงานในแต่ละช่วงของโปรเจกต์
                 </span>
               </h3>
 
@@ -728,9 +728,9 @@ export function CreateProjectModal() {
             {/* Statuses Section (match GAS with long description) */}
             <div className="border-t border-border pt-6 space-y-4">
               <h3 className="text-lg font-semibold">
-                สถานะงานในโปรเจค <span className="text-red-500">*</span>
+                สถานะงานในโปรเจกต์ <span className="text-red-500">*</span>
                 <span className="text-sm font-normal text-muted-foreground ml-2">
-                  สร้างตัวเลือกสำหรับสถานะของงานแต่ละงานภายใต้โปรเจค
+                  สร้างตัวเลือกสำหรับสถานะของงานแต่ละงานภายใต้โปรเจกต์
                   ลำดับแรกจะมีค่าเป็นสถานะรอดำเนินการ
                   ลำดับถัดมาจะมีค่าเป็นสถานะอยู่ระหว่างดำเนินการ
                   และลำดับสุดท้ายจะมีค่าเป็นสถานะเสร็จสิ้น
@@ -833,7 +833,7 @@ export function CreateProjectModal() {
               <span>
                 {createProjectMutation.isPending
                   ? "กำลังสร้าง..."
-                  : "สร้างโปรเจค"}
+                  : "สร้างโปรเจกต์"}
               </span>
             </Button>
           </footer>

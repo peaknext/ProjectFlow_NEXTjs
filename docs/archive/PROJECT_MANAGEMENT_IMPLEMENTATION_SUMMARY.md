@@ -9,27 +9,34 @@
 ## 📋 What Was Built
 
 ### Phase 1: Core Page Structure ✅
+
 **Files Created:**
+
 - `src/app/(dashboard)/projects/page.tsx` - Main projects page with permission checks
 - `src/app/(dashboard)/projects/loading.tsx` - Loading skeleton
 - `src/app/(dashboard)/projects/error.tsx` - Error boundary
 
 **Features:**
+
 - ✅ Permission-based access (ADMIN, CHIEF, LEADER, HEAD only)
 - ✅ Redirect to dashboard if no permission
 - ✅ "No permission" screen for unauthorized users
 - ✅ Loading state while checking auth
 
 **Updated:**
-- `src/components/layout/sidebar.tsx` - Enabled "โปรเจค" menu item
+
+- `src/components/layout/sidebar.tsx` - Enabled "โปรเจกต์" menu item
 
 ---
 
 ### Phase 2: Filter System ✅
+
 **Files Created:**
+
 - `src/components/projects/project-filter-bar.tsx` - Complete filter bar
 
 **Features:**
+
 - ✅ Mission Group selector (Popover)
 - ✅ Division selector (cascade from MG)
 - ✅ Department selector (cascade from Division)
@@ -39,6 +46,7 @@
 - ✅ Responsive layout (flex-wrap)
 
 **Integration:**
+
 - Uses `useWorkspace()` hook for organization data
 - Cascade filtering (selecting MG filters Divisions, etc.)
 - Real-time filter updates
@@ -46,11 +54,14 @@
 ---
 
 ### Phase 3: Projects Table ✅
+
 **Files Created:**
+
 - `src/components/projects/projects-table.tsx` - Main table component
 - `src/components/projects/project-row.tsx` - Individual row component
 
 **Features:**
+
 - ✅ shadcn/ui Table component
 - ✅ Sortable columns (name, owner, phase) with indicators
 - ✅ Progress bar (color-coded based on percentage)
@@ -63,6 +74,7 @@
 - ✅ Loading skeleton (5 rows)
 
 **Design:**
+
 - Clean, modern table design
 - Hover effects on rows
 - Icon buttons for actions
@@ -71,7 +83,9 @@
 ---
 
 ### Phase 4: Data Fetching & State ✅
+
 **Files Created:**
+
 - `src/hooks/use-projects-list.ts` - React Query hook
 - `src/lib/project-utils.ts` - Utility functions
 - `src/types/project.ts` - TypeScript types
@@ -79,6 +93,7 @@
 - `src/components/projects/projects-pagination.tsx` - Pagination component
 
 **Features:**
+
 - ✅ React Query with 5-minute stale time
 - ✅ Automatic cache invalidation
 - ✅ Client-side filtering (by MG/Div/Dept/Search)
@@ -88,6 +103,7 @@
 - ✅ Pagination info ("แสดง 1-10 จาก 25 รายการ")
 
 **Utility Functions:**
+
 - `calculateProjectProgress()` - Calculate % based on tasks in DONE status
 - `getCurrentPhase()` - Determine current phase from date ranges
 - `getPhaseColorClasses()` - Phase badge colors (blue/yellow/orange/green)
@@ -96,6 +112,7 @@
 - `sortProjects()` - Sort by column and direction
 
 **Updated:**
+
 - `src/app/api/projects/route.ts` - Added `includeDetails=true` parameter
   - Now includes: `tasks`, `statuses`, `phases` (full details)
   - Includes: `department.division.missionGroup` (for filtering)
@@ -105,6 +122,7 @@
 ## 🎨 Design System Compliance
 
 ### Colors (Dark Mode Support)
+
 ```tsx
 // Phase badges
 1: bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
@@ -121,6 +139,7 @@
 ```
 
 ### Components Used
+
 - ✅ `shadcn/ui` Table
 - ✅ `shadcn/ui` Button
 - ✅ `shadcn/ui` Badge
@@ -136,32 +155,34 @@
 
 ## 📊 Comparison with GAS
 
-| Feature | GAS (Old) | Next.js (New) | Status |
-|---------|-----------|---------------|--------|
-| **Route** | ViewManager | `/projects` | ✅ Implemented |
-| **Permission Check** | Custom logic | Role-based | ✅ Implemented |
-| **Filters** | MG/Div/Dept/Search | Same | ✅ Implemented |
-| **Sorting** | Name/Owner/Phase | Same | ✅ Implemented |
-| **Pagination** | 10/25/50/100 | Same | ✅ Implemented |
-| **Progress Bar** | Custom | shadcn/ui | ✅ Improved |
-| **Phase Badges** | Custom | shadcn/ui | ✅ Improved |
-| **Table** | Vanilla HTML | shadcn/ui | ✅ Improved |
-| **Dark Mode** | Custom | next-themes | ✅ Implemented |
-| **Create Modal** | Custom HTML | shadcn/ui Dialog | ⏳ Phase 6 |
-| **Edit Modal** | Custom HTML | shadcn/ui Dialog | ⏳ Phase 6 |
-| **Delete Confirm** | SweetAlert2 | shadcn/ui Alert | ⏳ Phase 6 |
-| **Optimistic UI** | Custom | React Query | ⏳ Phase 7 |
+| Feature              | GAS (Old)          | Next.js (New)    | Status         |
+| -------------------- | ------------------ | ---------------- | -------------- |
+| **Route**            | ViewManager        | `/projects`      | ✅ Implemented |
+| **Permission Check** | Custom logic       | Role-based       | ✅ Implemented |
+| **Filters**          | MG/Div/Dept/Search | Same             | ✅ Implemented |
+| **Sorting**          | Name/Owner/Phase   | Same             | ✅ Implemented |
+| **Pagination**       | 10/25/50/100       | Same             | ✅ Implemented |
+| **Progress Bar**     | Custom             | shadcn/ui        | ✅ Improved    |
+| **Phase Badges**     | Custom             | shadcn/ui        | ✅ Improved    |
+| **Table**            | Vanilla HTML       | shadcn/ui        | ✅ Improved    |
+| **Dark Mode**        | Custom             | next-themes      | ✅ Implemented |
+| **Create Modal**     | Custom HTML        | shadcn/ui Dialog | ⏳ Phase 6     |
+| **Edit Modal**       | Custom HTML        | shadcn/ui Dialog | ⏳ Phase 6     |
+| **Delete Confirm**   | SweetAlert2        | shadcn/ui Alert  | ⏳ Phase 6     |
+| **Optimistic UI**    | Custom             | React Query      | ⏳ Phase 7     |
 
 ---
 
 ## 🚀 How to Use
 
 ### 1. Access the Page
-- Navigate to **"โปรเจค"** in the sidebar
+
+- Navigate to **"โปรเจกต์"** in the sidebar
 - URL: `http://localhost:3000/projects`
 - **Permission Required**: ADMIN, CHIEF, LEADER, or HEAD role
 
 ### 2. Filter Projects
+
 - Select **Mission Group** to filter by organization
 - Select **Division** (automatically filters based on MG)
 - Select **Department** (automatically filters based on Division)
@@ -169,16 +190,19 @@
 - Click **"ล้างตัวกรอง"** to reset all filters
 
 ### 3. Sort Projects
+
 - Click column headers to sort:
-  - **ชื่อโปรเจค** - Sort by name (A-Z or Z-A)
-  - **เจ้าของโปรเจค** - Sort by owner name
+  - **ชื่อโปรเจกต์** - Sort by name (A-Z or Z-A)
+  - **เจ้าของโปรเจกต์** - Sort by owner name
   - **Phase ปัจจุบัน** - Sort by phase order
 
 ### 4. Navigate to Project
+
 - Click any row to open project in **Board View**
 - Route: `/projects/:projectId/board`
 
 ### 5. Pagination
+
 - Use **Previous/Next** buttons
 - Click **page numbers** to jump to page
 - Change **page size** (10/25/50/100) via dropdown
@@ -188,9 +212,11 @@
 ## ⏳ What's Next (Phase 5-7)
 
 ### Phase 5: Create Project Modal (Not Implemented)
+
 **Estimated**: 4-6 hours
 
 **Tasks:**
+
 - [ ] Migrate `CreateProjectModal.html` from GAS
 - [ ] Convert to React + shadcn/ui Dialog
 - [ ] Add form validation (Zod)
@@ -198,9 +224,11 @@
 - [ ] Optimistic UI (blue skeleton)
 
 ### Phase 6: Edit/Delete Modals (Not Implemented)
+
 **Estimated**: 4-6 hours
 
 **Tasks:**
+
 - [ ] Migrate `EditProjectModal.html` from GAS
 - [ ] Convert to React + shadcn/ui Dialog
 - [ ] Add delete confirmation (shadcn/ui AlertDialog)
@@ -209,9 +237,11 @@
 - [ ] Optimistic UI (red skeleton for delete)
 
 ### Phase 7: Optimistic UI & Loading States (Not Implemented)
+
 **Estimated**: 2-3 hours
 
 **Tasks:**
+
 - [ ] Add optimistic create (blue skeleton)
 - [ ] Add optimistic delete (red skeleton + fade-out)
 - [ ] Add toast notifications (sonner)
@@ -222,13 +252,16 @@
 ## 🔍 Known Issues
 
 ### Critical
+
 - ⚠️ **Create/Edit/Delete Modals not implemented** - Buttons show console.log only
 
 ### Minor
+
 - ⚠️ TypeScript errors in `.next/types/validator.ts` - These are Next.js type generation issues, not affecting runtime
 - ⚠️ Existing errors in `src/components/views/list-view/index.tsx` - Pre-existing issues, not related to project management page
 
 ### Recommendations
+
 1. Fix TypeScript errors in existing files (list-view, api-middleware)
 2. Add integration tests for project management page
 3. Test with real database data
@@ -296,10 +329,12 @@ src/
 ## 🙏 Acknowledgments
 
 This implementation was based on the original GAS (Google Apps Script) project:
+
 - `old_project/component.ProjectManagement.html` (1884 lines)
 - `old_project/PROJECT_MANAGEMENT_IMPLEMENTATION.md` (1039 lines)
 
 Key improvements in Next.js version:
+
 - ✅ Modern React + TypeScript
 - ✅ shadcn/ui components (consistent design)
 - ✅ React Query (automatic cache management)

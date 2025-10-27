@@ -1,17 +1,17 @@
 /**
- * Board Page - หน้าบอร์ด Kanban สำหรับโปรเจค
+ * Board Page - หน้าบอร์ด Kanban สำหรับโปรเจกต์
  */
 
-'use client';
+"use client";
 
-import { use, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { BoardView } from '@/components/views/board-view';
-import { ProjectToolbar } from '@/components/layout/project-toolbar';
-import { useAppStore } from '@/stores/use-app-store';
-import { useUIStore } from '@/stores/use-ui-store';
-import { useNavigationStore } from '@/stores/use-navigation-store';
-import { useProject } from '@/hooks/use-projects';
+import { use, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { BoardView } from "@/components/views/board-view";
+import { ProjectToolbar } from "@/components/layout/project-toolbar";
+import { useAppStore } from "@/stores/use-app-store";
+import { useUIStore } from "@/stores/use-ui-store";
+import { useNavigationStore } from "@/stores/use-navigation-store";
+import { useProject } from "@/hooks/use-projects";
 
 interface BoardPageProps {
   params: Promise<{
@@ -33,7 +33,7 @@ export default function BoardPage({ params }: BoardPageProps) {
   useEffect(() => {
     // Update app store with current project
     setCurrentProject(projectId);
-    setCurrentView('board');
+    setCurrentView("board");
   }, [projectId, setCurrentProject, setCurrentView]);
 
   // Update navigation store when project data loads
@@ -57,7 +57,7 @@ export default function BoardPage({ params }: BoardPageProps) {
     }
   }, [projectData, setProject]);
 
-  const handleViewChange = (view: 'list' | 'board' | 'calendar') => {
+  const handleViewChange = (view: "list" | "board" | "calendar") => {
     setCurrentView(view);
     router.push(`/projects/${projectId}/${view}`);
   };

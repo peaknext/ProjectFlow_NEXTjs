@@ -1,17 +1,17 @@
 /**
- * Calendar Page - หน้าปฏิทินงานสำหรับโปรเจค
+ * Calendar Page - หน้าปฏิทินงานสำหรับโปรเจกต์
  */
 
-'use client';
+"use client";
 
-import { use, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { CalendarView } from '@/components/views/calendar-view';
-import { ProjectToolbar } from '@/components/layout/project-toolbar';
-import { useAppStore } from '@/stores/use-app-store';
-import { useUIStore } from '@/stores/use-ui-store';
-import { useNavigationStore } from '@/stores/use-navigation-store';
-import { useProject } from '@/hooks/use-projects';
+import { use, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { CalendarView } from "@/components/views/calendar-view";
+import { ProjectToolbar } from "@/components/layout/project-toolbar";
+import { useAppStore } from "@/stores/use-app-store";
+import { useUIStore } from "@/stores/use-ui-store";
+import { useNavigationStore } from "@/stores/use-navigation-store";
+import { useProject } from "@/hooks/use-projects";
 
 interface CalendarPageProps {
   params: Promise<{
@@ -33,7 +33,7 @@ export default function CalendarPage({ params }: CalendarPageProps) {
   useEffect(() => {
     // Update app store with current project
     setCurrentProject(projectId);
-    setCurrentView('calendar');
+    setCurrentView("calendar");
   }, [projectId, setCurrentProject, setCurrentView]);
 
   // Update navigation store when project data loads
@@ -57,7 +57,7 @@ export default function CalendarPage({ params }: CalendarPageProps) {
     }
   }, [projectData, setProject]);
 
-  const handleViewChange = (view: 'list' | 'board' | 'calendar') => {
+  const handleViewChange = (view: "list" | "board" | "calendar") => {
     setCurrentView(view);
     router.push(`/projects/${projectId}/${view}`);
   };

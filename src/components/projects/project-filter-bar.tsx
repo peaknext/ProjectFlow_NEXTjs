@@ -90,19 +90,17 @@ export function ProjectFilterBar({
   const availableDepartments = filters.divisionId
     ? departments.filter((d) => d.divisionId === filters.divisionId)
     : filters.missionGroupId
-    ? departments.filter((d) => {
-        const division = divisions.find((div) => div.id === d.divisionId);
-        return division?.missionGroupId === filters.missionGroupId;
-      })
-    : departments;
+      ? departments.filter((d) => {
+          const division = divisions.find((div) => div.id === d.divisionId);
+          return division?.missionGroupId === filters.missionGroupId;
+        })
+      : departments;
 
   // Get selected names
   const selectedMissionGroup = missionGroups.find(
     (mg) => mg.id === filters.missionGroupId
   );
-  const selectedDivision = divisions.find(
-    (d) => d.id === filters.divisionId
-  );
+  const selectedDivision = divisions.find((d) => d.id === filters.divisionId);
   const selectedDepartment = departments.find(
     (d) => d.id === filters.departmentId
   );
@@ -146,9 +144,7 @@ export function ProjectFilterBar({
       <div className="flex flex-wrap items-center gap-4 mb-4">
         {/* Mission Group Filter */}
         <div className="flex-shrink-0">
-          <Label className="text-sm font-medium mb-2 block">
-            กลุ่มภารกิจ
-          </Label>
+          <Label className="text-sm font-medium mb-2 block">กลุ่มภารกิจ</Label>
           <Popover
             open={popoverOpen.missionGroup}
             onOpenChange={(open) =>
@@ -277,13 +273,13 @@ export function ProjectFilterBar({
         {/* Search */}
         <div className="flex-1 min-w-[250px]">
           <Label className="text-sm font-medium mb-2 block">
-            ค้นหาโปรเจค
+            ค้นหาโปรเจกต์
           </Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="ค้นหาชื่อโปรเจค..."
+              placeholder="ค้นหาชื่อโปรเจกต์..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               className="pl-10 h-10"
@@ -298,10 +294,10 @@ export function ProjectFilterBar({
           {hasActiveFilters ? (
             <>
               กำลังแสดง <span className="font-medium">{filteredCount}</span> จาก{" "}
-              {totalCount} โปรเจค
+              {totalCount} โปรเจกต์
             </>
           ) : (
-            <>แสดงทั้งหมด {totalCount} โปรเจค</>
+            <>แสดงทั้งหมด {totalCount} โปรเจกต์</>
           )}
         </div>
         {hasActiveFilters && (

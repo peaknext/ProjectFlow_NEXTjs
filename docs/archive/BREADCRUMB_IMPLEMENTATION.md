@@ -15,11 +15,13 @@ Implemented multi-level breadcrumb navigation system for ProjectFlow Next.js, ma
 ## Features Implemented
 
 ### ✅ 1. Navigation Store (Zustand)
+
 **File**: [src/stores/use-navigation-store.ts](src/stores/use-navigation-store.ts)
 
 **Purpose**: Centralized state management for navigation hierarchy
 
 **Features**:
+
 - Tracks current level: `missionGroup` | `division` | `department` | `project`
 - Preserves parent hierarchy when navigating deeper
 - 4 setter methods: `setMissionGroup()`, `setDivision()`, `setDepartment()`, `setProject()`
@@ -27,6 +29,7 @@ Implemented multi-level breadcrumb navigation system for ProjectFlow Next.js, ma
 - `useBreadcrumbPath()` helper hook returns ordered breadcrumb path
 
 **State Structure**:
+
 ```typescript
 {
   currentLevel: NavigationLevel | null,
@@ -44,11 +47,13 @@ Implemented multi-level breadcrumb navigation system for ProjectFlow Next.js, ma
 ---
 
 ### ✅ 2. Breadcrumb Component
+
 **File**: [src/components/navigation/breadcrumb.tsx](src/components/navigation/breadcrumb.tsx)
 
 **Purpose**: Renders multi-level breadcrumb navigation path
 
 **Features**:
+
 - ✅ **Multi-level path display**: Mission Group > Division > Department > Project
 - ✅ **Clickable links**: Navigate back to Department or Project level
 - ✅ **Non-clickable levels**: Mission Group and Division are display-only
@@ -58,6 +63,7 @@ Implemented multi-level breadcrumb navigation system for ProjectFlow Next.js, ma
 - ✅ **Dark mode support**: Integrated with theme system
 
 **Component API**:
+
 ```typescript
 interface BreadcrumbProps {
   projects?: Array<{ id: string; name: string; status?: string }>;
@@ -67,6 +73,7 @@ interface BreadcrumbProps {
 ```
 
 **Project Selector**:
+
 - Uses shadcn `Popover` + `Command` components
 - Search functionality included
 - Shows project status badge
@@ -75,15 +82,18 @@ interface BreadcrumbProps {
 ---
 
 ### ✅ 3. ProjectToolbar Integration
+
 **File**: [src/components/layout/project-toolbar.tsx](src/components/layout/project-toolbar.tsx)
 
 **Updated**:
+
 - Replaced old breadcrumb implementation with new `<Breadcrumb />` component
 - Removed `breadcrumbs` prop (now auto-generated from navigation store)
 - Added `projects` prop for project selector
 - Added `onProjectSelect` callback prop
 
 **New API**:
+
 ```typescript
 interface ProjectToolbarProps {
   currentView: ViewType;
@@ -97,12 +107,15 @@ interface ProjectToolbarProps {
 ---
 
 ### ✅ 4. Page Updates (Board, Calendar, List)
+
 **Files**:
-- [src/app/(dashboard)/projects/[projectId]/board/page.tsx](src/app/(dashboard)/projects/[projectId]/board/page.tsx)
-- [src/app/(dashboard)/projects/[projectId]/calendar/page.tsx](src/app/(dashboard)/projects/[projectId]/calendar/page.tsx)
-- [src/app/(dashboard)/projects/[projectId]/list/page.tsx](src/app/(dashboard)/projects/[projectId]/list/page.tsx)
+
+- [src/app/(dashboard)/projects/[projectId]/board/page.tsx](<src/app/(dashboard)/projects/[projectId]/board/page.tsx>)
+- [src/app/(dashboard)/projects/[projectId]/calendar/page.tsx](<src/app/(dashboard)/projects/[projectId]/calendar/page.tsx>)
+- [src/app/(dashboard)/projects/[projectId]/list/page.tsx](<src/app/(dashboard)/projects/[projectId]/list/page.tsx>)
 
 **Changes**:
+
 1. Import `useNavigationStore` from navigation store
 2. Add `useEffect` to populate navigation store when project data loads
 3. Extract `departmentProjects` from project data
@@ -110,6 +123,7 @@ interface ProjectToolbarProps {
 5. Remove old `breadcrumbs` prop
 
 **Pattern**:
+
 ```typescript
 const { setProject } = useNavigationStore();
 const { data: projectData } = useProject(projectId);
@@ -194,7 +208,7 @@ const departmentProjects = projectData?.project?.department?.projects || [];
 ### 1. Basic Usage (Auto-loaded from Navigation Store)
 
 ```tsx
-import { Breadcrumb } from '@/components/navigation/breadcrumb';
+import { Breadcrumb } from "@/components/navigation/breadcrumb";
 
 export function MyPage() {
   return (
@@ -209,12 +223,12 @@ export function MyPage() {
 ### 2. With Project Selector
 
 ```tsx
-import { Breadcrumb } from '@/components/navigation/breadcrumb';
+import { Breadcrumb } from "@/components/navigation/breadcrumb";
 
 export function ProjectPage() {
   const projects = [
-    { id: 'proj001', name: 'โครงการจัดซื้อ', status: 'ACTIVE' },
-    { id: 'proj002', name: 'โครงการพัฒนา', status: 'ACTIVE' },
+    { id: "proj001", name: "โครงการจัดซื้อ", status: "ACTIVE" },
+    { id: "proj002", name: "โครงการพัฒนา", status: "ACTIVE" },
   ];
 
   const handleProjectSelect = (projectId: string) => {
@@ -223,10 +237,7 @@ export function ProjectPage() {
 
   return (
     <div>
-      <Breadcrumb
-        projects={projects}
-        onProjectSelect={handleProjectSelect}
-      />
+      <Breadcrumb projects={projects} onProjectSelect={handleProjectSelect} />
       {/* Page content */}
     </div>
   );
@@ -236,30 +247,30 @@ export function ProjectPage() {
 ### 3. Programmatic Navigation
 
 ```tsx
-import { useNavigationStore } from '@/stores/use-navigation-store';
+import { useNavigationStore } from "@/stores/use-navigation-store";
 
 export function MyComponent() {
   const { setDepartment, navigateToLevel } = useNavigationStore();
 
   // Navigate to department level
   const goToDepartment = () => {
-    setDepartment('dept001', 'งานธุรการ', 'div001', 'กองบริหาร');
-    router.push('/department/tasks?id=dept001');
+    setDepartment("dept001", "งานธุรการ", "div001", "กองบริหาร");
+    router.push("/department/tasks?id=dept001");
   };
 
   // Or use generic method
   const goToProject = () => {
-    navigateToLevel('project', 'proj001', 'โครงการจัดซื้อ', {
-      departmentId: 'dept001',
-      departmentName: 'งานธุรการ',
+    navigateToLevel("project", "proj001", "โครงการจัดซื้อ", {
+      departmentId: "dept001",
+      departmentName: "งานธุรการ",
     });
-    router.push('/projects/proj001/board');
+    router.push("/projects/proj001/board");
   };
 
   return (
     <div>
       <button onClick={goToDepartment}>ไปหน่วยงาน</button>
-      <button onClick={goToProject}>ไปโปรเจค</button>
+      <button onClick={goToProject}>ไปโปรเจกต์</button>
     </div>
   );
 }
@@ -269,17 +280,17 @@ export function MyComponent() {
 
 ## Comparison with GAS Implementation
 
-| Feature | GAS | Next.js | Status |
-|---------|-----|---------|--------|
-| **Navigation State** | `appState.navigation` | `useNavigationStore()` | ✅ Complete |
-| **Multi-level Path** | Mission Group > Division > Department > Project | Same | ✅ Complete |
-| **Clickable Links** | Yes (Department, Project) | Yes | ✅ Complete |
-| **Non-clickable Levels** | Mission Group, Division | Same | ✅ Complete |
-| **Current Level Highlight** | Bold, non-clickable | Same | ✅ Complete |
-| **Project Selector** | Popover after department | Popover with Command + Search | ✅ Enhanced |
-| **Navigation Handlers** | `handleBreadcrumbClick()` | Integrated in Breadcrumb component | ✅ Complete |
-| **Workspace Filtering** | Based on accessible IDs | Not yet implemented | ⏳ Future |
-| **Cache Integration** | `DepartmentCache.set()` | Not yet implemented | ⏳ Future |
+| Feature                     | GAS                                             | Next.js                            | Status      |
+| --------------------------- | ----------------------------------------------- | ---------------------------------- | ----------- |
+| **Navigation State**        | `appState.navigation`                           | `useNavigationStore()`             | ✅ Complete |
+| **Multi-level Path**        | Mission Group > Division > Department > Project | Same                               | ✅ Complete |
+| **Clickable Links**         | Yes (Department, Project)                       | Yes                                | ✅ Complete |
+| **Non-clickable Levels**    | Mission Group, Division                         | Same                               | ✅ Complete |
+| **Current Level Highlight** | Bold, non-clickable                             | Same                               | ✅ Complete |
+| **Project Selector**        | Popover after department                        | Popover with Command + Search      | ✅ Enhanced |
+| **Navigation Handlers**     | `handleBreadcrumbClick()`                       | Integrated in Breadcrumb component | ✅ Complete |
+| **Workspace Filtering**     | Based on accessible IDs                         | Not yet implemented                | ⏳ Future   |
+| **Cache Integration**       | `DepartmentCache.set()`                         | Not yet implemented                | ⏳ Future   |
 
 ---
 
@@ -312,26 +323,31 @@ export function MyComponent() {
 ## Known Limitations & Future Work
 
 ### 1. Department Tasks View Not Implemented
+
 **Status**: ❌ Not yet implemented
 **Impact**: Clicking on department link in breadcrumb will fail
 **Solution**: Implement `/department/tasks` page (see `NEXT_GOAL_DEPARTMENT_TASKS.md`)
 
 ### 2. Workspace Filtering Not Implemented
+
 **Status**: ❌ Not yet implemented
 **Impact**: Breadcrumb shows all levels without permission checking
 **Solution**: Add workspace filtering based on user's accessible IDs
 
 ### 3. Division/Mission Group Navigation
+
 **Status**: ⏳ Planned
 **Impact**: Cannot navigate to Division or Mission Group levels
 **Solution**: These levels are display-only in GAS, so this matches expected behavior
 
 ### 4. Cache Integration
+
 **Status**: ❌ Not yet implemented
 **Impact**: No client-side caching for navigation data
 **Solution**: Implement React Query caching for workspace/organization data
 
 ### 5. Auto-populate on Initial Load
+
 **Status**: ⏳ Planned
 **Impact**: Breadcrumb is empty until user navigates to a project
 **Solution**: Populate navigation store from URL params on page load
@@ -341,16 +357,19 @@ export function MyComponent() {
 ## Related Files
 
 **Core Implementation**:
+
 - [src/stores/use-navigation-store.ts](src/stores/use-navigation-store.ts) - Navigation state management
 - [src/components/navigation/breadcrumb.tsx](src/components/navigation/breadcrumb.tsx) - Breadcrumb component
 - [src/components/layout/project-toolbar.tsx](src/components/layout/project-toolbar.tsx) - Toolbar with breadcrumb
 
 **Updated Pages**:
-- [src/app/(dashboard)/projects/[projectId]/board/page.tsx](src/app/(dashboard)/projects/[projectId]/board/page.tsx)
-- [src/app/(dashboard)/projects/[projectId]/calendar/page.tsx](src/app/(dashboard)/projects/[projectId]/calendar/page.tsx)
-- [src/app/(dashboard)/projects/[projectId]/list/page.tsx](src/app/(dashboard)/projects/[projectId]/list/page.tsx)
+
+- [src/app/(dashboard)/projects/[projectId]/board/page.tsx](<src/app/(dashboard)/projects/[projectId]/board/page.tsx>)
+- [src/app/(dashboard)/projects/[projectId]/calendar/page.tsx](<src/app/(dashboard)/projects/[projectId]/calendar/page.tsx>)
+- [src/app/(dashboard)/projects/[projectId]/list/page.tsx](<src/app/(dashboard)/projects/[projectId]/list/page.tsx>)
 
 **Documentation**:
+
 - [WORKSPACE_NAVIGATION_COMPARISON.md](WORKSPACE_NAVIGATION_COMPARISON.md) - GAS vs Next.js comparison
 - [CLAUDE.md](CLAUDE.md) - Main project documentation
 
@@ -372,6 +391,7 @@ export function MyComponent() {
 ✅ **Breadcrumb navigation is COMPLETE** with core functionality matching GAS implementation.
 
 The navigation store provides a solid foundation for:
+
 - Multi-level workspace hierarchy
 - Department Tasks View (future)
 - Workspace Selectors (future)

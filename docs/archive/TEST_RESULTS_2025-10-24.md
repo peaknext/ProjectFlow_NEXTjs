@@ -9,14 +9,14 @@
 
 ## Test Summary
 
-| Test # | Test Name | Priority | Status | Result |
-|--------|-----------|----------|--------|--------|
-| 1 | Workspace API (getUserAccessibleScope) | P1 | ✅ | PASS |
-| 2 | User List API (Scope Filtering) | P2 | ✅ | PASS |
-| 3 | User Edit API (Permission Check) | P2 | ✅ | PASS |
-| 4 | User Status API (Permission Check) | P2 | ✅ | PASS |
-| 5 | Projects API (Scope Filtering) | P1 | ✅ | PASS |
-| 6 | Additional Roles Detection | P1 | ⚠️ | NO TEST DATA |
+| Test # | Test Name                              | Priority | Status | Result       |
+| ------ | -------------------------------------- | -------- | ------ | ------------ |
+| 1      | Workspace API (getUserAccessibleScope) | P1       | ✅     | PASS         |
+| 2      | User List API (Scope Filtering)        | P2       | ✅     | PASS         |
+| 3      | User Edit API (Permission Check)       | P2       | ✅     | PASS         |
+| 4      | User Status API (Permission Check)     | P2       | ✅     | PASS         |
+| 5      | Projects API (Scope Filtering)         | P1       | ✅     | PASS         |
+| 6      | Additional Roles Detection             | P1       | ⚠️     | NO TEST DATA |
 
 **Overall Result:** ✅ **5/5 Tests PASS** (1 test skipped due to no data)
 
@@ -31,11 +31,13 @@
 **Purpose:** Test `getUserAccessibleScope()` function with ADMIN user
 
 **Expected:**
+
 - ADMIN user should see all 9 Mission Groups
 - Should return hierarchical structure
 - Should include all Divisions and Departments
 
 **Actual Results:**
+
 ```
 Success: True
 View Type: hierarchical
@@ -62,6 +64,7 @@ Mission Groups Found:
 ```
 
 **Verdict:** ✅ **PASS**
+
 - All 9 Mission Groups returned correctly
 - Hierarchical structure intact
 - getUserAccessibleScope() working as expected
@@ -75,11 +78,13 @@ Mission Groups Found:
 **Purpose:** Test user management scope filtering
 
 **Expected:**
+
 - ADMIN user should see all non-ADMIN users
 - Should filter based on `getUserManageableUserIds()`
 - Should not show ADMIN users to other ADMINs
 
 **Database Stats:**
+
 ```
 Total Users: 6
 ADMIN Users: 1
@@ -87,6 +92,7 @@ Non-ADMIN Users: 5
 ```
 
 **Actual Results:**
+
 ```
 Success: True
 Total Users Returned: 5
@@ -101,6 +107,7 @@ Sample Users:
 ```
 
 **Verdict:** ✅ **PASS**
+
 - ADMIN sees exactly 5 non-ADMIN users (expected behavior)
 - Scope filtering working correctly
 - No ADMIN users in list (correct)
@@ -116,6 +123,7 @@ Sample Users:
 **Test Case:** ADMIN user editing non-ADMIN user
 
 **Request:**
+
 ```json
 {
   "jobTitle": "Updated Title Test"
@@ -123,11 +131,13 @@ Sample Users:
 ```
 
 **Expected:**
+
 - ADMIN should be able to edit non-ADMIN users
 - Permission check should pass
 - User should be updated successfully
 
 **Actual Results:**
+
 ```
 Success: True
 Message: User updated successfully
@@ -135,6 +145,7 @@ Job Title: Updated Title Test
 ```
 
 **Verdict:** ✅ **PASS**
+
 - ADMIN successfully edited non-ADMIN user
 - canManageTargetUser() working correctly
 - Permission scope validation passed
@@ -150,6 +161,7 @@ Job Title: Updated Title Test
 **Test Case:** ADMIN user changing non-ADMIN user status
 
 **Request:**
+
 ```json
 {
   "status": "ACTIVE"
@@ -157,17 +169,20 @@ Job Title: Updated Title Test
 ```
 
 **Expected:**
+
 - ADMIN should be able to change non-ADMIN user status
 - Permission check should pass
 - Status should be updated
 
 **Actual Results:**
+
 ```
 Success: True
 Message: User status updated to ACTIVE
 ```
 
 **Verdict:** ✅ **PASS**
+
 - Status updated successfully
 - Permission checks working
 - Scope validation passed
@@ -181,24 +196,27 @@ Message: User status updated to ACTIVE
 **Purpose:** Test project scope filtering (Priority 1 implementation)
 
 **Expected:**
+
 - ADMIN should see all projects
 - Should filter based on accessible departments
 - Should return project with department info
 
 **Actual Results:**
+
 ```
 Success: True
 Total Projects: 17
 
 Sample Projects:
-  - โปรเจค  3 บน Next.js (Dept: กลุ่มงานสุขภาพดิจิทัล)
-  - โปรเจค 2 บน Next.js (Dept: กลุ่มงานสุขภาพดิจิทัล)
-  - โปรเจคแรกบน Next.js (Dept: กลุ่มงานสุขภาพดิจิทัล)
+  - โปรเจกต์  3 บน Next.js (Dept: กลุ่มงานสุขภาพดิจิทัล)
+  - โปรเจกต์ 2 บน Next.js (Dept: กลุ่มงานสุขภาพดิจิทัล)
+  - โปรเจกต์แรกบน Next.js (Dept: กลุ่มงานสุขภาพดิจิทัล)
   - Test Project (Dept: กลุ่มงานสุขภาพดิจิทัล)
   - Hospital Management System (Dept: Software Development Department)
 ```
 
 **Verdict:** ✅ **PASS**
+
 - All projects returned for ADMIN user
 - Scope filtering working correctly
 - Department info included
@@ -210,21 +228,25 @@ Sample Projects:
 **Purpose:** Test additional roles support in scope calculation
 
 **Expected:**
+
 - Users with additional roles should have expanded scope
 - Should see data from multiple departments/divisions/mission groups
 
 **Actual Results:**
+
 ```
 Users with Additional Roles: 0
 No users with additional roles found.
 ```
 
 **Verdict:** ⚠️ **SKIPPED** (No test data available)
+
 - **Reason:** No users in database have additional roles configured
 - **Impact:** Cannot test multi-role scenarios
 - **Recommendation:** Create test users with additional roles for comprehensive testing
 
 **Test Data Needed:**
+
 ```typescript
 // Example: Chief in Mission Group A + Member in Mission Group B
 {
@@ -242,30 +264,30 @@ No users with additional roles found.
 
 ### Priority 1 Functions
 
-| Function | Tested | Status | Notes |
-|----------|--------|--------|-------|
-| `getUserAccessibleScope()` | ✅ | PASS | Tested with ADMIN user |
-| Additional Roles in Scope | ⚠️ | SKIPPED | No test data |
-| Workspace API Integration | ✅ | PASS | Returns correct hierarchy |
-| Projects API Integration | ✅ | PASS | Scope filtering works |
+| Function                   | Tested | Status  | Notes                     |
+| -------------------------- | ------ | ------- | ------------------------- |
+| `getUserAccessibleScope()` | ✅     | PASS    | Tested with ADMIN user    |
+| Additional Roles in Scope  | ⚠️     | SKIPPED | No test data              |
+| Workspace API Integration  | ✅     | PASS    | Returns correct hierarchy |
+| Projects API Integration   | ✅     | PASS    | Scope filtering works     |
 
 ### Priority 2 Functions
 
-| Function | Tested | Status | Notes |
-|----------|--------|--------|-------|
-| `getDepartmentInfo()` | ✅ | PASS | Used internally by other functions |
-| `isUserInManagementScope()` | ✅ | PASS | Tested via canManageTargetUser |
-| `canManageTargetUser()` | ✅ | PASS | ADMIN can manage non-ADMIN |
-| `getUserManageableUserIds()` | ✅ | PASS | Returns correct user IDs |
+| Function                     | Tested | Status | Notes                              |
+| ---------------------------- | ------ | ------ | ---------------------------------- |
+| `getDepartmentInfo()`        | ✅     | PASS   | Used internally by other functions |
+| `isUserInManagementScope()`  | ✅     | PASS   | Tested via canManageTargetUser     |
+| `canManageTargetUser()`      | ✅     | PASS   | ADMIN can manage non-ADMIN         |
+| `getUserManageableUserIds()` | ✅     | PASS   | Returns correct user IDs           |
 
 ### Priority 3 Functions
 
-| Function | Tested | Status | Notes |
-|----------|--------|--------|-------|
-| `canUserCreateProject()` | ⚠️ | NOT TESTED | Function exists, not called by APIs yet |
-| `canUserEditProject()` | ⚠️ | NOT TESTED | Function exists, not called by APIs yet |
-| `canUserDeleteProject()` | ⚠️ | NOT TESTED | Function exists, not called by APIs yet |
-| `canUserViewProject()` | ⚠️ | NOT TESTED | Function exists, not called by APIs yet |
+| Function                 | Tested | Status     | Notes                                   |
+| ------------------------ | ------ | ---------- | --------------------------------------- |
+| `canUserCreateProject()` | ⚠️     | NOT TESTED | Function exists, not called by APIs yet |
+| `canUserEditProject()`   | ⚠️     | NOT TESTED | Function exists, not called by APIs yet |
+| `canUserDeleteProject()` | ⚠️     | NOT TESTED | Function exists, not called by APIs yet |
+| `canUserViewProject()`   | ⚠️     | NOT TESTED | Function exists, not called by APIs yet |
 
 **Note:** Priority 3 functions are implemented but not yet integrated into API endpoints. They can be used for future enhancements.
 
@@ -275,12 +297,12 @@ No users with additional roles found.
 
 ### Response Times (Approximate)
 
-| Endpoint | Response Time | Status |
-|----------|--------------|--------|
-| GET /api/workspace | < 200ms | ✅ Excellent |
-| GET /api/users | < 100ms | ✅ Excellent |
-| PATCH /api/users/[id] | < 150ms | ✅ Good |
-| GET /api/projects | < 150ms | ✅ Good |
+| Endpoint              | Response Time | Status       |
+| --------------------- | ------------- | ------------ |
+| GET /api/workspace    | < 200ms       | ✅ Excellent |
+| GET /api/users        | < 100ms       | ✅ Excellent |
+| PATCH /api/users/[id] | < 150ms       | ✅ Good      |
+| GET /api/projects     | < 150ms       | ✅ Good      |
 
 **Overall Performance:** ✅ **Excellent** - All endpoints respond within acceptable limits
 
@@ -290,13 +312,13 @@ No users with additional roles found.
 
 ### Vulnerabilities Fixed ✅
 
-| Vulnerability | Before | After | Status |
-|---------------|--------|-------|--------|
-| Unauthorized User List Access | ❌ All users visible | ✅ Scope filtered | FIXED |
-| Unauthorized User Editing | ❌ Anyone can edit | ✅ Scope checked | FIXED |
-| Unauthorized Status Change | ❌ No scope check | ✅ Scope checked | FIXED |
-| Cross-Admin Management | ❌ Not blocked | ✅ Blocked | FIXED |
-| Project Scope Leakage | ❌ Possible | ✅ Filtered | FIXED |
+| Vulnerability                 | Before               | After             | Status |
+| ----------------------------- | -------------------- | ----------------- | ------ |
+| Unauthorized User List Access | ❌ All users visible | ✅ Scope filtered | FIXED  |
+| Unauthorized User Editing     | ❌ Anyone can edit   | ✅ Scope checked  | FIXED  |
+| Unauthorized Status Change    | ❌ No scope check    | ✅ Scope checked  | FIXED  |
+| Cross-Admin Management        | ❌ Not blocked       | ✅ Blocked        | FIXED  |
+| Project Scope Leakage         | ❌ Possible          | ✅ Filtered       | FIXED  |
 
 **Security Status:** ✅ **All Critical Vulnerabilities Fixed**
 
@@ -312,6 +334,7 @@ No users with additional roles found.
 **Status:** BLOCKED by lack of test data
 
 **Resolution:**
+
 ```sql
 -- Create test user with additional roles
 UPDATE users

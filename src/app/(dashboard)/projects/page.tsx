@@ -12,11 +12,14 @@ export default function ProjectsPage() {
 
   // Check permissions - only ADMIN, CHIEF, LEADER, HEAD can access
   // Uses effective role (primary + additional roles combined)
-  const canAccessProjectManagement = user?.role && hasAnyRole(
-    user.role,
-    user.additionalRoles,
-    ["ADMIN", "CHIEF", "LEADER", "HEAD"]
-  );
+  const canAccessProjectManagement =
+    user?.role &&
+    hasAnyRole(user.role, user.additionalRoles, [
+      "ADMIN",
+      "CHIEF",
+      "LEADER",
+      "HEAD",
+    ]);
 
   useEffect(() => {
     // Redirect if user cannot access
@@ -41,7 +44,7 @@ export default function ProjectsPage() {
         </span>
         <h3 className="text-xl font-semibold mb-2">ไม่มีสิทธิ์เข้าถึง</h3>
         <p className="text-muted-foreground text-center max-w-md">
-          คุณไม่มีสิทธิ์ในการจัดการโปรเจค กรุณาติดต่อผู้ดูแลระบบ
+          คุณไม่มีสิทธิ์ในการจัดการโปรเจกต์ กรุณาติดต่อผู้ดูแลระบบ
         </p>
       </div>
     );

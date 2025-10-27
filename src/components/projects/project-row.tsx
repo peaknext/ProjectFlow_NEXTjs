@@ -35,16 +35,19 @@ interface ProjectRowProps {
 export function ProjectRow({ project }: ProjectRowProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const openEditProjectModal = useUIStore((state) => state.openEditProjectModal);
+  const openEditProjectModal = useUIStore(
+    (state) => state.openEditProjectModal
+  );
 
   // Delete confirmation dialog state
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Use cached progress from database (already 0-100)
   // Fallback to calculation if not available
-  const progress = project.progress !== null && project.progress !== undefined
-    ? Math.round(project.progress)
-    : calculateProjectProgress(project);
+  const progress =
+    project.progress !== null && project.progress !== undefined
+      ? Math.round(project.progress)
+      : calculateProjectProgress(project);
   const currentPhase = getCurrentPhase(project.phases);
   const progressColors = getProgressColorClasses(progress);
 
@@ -60,8 +63,10 @@ export function ProjectRow({ project }: ProjectRowProps) {
   const deleteMutation = useDeleteProject();
 
   // Check permissions
-  const canEdit = user?.role && ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(user.role);
-  const canDelete = user?.role && ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(user.role);
+  const canEdit =
+    user?.role && ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(user.role);
+  const canDelete =
+    user?.role && ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(user.role);
 
   // Handlers
   const handleRowClick = () => {
@@ -84,16 +89,18 @@ export function ProjectRow({ project }: ProjectRowProps) {
       const result = await deleteMutation.mutateAsync(project.id);
       const taskCount = result?.deletedTasks || 0;
 
-      toast.success("ลบโปรเจคสำเร็จ", {
-        description: taskCount > 0
-          ? `โปรเจค "${project.name}" และงานทั้งหมด ${taskCount} งาน ถูกลบเรียบร้อยแล้ว`
-          : `โปรเจค "${project.name}" ถูกลบเรียบร้อยแล้ว`,
+      toast.success("ลบโปรเจกต์สำเร็จ", {
+        description:
+          taskCount > 0
+            ? `โปรเจกต์ "${project.name}" และงานทั้งหมด ${taskCount} งาน ถูกลบเรียบร้อยแล้ว`
+            : `โปรเจกต์ "${project.name}" ถูกลบเรียบร้อยแล้ว`,
       });
       setShowDeleteDialog(false);
     } catch (error: any) {
       console.error("Delete project error:", error);
-      toast.error("ไม่สามารถลบโปรเจคได้", {
-        description: "กรุณาลองใหม่อีกครั้ง หากปัญหายังคงอยู่ กรุณาติดต่อผู้ดูแลระบบ",
+      toast.error("ไม่สามารถลบโปรเจกต์ได้", {
+        description:
+          "กรุณาลองใหม่อีกครั้ง หากปัญหายังคงอยู่ กรุณาติดต่อผู้ดูแลระบบ",
       });
     }
   };
@@ -113,7 +120,9 @@ export function ProjectRow({ project }: ProjectRowProps) {
             <div className="flex items-center gap-3">
               <div className="w-[200px] flex items-center gap-2">
                 <Progress value={progress} className="h-2.5" />
-                <span className={`text-sm font-medium whitespace-nowrap ${progressColors.text}`}>
+                <span
+                  className={`text-sm font-medium whitespace-nowrap ${progressColors.text}`}
+                >
                   {progress.toFixed(1)}%
                 </span>
               </div>
@@ -145,9 +154,7 @@ export function ProjectRow({ project }: ProjectRowProps) {
 
         {/* Phase */}
         <TableCell>
-          <span className="text-sm">
-            {currentPhase.name}
-          </span>
+          <span className="text-sm">{currentPhase.name}</span>
         </TableCell>
 
         {/* Actions */}
@@ -183,15 +190,18 @@ export function ProjectRow({ project }: ProjectRowProps) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบโปรเจค</AlertDialogTitle>
+            <AlertDialogTitle>ยืนยันการลบโปรเจกต์</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p>คุณแน่ใจหรือไม่ที่จะลบโปรเจค <strong className="text-foreground">{project.name}</strong>?</p>
+              <p>
+                คุณแน่ใจหรือไม่ที่จะลบโปรเจกต์{" "}
+                <strong className="text-foreground">{project.name}</strong>?
+              </p>
               <p className="text-sm text-muted-foreground">
-                การลบโปรเจคจะลบข้อมูลต่อไปนี้ออกจากระบบ:
+                การลบโปรเจกต์จะลบข้อมูลต่อไปนี้ออกจากระบบ:
               </p>
               <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
                 <li>งานทั้งหมด ({project._count.tasks} งาน)</li>
-                <li>สถานะและ Phase ของโปรเจค</li>
+                <li>สถานะและ Phase ของโปรเจกต์</li>
                 <li>ความคิดเห็นและ Checklist ในงาน</li>
                 <li>ประวัติการดำเนินงานทั้งหมด</li>
               </ul>
@@ -215,7 +225,7 @@ export function ProjectRow({ project }: ProjectRowProps) {
                   กำลังลบ...
                 </>
               ) : (
-                "ลบโปรเจค"
+                "ลบโปรเจกต์"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

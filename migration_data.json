@@ -1115,7 +1115,7 @@
       "originalRowNumber": 10,
       "originalId": "PROJ-f9bfa4cd-82b5-44ad-9629-3f385913e1f9",
       "name": "พัฒนาแอพ ProjectFlow",
-      "description": "สร้างแอพสำหรับบริหารจัดการโปรเจคสำหรับใช้งานเป็นทีมในโรงพยาบาล โดยอ้างอิงจาก ClickUp เป็นต้นแบบฟังค์ชั่นการทำงานในแอพของผมจะใกล้เคียงกับ ClickUp มากที่สุดเท่าที่จะทำได้ โดยมุ่งเน้นที่ความเรียบง่าย, ประสิทธิภาพ, และประสบการณ์การใช้งานที่ลื่นไหล (Fluid UX) เหมาะสมกับบริบทการทำงานในโรงพยาบาลUI/UX ที่ทันสมัยและเป็นภาษาไทย เพื่อลดอุปสรรคในการใช้งาน  เทคโนโลยีที่ใช้คือ Google App Script และ Google Sheets ดีไซน์ออกมาในแบบ Single Page App",
+      "description": "สร้างแอพสำหรับบริหารจัดการโปรเจกต์สำหรับใช้งานเป็นทีมในโรงพยาบาล โดยอ้างอิงจาก ClickUp เป็นต้นแบบฟังค์ชั่นการทำงานในแอพของผมจะใกล้เคียงกับ ClickUp มากที่สุดเท่าที่จะทำได้ โดยมุ่งเน้นที่ความเรียบง่าย, ประสิทธิภาพ, และประสบการณ์การใช้งานที่ลื่นไหล (Fluid UX) เหมาะสมกับบริบทการทำงานในโรงพยาบาลUI/UX ที่ทันสมัยและเป็นภาษาไทย เพื่อลดอุปสรรคในการใช้งาน  เทคโนโลยีที่ใช้คือ Google App Script และ Google Sheets ดีไซน์ออกมาในแบบ Single Page App",
       "departmentId": "DEPT-059",
       "ownerUserId": "peaknext@gmail.com",
       "createdDate": "2025-10-19T17:12:07.967Z",
@@ -2993,49 +2993,49 @@
     {
       "originalRowNumber": 42,
       "permissionKey": "create_dept_project",
-      "permissionName": "สร้างโปรเจคในหน่วยงาน",
+      "permissionName": "สร้างโปรเจกต์ในหน่วยงาน",
       "category": "create"
     },
     {
       "originalRowNumber": 43,
       "permissionKey": "create_div_project",
-      "permissionName": "สร้างโปรเจคในหน่วยงานที่อยู่ภายใต้กลุ่มงานเดียวกัน",
+      "permissionName": "สร้างโปรเจกต์ในหน่วยงานที่อยู่ภายใต้กลุ่มงานเดียวกัน",
       "category": "create"
     },
     {
       "originalRowNumber": 44,
       "permissionKey": "create_missgrp_project",
-      "permissionName": "สร้างโปรเจคในหน่วยงานที่อยู่ภายใต้กลุ่มภารกิจเดียวกัน",
+      "permissionName": "สร้างโปรเจกต์ในหน่วยงานที่อยู่ภายใต้กลุ่มภารกิจเดียวกัน",
       "category": "create"
     },
     {
       "originalRowNumber": 45,
       "permissionKey": "create_all_project",
-      "permissionName": "สร้างโปรเจคในทุกหน่วยงาน",
+      "permissionName": "สร้างโปรเจกต์ในทุกหน่วยงาน",
       "category": "create"
     },
     {
       "originalRowNumber": 46,
       "permissionKey": "edit_dept_project",
-      "permissionName": "แก้ไขโปรเจคในหน่วยงาน",
+      "permissionName": "แก้ไขโปรเจกต์ในหน่วยงาน",
       "category": "update"
     },
     {
       "originalRowNumber": 47,
       "permissionKey": "edit_div_project",
-      "permissionName": "แก้ไขโปรเจคในหน่วยงานที่อยู่ภายใต้กลุ่มงานเดียวกัน",
+      "permissionName": "แก้ไขโปรเจกต์ในหน่วยงานที่อยู่ภายใต้กลุ่มงานเดียวกัน",
       "category": "update"
     },
     {
       "originalRowNumber": 48,
       "permissionKey": "edit_missgrp_project",
-      "permissionName": "แก้ไขโปรเจคในหน่วยงานที่อยู่ภายใต้กลุ่มภารกิจเดียวกัน",
+      "permissionName": "แก้ไขโปรเจกต์ในหน่วยงานที่อยู่ภายใต้กลุ่มภารกิจเดียวกัน",
       "category": "update"
     },
     {
       "originalRowNumber": 49,
       "permissionKey": "edit_all_project",
-      "permissionName": "แก้ไขโปรเจคในทุกหน่วยงาน",
+      "permissionName": "แก้ไขโปรเจกต์ในทุกหน่วยงาน",
       "category": "update"
     },
     {
@@ -3089,7 +3089,7 @@
     {
       "originalRowNumber": 58,
       "permissionKey": "filter_project",
-      "permissionName": "ใช้งานตัวกรองตามโปรเจค",
+      "permissionName": "ใช้งานตัวกรองตามโปรเจกต์",
       "category": "ui"
     },
     {
@@ -3113,49 +3113,49 @@
     {
       "originalRowNumber": 62,
       "permissionKey": "delete_dept_project",
-      "permissionName": "ลบโปรเจคในหน่วยงาน",
+      "permissionName": "ลบโปรเจกต์ในหน่วยงาน",
       "category": "delete"
     },
     {
       "originalRowNumber": 63,
       "permissionKey": "delete_div_project",
-      "permissionName": "ลบโปรเจคในหน่วยงานที่อยู่ภายใต้กลุ่มงานเดียวกัน",
+      "permissionName": "ลบโปรเจกต์ในหน่วยงานที่อยู่ภายใต้กลุ่มงานเดียวกัน",
       "category": "delete"
     },
     {
       "originalRowNumber": 64,
       "permissionKey": "delete_missgrp_project",
-      "permissionName": "ลบโปรเจคในหน่วยงานที่อยู่ภายใต้กลุ่มภารกิจเดียวกัน",
+      "permissionName": "ลบโปรเจกต์ในหน่วยงานที่อยู่ภายใต้กลุ่มภารกิจเดียวกัน",
       "category": "delete"
     },
     {
       "originalRowNumber": 65,
       "permissionKey": "delete_all_project",
-      "permissionName": "ลบโปรเจคในทุกหน่วยงาน",
+      "permissionName": "ลบโปรเจกต์ในทุกหน่วยงาน",
       "category": "delete"
     },
     {
       "originalRowNumber": 66,
       "permissionKey": "close_dept_project",
-      "permissionName": "ปิดโปรเจคในหน่วยงาน",
+      "permissionName": "ปิดโปรเจกต์ในหน่วยงาน",
       "category": "update"
     },
     {
       "originalRowNumber": 67,
       "permissionKey": "close_div_project",
-      "permissionName": "ปิดโปรเจคในหน่วยงานที่อยู่ภายใต้กลุ่มงานเดียวกัน",
+      "permissionName": "ปิดโปรเจกต์ในหน่วยงานที่อยู่ภายใต้กลุ่มงานเดียวกัน",
       "category": "update"
     },
     {
       "originalRowNumber": 68,
       "permissionKey": "close_missgrp_project",
-      "permissionName": "ปิดโปรเจคในหน่วยงานที่อยู่ภายใต้กลุ่มภารกิจเดียวกัน",
+      "permissionName": "ปิดโปรเจกต์ในหน่วยงานที่อยู่ภายใต้กลุ่มภารกิจเดียวกัน",
       "category": "update"
     },
     {
       "originalRowNumber": 69,
       "permissionKey": "close_all_project",
-      "permissionName": "ปิดโปรเจคในทุกหน่วยงาน",
+      "permissionName": "ปิดโปรเจกต์ในทุกหน่วยงาน",
       "category": "update"
     },
     {

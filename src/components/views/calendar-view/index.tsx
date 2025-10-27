@@ -3,26 +3,33 @@
  * Shows tasks by due date with drag-and-drop support
  */
 
-'use client';
+"use client";
 
-import { useEffect, useRef, useState, useMemo } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import type { EventClickArg, EventMountArg, EventDropArg } from '@fullcalendar/core';
-import { useTheme } from 'next-themes';
-import { useQueryClient } from '@tanstack/react-query';
-import { useProject, projectKeys } from '@/hooks/use-projects';
-import { useUpdateTask } from '@/hooks/use-tasks';
-import { useUIStore } from '@/stores/use-ui-store';
-import { usePersistedFilters } from '@/hooks/use-persisted-filters';
-import { getCalendarColor, getCalendarTextColor } from '@/lib/calendar-colors';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { TaskFilterBar } from '@/components/views/common/task-filter-bar';
-import { filterTasks, getUniqueAssignees } from '@/components/views/common/filter-tasks';
-import type { Task } from '@/hooks/use-tasks';
+import { useEffect, useRef, useState, useMemo } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import type {
+  EventClickArg,
+  EventMountArg,
+  EventDropArg,
+} from "@fullcalendar/core";
+import { useTheme } from "next-themes";
+import { useQueryClient } from "@tanstack/react-query";
+import { useProject, projectKeys } from "@/hooks/use-projects";
+import { useUpdateTask } from "@/hooks/use-tasks";
+import { useUIStore } from "@/stores/use-ui-store";
+import { usePersistedFilters } from "@/hooks/use-persisted-filters";
+import { getCalendarColor, getCalendarTextColor } from "@/lib/calendar-colors";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TaskFilterBar } from "@/components/views/common/task-filter-bar";
+import {
+  filterTasks,
+  getUniqueAssignees,
+} from "@/components/views/common/filter-tasks";
+import type { Task } from "@/hooks/use-tasks";
 
 interface CalendarViewProps {
   projectId: string;
@@ -36,7 +43,7 @@ export function CalendarView({ projectId }: CalendarViewProps) {
   const openTaskPanel = useUIStore((state) => state.openTaskPanel);
   const calendarRef = useRef<FullCalendar>(null);
 
-  const isDarkMode = theme === 'dark';
+  const isDarkMode = theme === "dark";
 
   // Filter state with localStorage persistence
   const [filters, setFilters] = usePersistedFilters();
@@ -76,7 +83,11 @@ export function CalendarView({ projectId }: CalendarViewProps) {
     .map((task) => {
       // Calculate start and end dates
       // FullCalendar uses exclusive end dates for all-day events, so we need to add 1 day
-      const startDate = task.startDate ? new Date(task.startDate) : task.dueDate ? new Date(task.dueDate) : new Date();
+      const startDate = task.startDate
+        ? new Date(task.startDate)
+        : task.dueDate
+          ? new Date(task.dueDate)
+          : new Date();
 
       // For end date: add 1 day to make it exclusive (FullCalendar convention)
       const endDate = new Date(task.dueDate || startDate);
@@ -85,9 +96,9 @@ export function CalendarView({ projectId }: CalendarViewProps) {
       // Skeleton state for creating/closing tasks
       if (task.isCreating || task.isClosing) {
         const title = task.isClosing
-          ? task.closeType === 'COMPLETED'
-            ? 'กำลังปิดงาน...'
-            : 'กำลังยกเลิกงาน...'
+          ? task.closeType === "COMPLETED"
+            ? "กำลังปิดงาน..."
+            : "กำลังยกเลิกงาน..."
           : task.name;
 
         return {
@@ -95,9 +106,9 @@ export function CalendarView({ projectId }: CalendarViewProps) {
           title,
           start: startDate.toISOString(),
           end: endDate.toISOString(),
-          backgroundColor: '#e5e7eb',
-          borderColor: '#e5e7eb',
-          textColor: '#6b7280',
+          backgroundColor: "#e5e7eb",
+          borderColor: "#e5e7eb",
+          textColor: "#6b7280",
           editable: false,
           extendedProps: {
             projectId: task.projectId,
@@ -109,7 +120,9 @@ export function CalendarView({ projectId }: CalendarViewProps) {
 
       // Normal event with priority colors
       const eventColor = getCalendarColor(task.priority, isDarkMode);
-      const textColor = isDarkMode ? getCalendarTextColor(task.priority) : '#424242';
+      const textColor = isDarkMode
+        ? getCalendarTextColor(task.priority)
+        : "#424242";
 
       return {
         id: task.id,
@@ -135,20 +148,22 @@ export function CalendarView({ projectId }: CalendarViewProps) {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) {
       info.revert();
-      console.error('Task not found:', taskId);
+      console.error("Task not found:", taskId);
       return;
     }
 
     // Check if closed
     if (task.isClosed) {
       info.revert();
-      console.warn('Cannot edit closed task:', taskId);
+      console.warn("Cannot edit closed task:", taskId);
       return;
     }
 
     // Calculate new dates from event (FullCalendar uses exclusive end dates for day-based events)
     // For all-day events: end date is exclusive (next day), so we need to subtract 1 day
-    const newStartDate = info.event.start ? info.event.start.toISOString() : task.startDate;
+    const newStartDate = info.event.start
+      ? info.event.start.toISOString()
+      : task.startDate;
 
     // FullCalendar end date is exclusive, so subtract 1 day to get the actual end date
     let newDueDate: string | null = null;
@@ -167,7 +182,8 @@ export function CalendarView({ projectId }: CalendarViewProps) {
     }
 
     // Prepare update data
-    const updateData: { startDate?: string | null; dueDate?: string | null } = {};
+    const updateData: { startDate?: string | null; dueDate?: string | null } =
+      {};
     if (newStartDate !== task.startDate) {
       updateData.startDate = newStartDate;
     }
@@ -207,7 +223,7 @@ export function CalendarView({ projectId }: CalendarViewProps) {
           queryClient.setQueryData(queryKey, previousData);
           // Revert calendar UI
           info.revert();
-          console.error('Failed to update task dates:', error);
+          console.error("Failed to update task dates:", error);
         },
       }
     );
@@ -218,11 +234,13 @@ export function CalendarView({ projectId }: CalendarViewProps) {
     const taskId = info.event.id;
     const projectId = info.event.extendedProps.projectId;
 
-
     if (taskId && projectId) {
       openTaskPanel(taskId);
     } else {
-      console.warn('[Calendar] Missing taskId or projectId:', { taskId, projectId });
+      console.warn("[Calendar] Missing taskId or projectId:", {
+        taskId,
+        projectId,
+      });
     }
   };
 
@@ -233,14 +251,14 @@ export function CalendarView({ projectId }: CalendarViewProps) {
 
     // Add pin indicator to pinned tasks
     if (isPinned && !isSkeleton) {
-      const pinIcon = document.createElement('span');
-      pinIcon.className = 'material-symbols-outlined';
-      pinIcon.style.fontSize = '12px';
-      pinIcon.style.marginRight = '2px';
-      pinIcon.textContent = 'keep';
-      pinIcon.title = 'ปักหมุดแล้ว';
+      const pinIcon = document.createElement("span");
+      pinIcon.className = "material-symbols-outlined";
+      pinIcon.style.fontSize = "12px";
+      pinIcon.style.marginRight = "2px";
+      pinIcon.textContent = "keep";
+      pinIcon.title = "ปักหมุดแล้ว";
 
-      const titleEl = info.el.querySelector('.fc-event-title');
+      const titleEl = info.el.querySelector(".fc-event-title");
       if (titleEl) {
         titleEl.insertBefore(pinIcon, titleEl.firstChild);
       }
@@ -277,11 +295,10 @@ export function CalendarView({ projectId }: CalendarViewProps) {
   if (!data) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">ไม่พบข้อมูลโปรเจค</p>
+        <p className="text-sm text-muted-foreground">ไม่พบข้อมูลโปรเจกต์</p>
       </div>
     );
   }
-
 
   return (
     <div className="flex flex-col h-full">
@@ -303,9 +320,9 @@ export function CalendarView({ projectId }: CalendarViewProps) {
           initialView="dayGridMonth"
           locale="th"
           headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
           }}
           events={events}
           editable={true}
@@ -315,12 +332,12 @@ export function CalendarView({ projectId }: CalendarViewProps) {
           eventDidMount={handleEventDidMount}
           dayCellContent={(arg) => {
             // Remove " วัน" suffix from Thai locale
-            return arg.dayNumberText.replace(' วัน', '');
+            return arg.dayNumberText.replace(" วัน", "");
           }}
           height="100%"
           eventTimeFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
+            hour: "2-digit",
+            minute: "2-digit",
             meridiem: false,
           }}
         />

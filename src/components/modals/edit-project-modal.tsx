@@ -32,8 +32,8 @@ import { useProjectEditDetails, useEditProject } from "@/hooks/use-projects";
 import { useSession } from "@/hooks/use-session";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { format } from 'date-fns';
-import { th } from 'date-fns/locale';
+import { format } from "date-fns";
+import { th } from "date-fns/locale";
 import {
   Popover,
   PopoverContent,
@@ -112,7 +112,7 @@ export function EditProjectModal() {
   // Check if user can edit projects (ADMIN, CHIEF, LEADER, HEAD can edit)
   const canEdit = useMemo(() => {
     if (!session?.user?.role) return false;
-    return ['ADMIN', 'CHIEF', 'LEADER', 'HEAD'].includes(session.user.role);
+    return ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(session.user.role);
   }, [session?.user?.role]);
 
   // Fetch project edit details
@@ -217,7 +217,7 @@ export function EditProjectModal() {
         },
       });
 
-      toast.success(`แก้ไขโปรเจค "${project?.name}" สำเร็จ`);
+      toast.success(`แก้ไขโปรเจกต์ "${project?.name}" สำเร็จ`);
       handleClose();
     } catch (error: any) {
       console.error("[EditProjectModal] Error saving:", error);
@@ -257,7 +257,7 @@ export function EditProjectModal() {
         <header className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 rounded-t-xl">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              แก้ไขโปรเจค
+              แก้ไขโปรเจกต์
             </h2>
           </div>
           <button
@@ -301,7 +301,7 @@ export function EditProjectModal() {
               <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/50 rounded-lg p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-muted-foreground">ชื่อโปรเจค:</span>
+                    <span className="text-muted-foreground">ชื่อโปรเจกต์:</span>
                     <span className="ml-2 font-medium">{project.name}</span>
                   </div>
                   <div>
@@ -338,7 +338,7 @@ export function EditProjectModal() {
                 <Textarea
                   id="description"
                   rows={4}
-                  placeholder="อธิบายวัตถุประสงค์และขอบเขตของโปรเจค..."
+                  placeholder="อธิบายวัตถุประสงค์และขอบเขตของโปรเจกต์..."
                   {...register("description")}
                   disabled={!canEdit}
                   className={cn(
@@ -355,7 +355,7 @@ export function EditProjectModal() {
                 <div className="flex items-center gap-1.5">
                   <span>สร้างโดย:</span>
                   <span className="font-medium text-foreground">
-                    {(project as any).creator?.fullName || '-'}
+                    {(project as any).creator?.fullName || "-"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -365,10 +365,12 @@ export function EditProjectModal() {
                       ? (() => {
                           const date = new Date(project.dateCreated);
                           const thaiYear = date.getFullYear() + 543;
-                          const dateStr = format(date, 'd MMMM yyyy, HH:mm', { locale: th });
+                          const dateStr = format(date, "d MMMM yyyy, HH:mm", {
+                            locale: th,
+                          });
                           return dateStr.replace(/\d{4}/, thaiYear.toString());
                         })()
-                      : '-'}
+                      : "-"}
                   </span>
                 </div>
               </div>
@@ -457,7 +459,7 @@ export function EditProjectModal() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p className="text-sm">โปรเจคนี้ยังไม่มีข้อมูล Phase</p>
+                    <p className="text-sm">โปรเจกต์นี้ยังไม่มีข้อมูล Phase</p>
                   </div>
                 )}
               </div>
@@ -547,7 +549,7 @@ export function EditProjectModal() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p className="text-sm">โปรเจคนี้ยังไม่มีข้อมูล Status</p>
+                    <p className="text-sm">โปรเจกต์นี้ยังไม่มีข้อมูล Status</p>
                   </div>
                 )}
               </div>
@@ -578,7 +580,9 @@ export function EditProjectModal() {
               <Button
                 type="button"
                 onClick={handleFormSubmit(onSubmit)}
-                disabled={!isDirty || editProjectMutation.isPending || isLoading}
+                disabled={
+                  !isDirty || editProjectMutation.isPending || isLoading
+                }
                 className="flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg shadow-md h-[46px] min-w-[150px]"
               >
                 {editProjectMutation.isPending ? (
@@ -599,20 +603,27 @@ export function EditProjectModal() {
       </div>
 
       {/* Unsaved Changes Warning Dialog */}
-      <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
+      <AlertDialog
+        open={showUnsavedWarning}
+        onOpenChange={setShowUnsavedWarning}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</AlertDialogTitle>
+            <AlertDialogTitle>
+              มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              คุณมีการเปลี่ยนแปลงข้อมูลที่ยังไม่ได้บันทึก หากปิดหน้าต่างนี้ การเปลี่ยนแปลงทั้งหมดจะสูญหาย
+              คุณมีการเปลี่ยนแปลงข้อมูลที่ยังไม่ได้บันทึก หากปิดหน้าต่างนี้
+              การเปลี่ยนแปลงทั้งหมดจะสูญหาย
               คุณต้องการปิดหน้าต่างโดยไม่บันทึกหรือไม่?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelClose}>
-              ยกเลิก
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmClose} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogCancel onClick={cancelClose}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmClose}
+              className="bg-red-600 hover:bg-red-700"
+            >
               ปิดโดยไม่บันทึก
             </AlertDialogAction>
           </AlertDialogFooter>

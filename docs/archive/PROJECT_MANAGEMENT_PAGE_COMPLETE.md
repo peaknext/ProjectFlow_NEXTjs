@@ -30,7 +30,7 @@ Project Management page provides a comprehensive interface for managing all proj
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Header: "จัดการโปรเจค" + [สร้างโปรเจค] Button        │ (Fixed)
+│ Header: "จัดการโปรเจกต์" + [สร้างโปรเจกต์] Button        │ (Fixed)
 ├─────────────────────────────────────────────────────────┤
 │ Filter Bar:                                              │ (Fixed)
 │  - กลุ่มภารกิจ (Mission Group)                          │
@@ -38,11 +38,11 @@ Project Management page provides a comprehensive interface for managing all proj
 │  - หน่วยงาน (Department)                                │
 │  - Search box                                            │
 │  - Clear filters button                                  │
-│  - Count: "แสดง X จาก Y โปรเจค"                        │
+│  - Count: "แสดง X จาก Y โปรเจกต์"                        │
 ├─────────────────────────────────────────────────────────┤
 │ Table:                                                   │ (Header Fixed)
 │  ┌──────────────────────────────────────────────────┐  │
-│  │ ชื่อโปรเจค │ เจ้าของโปรเจค │ Phase │ Actions │  │
+│  │ ชื่อโปรเจกต์ │ เจ้าของโปรเจกต์ │ Phase │ Actions │  │
 │  ├──────────────────────────────────────────────────┤  │
 │  │ Project 1  │ User Avatar    │ Badge │ [Icons] │  │ (Scrollable)
 │  │ Project 2  │ User Avatar    │ Badge │ [Icons] │  │
@@ -57,23 +57,24 @@ Project Management page provides a comprehensive interface for managing all proj
 ### Component Breakdown
 
 **Main Components:**
+
 1. **Header** (`flex-shrink-0`)
-   - Title: "จัดการโปรเจค"
-   - Description: "จัดการและติดตามความคืบหน้าของโปรเจคทั้งหมด"
+   - Title: "จัดการโปรเจกต์"
+   - Description: "จัดการและติดตามความคืบหน้าของโปรเจกต์ทั้งหมด"
    - Create Button: Shows for ADMIN/CHIEF/LEADER/HEAD
 
 2. **Filter Bar** (`flex-shrink-0`)
    - 3 Cascade Popovers (Mission Group → Division → Department)
    - Search Input (debounced 300ms)
    - Clear Filters Button
-   - Count Display: "แสดง X จาก Y โปรเจค"
+   - Count Display: "แสดง X จาก Y โปรเจกต์"
 
 3. **Table** (`flex-1 min-h-0` - scrollable area)
    - **Fixed Header** (stays visible while scrolling)
    - **Scrollable Body** (overflow-auto)
    - Columns:
-     - **ชื่อโปรเจค** (40%) - Project name + hierarchy path + progress bar
-     - **เจ้าของโปรเจค** (25%) - Owner avatar + name
+     - **ชื่อโปรเจกต์** (40%) - Project name + hierarchy path + progress bar
+     - **เจ้าของโปรเจกต์** (25%) - Owner avatar + name
      - **Phase ปัจจุบัน** (20%) - Phase badge with color
      - **Actions** (15%) - Edit/Delete buttons (permission-based)
 
@@ -115,6 +116,7 @@ src/
 **Challenge**: When page size is large (50/100 items), content overflows and cannot scroll.
 
 **Solution**: Split table into two parts:
+
 - **Fixed Header Section**: Separate div with border, doesn't scroll
 - **Scrollable Body Section**: Independent div with `overflow-auto flex-1`
 
@@ -138,6 +140,7 @@ src/
 ```
 
 **Benefits**:
+
 - ✅ Header always visible (fixed at top)
 - ✅ Content scrolls independently
 - ✅ Column widths stay aligned
@@ -153,9 +156,7 @@ src/
   <div className="flex-shrink-0">{/* Filter Bar */}</div>
 
   {/* Scrollable section */}
-  <div className="flex-1 min-h-0">
-    {/* Table with fixed header */}
-  </div>
+  <div className="flex-1 min-h-0">{/* Table with fixed header */}</div>
 
   {/* Fixed section */}
   <div className="flex-shrink-0">{/* Pagination */}</div>
@@ -163,6 +164,7 @@ src/
 ```
 
 **Key CSS Classes**:
+
 - `flex-shrink-0` - Prevents element from shrinking (stays full size)
 - `flex-1 min-h-0` - Takes remaining space, allows content to scroll
 - `h-full` - Takes 100% of parent height
@@ -173,25 +175,31 @@ src/
 **Hierarchy**: Mission Group → Division → Department
 
 **Logic**:
+
 ```typescript
 // When Mission Group selected
-const filteredDivisions = divisions.filter(d => d.missionGroupId === selectedMG);
+const filteredDivisions = divisions.filter(
+  (d) => d.missionGroupId === selectedMG
+);
 
 // When Division selected
-const filteredDepartments = departments.filter(d => d.divisionId === selectedDiv);
+const filteredDepartments = departments.filter(
+  (d) => d.divisionId === selectedDiv
+);
 
 // Reset child selectors when parent changes
 if (missionGroupId !== filters.missionGroupId) {
   setFilters({
     missionGroupId,
-    divisionId: null,    // Reset
-    departmentId: null,  // Reset
-    searchQuery
+    divisionId: null, // Reset
+    departmentId: null, // Reset
+    searchQuery,
   });
 }
 ```
 
 **Controlled Popovers** (Auto-close on selection):
+
 ```typescript
 const [popoverOpen, setPopoverOpen] = useState<PopoverState>({
   missionGroup: false,
@@ -212,6 +220,7 @@ const [popoverOpen, setPopoverOpen] = useState<PopoverState>({
 #### 4. Client-side Pagination
 
 **Calculation**:
+
 ```typescript
 const totalPages = Math.ceil(filteredProjects.length / pageSize);
 const startIndex = (currentPage - 1) * pageSize;
@@ -220,6 +229,7 @@ const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
 ```
 
 **Page Size Change**:
+
 ```typescript
 const handlePageSizeChange = (size: number) => {
   setPageSize(size);
@@ -230,8 +240,11 @@ const handlePageSizeChange = (size: number) => {
 #### 5. Sorting System
 
 **State Management**:
+
 ```typescript
-const [sortColumn, setSortColumn] = useState<"name" | "owner" | "phase">("name");
+const [sortColumn, setSortColumn] = useState<"name" | "owner" | "phase">(
+  "name"
+);
 const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
 const handleSort = (column: "name" | "owner" | "phase") => {
@@ -247,6 +260,7 @@ const handleSort = (column: "name" | "owner" | "phase") => {
 ```
 
 **Sorting Logic** (`project-utils.ts`):
+
 ```typescript
 export function sortProjects(
   projects: ProjectWithDetails[],
@@ -288,6 +302,7 @@ export function sortProjects(
 **Endpoint**: `GET /api/projects?includeDetails=true`
 
 **Response Structure**:
+
 ```typescript
 {
   success: true,
@@ -319,6 +334,7 @@ export function sortProjects(
 ```
 
 **React Query Hook**:
+
 ```typescript
 export function useProjectsList() {
   return useQuery({
@@ -341,6 +357,7 @@ export function useProjectsList() {
 ### Access Control
 
 **Route Level** (`src/app/(dashboard)/projects/page.tsx`):
+
 ```typescript
 const canAccessProjectManagement = user?.role && [
   "ADMIN", "CHIEF", "LEADER", "HEAD"
@@ -352,26 +369,24 @@ if (!canAccessProjectManagement) {
 ```
 
 **Action Buttons** (`src/components/projects/project-row.tsx`):
-```typescript
-const canEdit = user?.role && [
-  "ADMIN", "CHIEF", "LEADER", "HEAD"
-].includes(user.role);
 
-const canDelete = user?.role && [
-  "ADMIN", "CHIEF"
-].includes(user.role);
+```typescript
+const canEdit =
+  user?.role && ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(user.role);
+
+const canDelete = user?.role && ["ADMIN", "CHIEF"].includes(user.role);
 ```
 
 ### Role Matrix
 
 | Role   | View List | Edit Project | Delete Project | Create Project |
-|--------|-----------|--------------|----------------|----------------|
-| ADMIN  | ✅         | ✅            | ✅              | ✅              |
-| CHIEF  | ✅         | ✅            | ✅              | ✅              |
-| LEADER | ✅         | ✅            | ❌              | ✅              |
-| HEAD   | ✅         | ✅            | ❌              | ✅              |
-| MEMBER | ❌         | ❌            | ❌              | ❌              |
-| USER   | ❌         | ❌            | ❌              | ❌              |
+| ------ | --------- | ------------ | -------------- | -------------- |
+| ADMIN  | ✅        | ✅           | ✅             | ✅             |
+| CHIEF  | ✅        | ✅           | ✅             | ✅             |
+| LEADER | ✅        | ✅           | ❌             | ✅             |
+| HEAD   | ✅        | ✅           | ❌             | ✅             |
+| MEMBER | ❌        | ❌           | ❌             | ❌             |
+| USER   | ❌        | ❌           | ❌             | ❌             |
 
 ---
 
@@ -427,9 +442,7 @@ export function getCurrentPhase(
 ### 3. Phase Badge Colors
 
 ```typescript
-export function getPhaseColorClasses(
-  phaseType: string
-): {
+export function getPhaseColorClasses(phaseType: string): {
   bg: string;
   text: string;
   border: string;
@@ -486,8 +499,7 @@ export function filterProjects(
   // Filter by Mission Group
   if (filters.missionGroupId) {
     result = result.filter(
-      (p) =>
-        p.department.division.missionGroup.id === filters.missionGroupId
+      (p) => p.department.division.missionGroup.id === filters.missionGroupId
     );
   }
 
@@ -500,9 +512,7 @@ export function filterProjects(
 
   // Filter by Department
   if (filters.departmentId) {
-    result = result.filter(
-      (p) => p.department.id === filters.departmentId
-    );
+    result = result.filter((p) => p.department.id === filters.departmentId);
   }
 
   // Filter by search query
@@ -533,16 +543,19 @@ export function filterProjects(
 ### Future Features (Phases 5-7)
 
 **Phase 5: Create Project Modal** (2-3 days)
+
 - Modal form with validation (Zod)
 - Fields: Name, Department, Owner, Phases, Statuses
 - API integration: POST /api/projects
 
 **Phase 6: Edit/Delete Modals** (2-3 days)
+
 - Edit Project Modal (similar to Create)
 - Delete Confirmation Modal
 - API integration: PATCH /api/projects/:id, DELETE /api/projects/:id
 
 **Phase 7: Optimistic UI** (1-2 days)
+
 - Instant UI updates on create/edit/delete
 - Automatic rollback on error
 - Sync animation integration
@@ -554,12 +567,14 @@ export function filterProjects(
 ### Manual Testing
 
 **Basic Functionality**:
+
 - [x] Page loads successfully at `/projects`
 - [x] Projects list displays correctly
 - [x] Loading skeleton shows during data fetch
 - [x] Error state displays on API failure
 
 **Permissions**:
+
 - [x] ADMIN can access page
 - [x] CHIEF can access page
 - [x] LEADER can access page
@@ -568,6 +583,7 @@ export function filterProjects(
 - [x] USER sees "No Permission" screen
 
 **Filtering**:
+
 - [x] Mission Group filter works
 - [x] Division filter shows only divisions from selected Mission Group
 - [x] Department filter shows only departments from selected Division
@@ -578,18 +594,21 @@ export function filterProjects(
 - [x] Count display updates correctly
 
 **Popover Behavior**:
+
 - [x] Popovers open when clicked
 - [x] Popovers close after selection
 - [x] Popovers close when clicking outside
 - [x] Search within popover works
 
 **Sorting**:
+
 - [x] Sort by Name (ascending/descending)
 - [x] Sort by Owner (ascending/descending)
 - [x] Sort by Phase (ascending/descending)
 - [x] Sort indicator shows current column and direction
 
 **Pagination**:
+
 - [x] Page size selector works (10/25/50/100)
 - [x] Table displays correct number of items
 - [x] **Content scrolls when items exceed viewport** ✨
@@ -600,6 +619,7 @@ export function filterProjects(
 - [x] Info display shows correct range
 
 **Table Display**:
+
 - [x] Project name displays
 - [x] Hierarchy path displays (MG > DIV > DEPT)
 - [x] Progress bar displays with correct percentage
@@ -610,11 +630,13 @@ export function filterProjects(
 - [x] Clicking row navigates to Board view
 
 **Dark Mode**:
+
 - [x] All components support dark mode
 - [x] Colors remain readable in dark mode
 - [x] Borders and backgrounds adjust correctly
 
 **Responsive Design**:
+
 - [x] Layout works on desktop (1920px)
 - [x] Layout works on laptop (1366px)
 - [x] Layout works on tablet (768px)
@@ -690,15 +712,15 @@ export function filterProjects(
 
 ### Implementation Status
 
-| Phase | Feature | Status | Completion Date |
-|-------|---------|--------|-----------------|
-| 1 | Page Structure & Routing | ✅ | 2025-10-24 |
-| 2 | Filter Bar & Search | ✅ | 2025-10-24 |
-| 3 | Table Display & Sorting | ✅ | 2025-10-24 |
-| 4 | Data Integration & Pagination | ✅ | 2025-10-24 |
-| 5 | Create Project Modal | ⏳ | TBD |
-| 6 | Edit/Delete Modals | ⏳ | TBD |
-| 7 | Optimistic UI | ⏳ | TBD |
+| Phase | Feature                       | Status | Completion Date |
+| ----- | ----------------------------- | ------ | --------------- |
+| 1     | Page Structure & Routing      | ✅     | 2025-10-24      |
+| 2     | Filter Bar & Search           | ✅     | 2025-10-24      |
+| 3     | Table Display & Sorting       | ✅     | 2025-10-24      |
+| 4     | Data Integration & Pagination | ✅     | 2025-10-24      |
+| 5     | Create Project Modal          | ⏳     | TBD             |
+| 6     | Edit/Delete Modals            | ⏳     | TBD             |
+| 7     | Optimistic UI                 | ⏳     | TBD             |
 
 ### Code Quality
 
@@ -720,6 +742,7 @@ export function filterProjects(
 The Project Management page is now fully functional for viewing, filtering, sorting, and navigating projects. The implementation follows Next.js 15 best practices and provides a solid foundation for future enhancements (Create/Edit/Delete modals).
 
 **Key Achievements**:
+
 - ✨ **Fixed header table** - Solves scrolling issue with large datasets
 - 🎯 **Hierarchical cascade filters** - Intuitive navigation through organizational structure
 - ⚡ **Fast client-side operations** - No server round-trips for filtering/sorting

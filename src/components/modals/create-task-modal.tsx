@@ -81,7 +81,7 @@ export function CreateTaskModal() {
   // Fetch all accessible projects (with permission check)
   const { data: projectsData, isLoading: isLoadingProjects } = useProjects({
     limit: 1000, // Get all accessible projects
-    status: 'ACTIVE', // Only active projects
+    status: "ACTIVE", // Only active projects
   });
 
   // Animation state (same as TaskPanel)
@@ -161,7 +161,6 @@ export function CreateTaskModal() {
   }, [watchProjectId]);
 
   async function loadInitialData() {
-
     // Reset form first (but keep default values)
     reset({
       name: "",
@@ -180,7 +179,6 @@ export function CreateTaskModal() {
 
     // PRIORITY 1: Use projects from useProjects hook (with permission check)
     if (projectsData?.projects && projectsData.projects.length > 0) {
-
       // Map to expected Project interface (keep departmentId for filtering)
       projects = projectsData.projects.map((p: any) => ({
         id: p.id,
@@ -249,8 +247,7 @@ export function CreateTaskModal() {
 
       // Load project data immediately
       await loadProjectData(project.id);
-    }
-    else {
+    } else {
       setSelectedProject(null);
       // Clear project data
       setProjectUsers([]);
@@ -266,7 +263,6 @@ export function CreateTaskModal() {
     filterDepartmentId?: string
   ): Project[] {
     const projects: Project[] = [];
-
 
     if (workspace.viewType === "hierarchical" && workspace.hierarchical) {
       workspace.hierarchical.forEach((mg: any) => {
@@ -340,7 +336,7 @@ export function CreateTaskModal() {
       setValue("assigneeUserIds", []);
     } catch (error) {
       console.error("Failed to load project data:", error);
-      toast.error("ไม่สามารถโหลดข้อมูลโปรเจคได้");
+      toast.error("ไม่สามารถโหลดข้อมูลโปรเจกต์ได้");
     } finally {
       setIsLoadingProjectData(false);
     }
@@ -369,7 +365,7 @@ export function CreateTaskModal() {
   const onSubmit = async (data: TaskFormData) => {
     // Validate project selection
     if (!data.projectId) {
-      toast.error("กรุณาเลือกโปรเจค");
+      toast.error("กรุณาเลือกโปรเจกต์");
       return;
     }
 
@@ -613,13 +609,13 @@ export function CreateTaskModal() {
               <div>
                 <Label className="block mb-1">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    โปรเจค <span className="text-red-500">*</span>
+                    โปรเจกต์ <span className="text-red-500">*</span>
                   </span>
                 </Label>
                 <Controller
                   name="projectId"
                   control={control}
-                  rules={{ required: "กรุณาเลือกโปรเจค" }}
+                  rules={{ required: "กรุณาเลือกโปรเจกต์" }}
                   render={({ field }) => (
                     <ProjectPopover
                       projects={availableProjects}
@@ -638,8 +634,8 @@ export function CreateTaskModal() {
                       }
                       placeholder={
                         isLoadingProjects
-                          ? "กำลังโหลดโปรเจค..."
-                          : "เลือกโปรเจค"
+                          ? "กำลังโหลดโปรเจกต์..."
+                          : "เลือกโปรเจกต์"
                       }
                       required
                     />

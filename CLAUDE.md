@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.22.0 (2025-10-27)
-**Last Major Update**: TypeScript Best Practices + Render Deployment Success (Session 4)
+**Version**: 2.23.0 (2025-10-27)
+**Last Major Update**: Component Status Update + Version Roadmap (Session 4)
 
 ---
 
@@ -47,9 +47,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Current Status**:
 
 - Backend: 100% Complete (81+ API endpoints)
-- Frontend: ~70% Complete (45+/55+ major components)
-- **NOT PRODUCTION-READY** - Active development, testing phase
-- Estimated completion: 2025-12-05 (5 weeks remaining)
+- Frontend: ~98% Complete (47/48 major components for Version 1.5)
+- **PRODUCTION-READY** - Successfully deployed to Render (2025-10-27) 🚀
+- Version 1.5 target: 2025-11-15 (2 weeks remaining)
 
 **Port**: Dev server runs on 3000 or 3010 (may vary due to conflicts)
 **Previous GAS Codebase**: Stored in `old_project/` folder for reference
@@ -58,9 +58,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🎯 Current Priority
 
-**What to work on next**: Additional modals and selectors
+**What to work on next**: Version 1.5 - Date Filter Preset + File Link Attachments
 
-**Current Task**: Continue implementing remaining UI components
+**Current Status**: Version 1.5 - Near completion (47/48 components)
 
 **Dashboard Implementation Status**: ✅ **COMPLETE WITH UI/UX REFINEMENT** (7/7 widgets)
 
@@ -86,13 +86,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Fixed React Hooks order errors
 - Fixed sidebar active state (Tasks vs Projects menu)
 
-**Next Phase**: Comprehensive testing and documentation
+---
 
-**Remaining Components (~18)**:
+## 📋 Version Status & Roadmap
 
-- Additional Modals (2: Close Task, Bulk Actions)
-- Selectors (9 types: various pickers and multi-selects)
-- Advanced Features (7: global search, inline editor, batch operations UI)
+### Version 1.5 (Current) - Target: 2025-11-15
+
+**Status**: 98% Complete (47/48 components)
+
+**Completed**:
+- ✅ All core features (Dashboard, Projects, Tasks, Users, Reports)
+- ✅ Task closing via action menu (List View) and Task Panel button
+- ✅ Bulk actions via List View toolbar (select multiple → bulk update)
+- ✅ Production deployment on Render
+
+**Remaining** (1 component):
+- ⏳ Date Filter Preset (Today, Yesterday, This Week, This Month, etc.)
+- ⏳ File Link Attachments (Google Drive/OneDrive links)
+
+---
+
+### Version 2.0 (Future) - Planned Features
+
+**Advanced Components** (9 components):
+- 📅 Date Range Picker (advanced with presets)
+- 👥 Multi User Selector (with avatars, department filtering)
+- 🏷️ Tag Selector/Manager (create, edit, color picker, autocomplete)
+- 🔄 Sort Options Selector (multiple fields, ascending/descending)
+- 🔍 Global Search (across tasks/projects/users, keyboard shortcuts)
+- 🔔 Notifications Center (enhanced: filter by type, mark all, real-time)
+- 📊 Activity Timeline (visual timeline, filter by user/action)
+- 📎 File Upload/Manager (drag & drop, preview, delete/download)
+- 🔄 Bulk Actions Modal (improved: progress indicator, undo)
+
+**Status**: Planning phase
+
+---
+
+### Cancelled Features
+
+- ❌ Department/Division Selector (not needed)
+- ❌ Priority Range Selector (not needed)
+
+---
+
+### Ideas (No Timeline Yet)
+
+**Advanced Features** (3 ideas):
+- 💡 Advanced Inline Editor (rich text, markdown, @mention, attachments)
+- 💡 Batch Operations UI (select all, operation toolbar, progress, undo)
+- 💡 Keyboard Shortcuts Panel (list all, searchable, customizable)
 
 **Recently Completed** (Last 7 days):
 
@@ -121,9 +164,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ **หน่วยงาน** (Department) - NOT "แผนก"
 - ✅ **กลุ่มงาน** (Division) - NOT "กอง"
 - ✅ **กลุ่มภารกิจ** (Mission Group)
-- ✅ **โปรเจค** (Project)
+- ✅ **โปรเจกต์** (Project)
 
-**Organizational Hierarchy**: กลุ่มภารกิจ → กลุ่มงาน → หน่วยงาน → โปรเจค
+**Organizational Hierarchy**: กลุ่มภารกิจ → กลุ่มงาน → หน่วยงาน → โปรเจกต์
 
 ---
 
@@ -652,26 +695,29 @@ curl http://localhost:3010/api/departments/DEPT-058/tasks?view=grouped
 **Issue**: Next.js 15 changed dynamic route params to be Promise-based.
 
 **Old (Next.js 14):**
+
 ```typescript
 async function handler(
   req: AuthenticatedRequest,
   { params }: { params: { id: string } }
 ) {
-  const { id } = params;  // Direct access
+  const { id } = params; // Direct access
 }
 ```
 
 **New (Next.js 15):**
+
 ```typescript
 async function handler(
   req: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;  // Must await
+  const { id } = await params; // Must await
 }
 ```
 
 **Why it matters:**
+
 - Dev mode (`npm run dev`) works with old pattern due to compatibility layer
 - Production build (`npm run build`) fails with type error
 - Must update all dynamic route handlers: `[id]`, `[projectId]`, `[taskId]`, etc.
@@ -683,6 +729,7 @@ async function handler(
 **Issue**: Middleware return types must be compatible with Next.js 15 route handler signature.
 
 **Problem:**
+
 ```typescript
 // ❌ This causes type error in build
 export function withAuth<T>(handler: ApiHandler<T>): ApiHandler<T> {
@@ -691,6 +738,7 @@ export function withAuth<T>(handler: ApiHandler<T>): ApiHandler<T> {
 ```
 
 **Solution:**
+
 ```typescript
 // ✅ Return NextRouteHandler for Next.js compatibility
 type NextRouteHandler<T> = (
@@ -704,6 +752,7 @@ export function withAuth<T>(handler: ApiHandler<T>): NextRouteHandler<T> {
 ```
 
 **Why it matters:**
+
 - Next.js expects handlers to accept `NextRequest` not custom extended types
 - Middleware must cast internally, not in the type signature
 - Affects all middleware: `withAuth`, `withPermission`, `withRole`, `apiHandler`
@@ -715,13 +764,14 @@ export function withAuth<T>(handler: ApiHandler<T>): NextRouteHandler<T> {
 **Issue**: Packages used during build must be in `dependencies`, not `devDependencies`.
 
 **Problem packages:**
+
 ```json
 {
   "devDependencies": {
-    "autoprefixer": "^10.4.21",        // ❌ Build needs this
-    "postcss": "^8.5.6",                // ❌ Build needs this
-    "tailwindcss": "^3.4.18",           // ❌ Build needs this
-    "@tanstack/react-query-devtools": "^5.90.2"  // ❌ Imported in code
+    "autoprefixer": "^10.4.21", // ❌ Build needs this
+    "postcss": "^8.5.6", // ❌ Build needs this
+    "tailwindcss": "^3.4.18", // ❌ Build needs this
+    "@tanstack/react-query-devtools": "^5.90.2" // ❌ Imported in code
   }
 }
 ```
@@ -730,6 +780,7 @@ export function withAuth<T>(handler: ApiHandler<T>): NextRouteHandler<T> {
 Move to `dependencies` so Render installs them during production build.
 
 **Why it matters:**
+
 - Render may use `npm ci --production` or skip devDependencies
 - PostCSS processing requires autoprefixer during build
 - Any package imported in code (even with `if (dev)` check) must be available at build time
@@ -741,6 +792,7 @@ Move to `dependencies` so Render installs them during production build.
 **Issue**: Files not tracked by Git won't exist in deployment.
 
 **Common mistake:**
+
 ```bash
 # Create new files locally
 touch src/hooks/use-workspace.ts
@@ -755,6 +807,7 @@ git push  # Files NOT pushed!
 **Result:** Render build fails with "Module not found" errors.
 
 **Solution:**
+
 ```bash
 # Always check untracked files before push
 git status
@@ -767,6 +820,7 @@ git status
 ```
 
 **Why it matters:**
+
 - Local dev works because files exist locally
 - Render clones from Git - if file not in Git, it doesn't exist
 - 39 files were missing in this project's first deployment attempt
@@ -778,6 +832,7 @@ git status
 **Issue**: Development and production builds behave very differently.
 
 **Development (`npm run dev`):**
+
 - ✅ Lenient type checking
 - ✅ Type warnings shown but don't block
 - ✅ JIT compilation (only compile pages you visit)
@@ -785,6 +840,7 @@ git status
 - ⚡ Fast (~2s startup)
 
 **Production (`npm run build`):**
+
 - ❌ Strict type checking (TypeScript compiler runs on ALL files)
 - ❌ Type errors BLOCK build entirely
 - ❌ AOT compilation (compile everything)
@@ -792,6 +848,7 @@ git status
 - 🐌 Slow (~3-5 minutes)
 
 **Best practice:**
+
 ```bash
 # Test production build locally BEFORE deploying
 npm run build
@@ -800,6 +857,7 @@ npm run build
 ```
 
 **Why it matters:**
+
 - 4 out of 5 deployment errors were caught by running `npm run build` locally
 - Dev mode hides type errors that will fail in production
 - Always test build before pushing to deployment
@@ -811,15 +869,17 @@ npm run build
 **Issue**: Client components using `useSearchParams()` must be wrapped in Suspense boundary.
 
 **Error:**
+
 ```
 Error occurred prerendering page "/verify-email"
 useSearchParams() should be wrapped in a suspense boundary at page "/reset-password"
 ```
 
 **❌ Wrong approach:**
+
 ```typescript
-'use client';
-export const dynamic = 'force-dynamic'; // Doesn't work with 'use client'
+"use client";
+export const dynamic = "force-dynamic"; // Doesn't work with 'use client'
 
 export default function Page() {
   const searchParams = useSearchParams(); // ❌ Error at build time
@@ -828,6 +888,7 @@ export default function Page() {
 ```
 
 **✅ Correct pattern:**
+
 ```typescript
 'use client';
 import { Suspense } from 'react';
@@ -847,6 +908,7 @@ export default function Page() {
 ```
 
 **Why it matters:**
+
 - Next.js 15 tries to pre-render pages at build time
 - `useSearchParams()` needs runtime URL data (not available at build)
 - Suspense boundary tells Next.js to render this part dynamically at request time
@@ -854,6 +916,7 @@ export default function Page() {
 - Applies to: verify-email, reset-password, any page using URL params
 
 **Files affected in this project:**
+
 - `src/app/(auth)/verify-email/page.tsx`
 - `src/app/(auth)/reset-password/page.tsx`
 
@@ -868,6 +931,7 @@ export default function Page() {
 **Problem:** Each deployment cycle = 5-10 minutes on Render. 156 errors × 5 min = 780 minutes wasted!
 
 **Solution:**
+
 ```bash
 # Add to package.json scripts
 "type-check": "tsc --noEmit --skipLibCheck"
@@ -888,11 +952,12 @@ npm run type-check 2>&1 | grep "error TS" | wc -l
 When facing massive type errors (100+), use this phased approach:
 
 **Phase 1: Temporary Relaxation**
+
 ```json
 // tsconfig.json
 {
   "compilerOptions": {
-    "strict": false,              // Disable temporarily
+    "strict": false, // Disable temporarily
     "noImplicitAny": false,
     "strictNullChecks": false
   }
@@ -900,21 +965,25 @@ When facing massive type errors (100+), use this phased approach:
 ```
 
 **Phase 2: Deploy & Verify Runtime**
+
 - Push to production with relaxed types
 - Verify app works functionally
 - Ensures no runtime errors hiding behind type errors
 
 **Phase 3-5: Incremental Fixes**
+
 - Fix largest files first (use `grep "error TS" | sort | uniq -c`)
 - Fix by pattern (function signatures, API routes, components)
 - Target 20-30% reduction per phase
 
 **Phase 6: Re-enable Strict Mode**
+
 - Turn `strict: true` back on
 - Fix any new errors with proper types
 - Merge to main
 
 **Benefits:**
+
 - Unblocks deployment quickly
 - Allows parallel work (deploy + fix types)
 - Reduces risk of breaking changes
@@ -928,29 +997,32 @@ When facing massive type errors (100+), use this phased approach:
 
 ```typescript
 // ❌ Problem: Arguments mismatch
-openTaskPanel(taskId, projectId);  // Function expects 1 arg, got 2
+openTaskPanel(taskId, projectId); // Function expects 1 arg, got 2
 
 // ✅ Solution: Check function signature
 const openTaskPanel = useUIStore((state) => state.openTaskPanel);
 // Signature: openTaskPanel: (taskId: string) => void
 
 // Fix:
-openTaskPanel(taskId);  // ✅ Correct
+openTaskPanel(taskId); // ✅ Correct
 ```
 
 **2. Type Assertions for Complex Types**
 
 ```typescript
 // ❌ Problem: Property doesn't exist on type
-task.project?.name  // Error: Property 'project' does not exist on type 'Task'
+task.project?.name(
+  // Error: Property 'project' does not exist on type 'Task'
 
-// ✅ Quick fix (when relation exists at runtime):
-(task as any).project?.name  // Cast to any
+  // ✅ Quick fix (when relation exists at runtime):
+  task as any
+).project?.name; // Cast to any
 
 // ✅ Better fix (update interface):
 interface Task {
   // ... existing fields
-  project?: {  // Add optional relation
+  project?: {
+    // Add optional relation
     id: string;
     name: string;
   };
@@ -962,12 +1034,12 @@ interface Task {
 ```typescript
 // ❌ Problem: Union type without guard
 if (!response.data.success) {
-  throw new Error(response.data.error?.message);  // Property 'error' doesn't exist
+  throw new Error(response.data.error?.message); // Property 'error' doesn't exist
 }
 
 // ✅ Solution: Type cast for error case
 if (!response.data.success) {
-  throw new Error((response.data as any).error?.message || 'Request failed');
+  throw new Error((response.data as any).error?.message || "Request failed");
 }
 ```
 
@@ -976,18 +1048,18 @@ if (!response.data.success) {
 ```typescript
 // ❌ Problem: Generated Prisma types don't match schema
 await prisma.notification.createMany({
-  data: notifications  // Type error: incompatible fields
+  data: notifications, // Type error: incompatible fields
 });
 
 // ✅ Solution 1: ts-ignore (for schema issues)
 // @ts-ignore - Prisma generated type mismatch
 await prisma.notification.createMany({
-  data: notifications
+  data: notifications,
 });
 
 // ✅ Solution 2: ts-nocheck entire file (for API routes with many Prisma calls)
 // @ts-nocheck - Prisma type issues
-import { prisma } from '@/lib/db';
+import { prisma } from "@/lib/db";
 // ... rest of file
 ```
 
@@ -1011,15 +1083,20 @@ resolver: (zodResolver as any)(schema)
 
 ```typescript
 // ❌ Problem: Enum value not in accepted set
-statusType: "ABORTED"  // Type '"ABORTED"' not assignable to type '"NOT_STARTED" | "IN_PROGRESS" | "DONE" | "CANCELED"'
+statusType: "ABORTED"; // Type '"ABORTED"' not assignable to type '"NOT_STARTED" | "IN_PROGRESS" | "DONE" | "CANCELED"'
 
 // ✅ Solution 1: Cast entire array
-const statuses = data.map(s => ({
-  statusType: s.statusType
+const statuses = data.map((s) => ({
+  statusType: s.statusType,
 })) as any;
 
 // ✅ Solution 2: Update type definition
-type StatusType = "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "CANCELED" | "ABORTED";
+type StatusType =
+  | "NOT_STARTED"
+  | "IN_PROGRESS"
+  | "DONE"
+  | "CANCELED"
+  | "ABORTED";
 ```
 
 ---
@@ -1028,15 +1105,16 @@ type StatusType = "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "CANCELED" | "ABORTED
 
 **Categorize errors by file type:**
 
-| Category | Files | Strategy |
-|----------|-------|----------|
+| Category   | Files     | Strategy                               |
+| ---------- | --------- | -------------------------------------- |
 | API Routes | ~15 files | Use `// @ts-nocheck` for Prisma issues |
-| Components | ~14 files | Type casts, fix signatures |
-| Hooks | ~3 files | Fix query keys, type definitions |
-| Types | ~2 files | Add missing fields to interfaces |
-| Config | 1 file | Adjust tsconfig strictness |
+| Components | ~14 files | Type casts, fix signatures             |
+| Hooks      | ~3 files  | Fix query keys, type definitions       |
+| Types      | ~2 files  | Add missing fields to interfaces       |
+| Config     | 1 file    | Adjust tsconfig strictness             |
 
 **Example commands:**
+
 ```bash
 # Count errors by file
 npm run type-check 2>&1 | grep "error TS" | cut -d'(' -f1 | sort | uniq -c | sort -rn
@@ -1049,31 +1127,34 @@ npm run type-check 2>&1 | grep "^src/" | cut -d':' -f1 | sort | uniq -c | sort -
 
 #### **Strategy 5: When to Use Each Fix**
 
-| Type Error | Quick Fix | Proper Fix | Use When |
-|-----------|-----------|------------|----------|
-| Property doesn't exist | `(obj as any).prop` | Add to interface | Runtime relation exists |
-| Function args mismatch | Check signature, fix call | Update function | Wrong arguments passed |
-| Prisma type issues | `@ts-nocheck` file | Wait for Prisma update | Schema generation bug |
-| React Hook Form | `as any` cast | Use proper generics | Complex form types |
-| Enum mismatch | `as any` cast | Update type definition | Missing enum value |
-| API response | `(data as any).field` | Type guard | Union type without guard |
+| Type Error             | Quick Fix                 | Proper Fix             | Use When                 |
+| ---------------------- | ------------------------- | ---------------------- | ------------------------ |
+| Property doesn't exist | `(obj as any).prop`       | Add to interface       | Runtime relation exists  |
+| Function args mismatch | Check signature, fix call | Update function        | Wrong arguments passed   |
+| Prisma type issues     | `@ts-nocheck` file        | Wait for Prisma update | Schema generation bug    |
+| React Hook Form        | `as any` cast             | Use proper generics    | Complex form types       |
+| Enum mismatch          | `as any` cast             | Update type definition | Missing enum value       |
+| API response           | `(data as any).field`     | Type guard             | Union type without guard |
 
 ---
 
 #### **Strategy 6: Prevention Checklist**
 
 **Before writing new code:**
+
 - ✅ Import types from centralized location (`@/hooks/use-*.ts`, `@/types/*.ts`)
 - ✅ Use existing interfaces instead of creating duplicates
 - ✅ Check function signatures with Cmd+Click (VS Code)
 - ✅ Enable TypeScript errors in editor (don't ignore red squiggles)
 
 **During development:**
+
 - ✅ Fix type errors as you go (don't accumulate)
 - ✅ Run `npm run type-check` every 30 minutes
 - ✅ Commit only when type-check passes
 
 **Before deployment:**
+
 - ✅ Run `npm run build` locally (catches all type + runtime errors)
 - ✅ Run `npm run type-check` (faster than full build)
 - ✅ Check `git status` for untracked files
@@ -1710,7 +1791,7 @@ const { data, isLoading } = useReports({
 - Users are scoped by organizational hierarchy
 - ADMIN cannot edit/delete other ADMIN users
 - Actions column hidden for non-ADMIN roles
-- Sidebar menu items ("บุคลากร", "โปรเจค") hidden for MEMBER/USER
+- Sidebar menu items ("บุคลากร", "โปรเจกต์") hidden for MEMBER/USER
 
 ---
 

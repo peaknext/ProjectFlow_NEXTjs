@@ -287,7 +287,10 @@
       "Bash(grep:*)",
       "Bash(git push)",
       "Bash(npm run type-check:*)",
-      "Bash(cut:*)"
+      "Bash(cut:*)",
+      "Bash(git push:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

@@ -14,14 +14,14 @@ Complete role-based permission system for user management with proper access con
 
 ### Role Capabilities
 
-| Role | View Users | Edit Users | Delete Users | Toggle Status | See Actions Column | Access Users Page |
-|------|-----------|-----------|--------------|---------------|-------------------|------------------|
-| **ADMIN** | All users (except self) | Non-ADMIN users | Non-ADMIN users | All users in scope | ✅ Yes | ✅ Yes |
-| **CHIEF** | Scope only | ❌ No | ❌ No | Scope only | ❌ No | ✅ Yes |
-| **LEADER** | Scope only | ❌ No | ❌ No | Scope only | ❌ No | ✅ Yes |
-| **HEAD** | Scope only | ❌ No | ❌ No | Scope only | ❌ No | ✅ Yes |
-| **MEMBER** | ❌ No access | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
-| **USER** | ❌ No access | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
+| Role       | View Users              | Edit Users      | Delete Users    | Toggle Status      | See Actions Column | Access Users Page |
+| ---------- | ----------------------- | --------------- | --------------- | ------------------ | ------------------ | ----------------- |
+| **ADMIN**  | All users (except self) | Non-ADMIN users | Non-ADMIN users | All users in scope | ✅ Yes             | ✅ Yes            |
+| **CHIEF**  | Scope only              | ❌ No           | ❌ No           | Scope only         | ❌ No              | ✅ Yes            |
+| **LEADER** | Scope only              | ❌ No           | ❌ No           | Scope only         | ❌ No              | ✅ Yes            |
+| **HEAD**   | Scope only              | ❌ No           | ❌ No           | Scope only         | ❌ No              | ✅ Yes            |
+| **MEMBER** | ❌ No access            | ❌ No           | ❌ No           | ❌ No              | ❌ No              | ❌ No             |
+| **USER**   | ❌ No access            | ❌ No           | ❌ No           | ❌ No              | ❌ No              | ❌ No             |
 
 ### Key Rules
 
@@ -42,7 +42,7 @@ Complete role-based permission system for user management with proper access con
 
 3. **Regular Roles (MEMBER/USER)**:
    - No access to Users page at all
-   - Sidebar menu items hidden ("บุคลากร" and "โปรเจค")
+   - Sidebar menu items hidden ("บุคลากร" and "โปรเจกต์")
    - Direct URL access shows "Access Denied" screen
    - Redirected to dashboard
 
@@ -53,6 +53,7 @@ Complete role-based permission system for user management with proper access con
 ### 1. Backend Protection (Already Complete)
 
 #### GET /api/users
+
 **File**: `src/app/api/users/route.ts`
 **Lines**: 48-68
 
@@ -60,7 +61,7 @@ Complete role-based permission system for user management with proper access con
 // Get list of manageable user IDs based on role and scope
 const manageableUserIds = await getUserManageableUserIds(
   session.userId,
-  'management' // Use management scope (VIEW + EDIT)
+  "management" // Use management scope (VIEW + EDIT)
 );
 
 // Fetch only users in scope
@@ -79,16 +80,18 @@ const users = await prisma.user.findMany({
     },
     jobTitle: true,
   },
-  orderBy: { fullName: 'asc' },
+  orderBy: { fullName: "asc" },
 });
 ```
 
 **Behavior**:
+
 - ADMIN: Returns all users except self (including other ADMINs)
 - HEAD/LEADER/CHIEF: Returns users in organizational scope
 - MEMBER/USER: Returns empty array
 
 #### PATCH /api/users/[userId]
+
 **File**: `src/app/api/users/[userId]/route.ts`
 **Lines**: 126-134
 
@@ -97,22 +100,23 @@ const users = await prisma.user.findMany({
 const canManage = await canManageTargetUser(currentUserId, userId);
 if (!canManage) {
   return errorResponse(
-    'FORBIDDEN',
-    'You do not have permission to edit this user',
+    "FORBIDDEN",
+    "You do not have permission to edit this user",
     403
   );
 }
 ```
 
 **Permission Logic** (from `src/lib/permissions.ts`):
+
 ```typescript
 export async function canManageTargetUser(
   currentUserId: string,
   targetUserId: string
 ): Promise<boolean> {
   // ADMIN can manage all non-ADMIN users
-  if (currentUser.role === 'ADMIN') {
-    return targetUser.role !== 'ADMIN';
+  if (currentUser.role === "ADMIN") {
+    return targetUser.role !== "ADMIN";
   }
 
   // Management roles can manage users in scope (except ADMIN)
@@ -122,6 +126,7 @@ export async function canManageTargetUser(
 ```
 
 #### PATCH /api/users/[userId]/status
+
 **File**: `src/app/api/users/[userId]/status/route.ts`
 **Lines**: 48-56
 
@@ -130,14 +135,15 @@ export async function canManageTargetUser(
 const canManage = await canManageTargetUser(currentUserId, userId);
 if (!canManage) {
   return errorResponse(
-    'FORBIDDEN',
-    'You do not have permission to change this user\'s status',
+    "FORBIDDEN",
+    "You do not have permission to change this user's status",
     403
   );
 }
 ```
 
 **Behavior**:
+
 - ADMIN: Can toggle status for all non-ADMIN users
 - HEAD/LEADER/CHIEF: Can toggle status for users in scope
 - Cannot toggle status for ADMIN users (blocked by backend)
@@ -147,6 +153,7 @@ if (!canManage) {
 ### 2. Frontend Protection (Newly Added)
 
 #### Page-Level Access Control
+
 **File**: `src/components/users/users-view.tsx`
 **Lines**: 17-49
 
@@ -189,12 +196,14 @@ export function UsersView() {
 ```
 
 **Features**:
+
 - Shows friendly access denied screen for MEMBER/USER
 - Yellow warning icon with clear message
 - "กลับหน้าหลัก" (Back to Dashboard) button
 - Prevents unauthorized users from seeing any user data
 
 #### Row-Level Permission Checks
+
 **File**: `src/components/users/user-row.tsx`
 **Lines**: 67-99
 
@@ -232,11 +241,13 @@ const showActions = currentUser?.role === "ADMIN";
 ```
 
 **Behavior**:
+
 - `canEdit`: Only ADMIN can edit non-ADMIN users (not self)
 - `canDelete`: Only ADMIN can delete non-ADMIN users (not self)
 - `showActions`: Actions dropdown only visible to ADMIN
 
 **UI Rendering**:
+
 ```typescript
 {/* Actions - Only show for ADMIN */}
 {showActions && (
@@ -282,11 +293,13 @@ const showActions = currentUser?.role === "ADMIN";
 ```
 
 **Result**:
+
 - HEAD/LEADER/CHIEF see NO Actions column at all
 - ADMIN sees Actions with Edit/Delete options
 - ADMIN cannot edit/delete other ADMINs (shows disabled state)
 
 #### Table Header Conditional Rendering
+
 **File**: `src/components/users/users-table.tsx`
 **Lines**: 32-35, 134-139
 
@@ -327,11 +340,13 @@ export function UsersTable({ ... }: UsersTableProps) {
 ```
 
 **Result**:
+
 - Actions column header ONLY shown to ADMIN
 - Column layout adjusts automatically
 - Clean UI for management roles (no empty column)
 
 #### Sidebar Navigation Filtering
+
 **File**: `src/components/layout/sidebar.tsx`
 **Changes**: Added `requiredRoles` array and role-based filtering
 
@@ -354,7 +369,7 @@ const mainNavigation = [
     requiredRoles: [], // All roles can access
   },
   {
-    name: "โปรเจค",
+    name: "โปรเจกต์",
     href: "/projects",
     icon: FolderKanban,
     enabled: true,
@@ -392,8 +407,9 @@ export function Sidebar() {
 ```
 
 **Result**:
+
 - MEMBER/USER don't see "บุคลากร" (Users) menu item
-- MEMBER/USER don't see "โปรเจค" (Projects) menu item
+- MEMBER/USER don't see "โปรเจกต์" (Projects) menu item
 - Management roles see full navigation
 - Clean sidebar without restricted items
 
@@ -402,6 +418,7 @@ export function Sidebar() {
 ## Testing Scenarios
 
 ### Test Case 1: ADMIN User
+
 1. Login as ADMIN (admin@hospital.test)
 2. Navigate to Users page
 3. **Expected**:
@@ -415,6 +432,7 @@ export function Sidebar() {
    - Cannot see Actions for self
 
 ### Test Case 2: HEAD/LEADER/CHIEF User
+
 1. Login as HEAD/LEADER/CHIEF
 2. Navigate to Users page
 3. **Expected**:
@@ -426,11 +444,12 @@ export function Sidebar() {
    - Clean table layout (no empty Actions column)
 
 ### Test Case 3: MEMBER/USER
+
 1. Login as MEMBER or USER
 2. Check sidebar
 3. **Expected**:
    - "บุคลากร" menu item NOT visible
-   - "โปรเจค" menu item NOT visible
+   - "โปรเจกต์" menu item NOT visible
    - Only see: แดชบอร์ด, งาน, รายงาน
 4. Try direct URL access to `/users`
 5. **Expected**:
@@ -440,6 +459,7 @@ export function Sidebar() {
    - "กลับหน้าหลัก" button works
 
 ### Test Case 4: Status Toggle Permission
+
 1. Login as LEADER
 2. Navigate to Users page
 3. Find user in scope
@@ -460,12 +480,14 @@ export function Sidebar() {
 ## Files Modified
 
 ### Backend (No changes - already correct)
+
 - ✅ `src/lib/permissions.ts` - Permission functions
 - ✅ `src/app/api/users/route.ts` - GET endpoint with scope filtering
 - ✅ `src/app/api/users/[userId]/route.ts` - PATCH endpoint with permission check
 - ✅ `src/app/api/users/[userId]/status/route.ts` - Status toggle endpoint
 
 ### Frontend (New changes)
+
 1. **`src/components/users/users-view.tsx`**
    - Added ShieldAlert icon import
    - Added page-level permission guard
@@ -493,6 +515,7 @@ export function Sidebar() {
 ## Security Review
 
 ### Backend Protection ✅
+
 - [x] GET /api/users returns only users in scope
 - [x] PATCH /api/users/[userId] checks `canManageTargetUser()`
 - [x] PATCH /api/users/[userId]/status checks scope permission
@@ -501,6 +524,7 @@ export function Sidebar() {
 - [x] Cannot edit/delete self
 
 ### Frontend Protection ✅
+
 - [x] Page-level access control (redirects MEMBER/USER)
 - [x] Sidebar menu items hidden based on role
 - [x] Actions column hidden for non-ADMIN
@@ -509,6 +533,7 @@ export function Sidebar() {
 - [x] Status toggle respects backend permissions
 
 ### Edge Cases Covered ✅
+
 - [x] ADMIN cannot edit other ADMINs
 - [x] ADMIN cannot delete other ADMINs
 - [x] ADMIN cannot edit/delete self
@@ -522,6 +547,7 @@ export function Sidebar() {
 ## User Experience
 
 ### ADMIN Experience
+
 - Full control over user management
 - Clear visual indicators for restricted actions
 - Disabled edit option for ADMIN users shows "(ไม่มีสิทธิ์)"
@@ -529,6 +555,7 @@ export function Sidebar() {
 - Smooth workflow with optimistic updates
 
 ### Management Role Experience (HEAD/LEADER/CHIEF)
+
 - Clean read-only view of users in scope
 - Status toggle is prominent and easy to use
 - No confusing disabled Actions dropdown
@@ -536,6 +563,7 @@ export function Sidebar() {
 - Clear feedback on status changes
 
 ### Regular User Experience (MEMBER/USER)
+
 - Menus are simply not visible (not grayed out)
 - If direct URL accessed, friendly error message
 - Clear explanation of access restriction
@@ -580,6 +608,7 @@ export function Sidebar() {
 ## Conclusion
 
 The user management permission system is now complete with:
+
 - ✅ Proper role-based access control
 - ✅ Multi-layer protection (backend + frontend)
 - ✅ Clean UX for all role types

@@ -21,7 +21,7 @@ export default function ProjectsError({
       </span>
       <h2 className="text-xl font-semibold mb-2">เกิดข้อผิดพลาด</h2>
       <p className="text-muted-foreground text-center max-w-md mb-6">
-        {error.message || "ไม่สามารถโหลดหน้าจัดการโปรเจคได้"}
+        {error.message || "ไม่สามารถโหลดหน้าจัดการโปรเจกต์ได้"}
       </p>
       <Button onClick={reset}>ลองใหม่อีกครั้ง</Button>
     </div>

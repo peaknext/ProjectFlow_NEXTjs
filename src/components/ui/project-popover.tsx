@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useMemo } from "react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Project {
   id: string;
@@ -43,29 +47,29 @@ export function ProjectPopover({
   value,
   onChange,
   disabled = false,
-  placeholder = 'เลือกโปรเจค',
+  placeholder = "เลือกโปรเจกต์",
   required = false,
-  className
+  className,
 }: ProjectPopoverProps) {
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filter projects based on search query
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) return projects;
     const query = searchQuery.toLowerCase();
-    return projects.filter(project =>
+    return projects.filter((project) =>
       project.name.toLowerCase().includes(query)
     );
   }, [projects, searchQuery]);
 
   // Get selected project for display
-  const selectedProject = projects.find(p => p.id === value);
+  const selectedProject = projects.find((p) => p.id === value);
 
   const handleSelectProject = (projectId: string) => {
     onChange(projectId);
     setOpen(false);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   return (
@@ -77,25 +81,30 @@ export function ProjectPopover({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            'w-full justify-between h-11 text-base px-3 py-2',
-            'bg-white dark:bg-slate-800',
-            !selectedProject && 'text-muted-foreground',
+            "w-full justify-between h-11 text-base px-3 py-2",
+            "bg-white dark:bg-slate-800",
+            !selectedProject && "text-muted-foreground",
             className
           )}
         >
           <span className="truncate">
             {selectedProject?.name || placeholder}
-            {required && !selectedProject && <span className="text-red-500 ml-1">*</span>}
+            {required && !selectedProject && (
+              <span className="text-red-500 ml-1">*</span>
+            )}
           </span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
         <div className="flex flex-col">
           {/* Search Input */}
           <div className="p-2 border-b">
             <Input
-              placeholder="ค้นหาโปรเจค..."
+              placeholder="ค้นหาโปรเจกต์..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-9"
@@ -107,7 +116,7 @@ export function ProjectPopover({
           <div className="max-h-[300px] overflow-y-auto">
             {filteredProjects.length === 0 ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
-                ไม่พบโปรเจค
+                ไม่พบโปรเจกต์
               </div>
             ) : (
               filteredProjects.map((project) => (
@@ -115,9 +124,9 @@ export function ProjectPopover({
                   key={project.id}
                   onClick={() => handleSelectProject(project.id)}
                   className={cn(
-                    'w-full px-3 py-2.5 text-sm text-left hover:bg-accent',
-                    'transition-colors border-b border-border last:border-0',
-                    value === project.id && 'bg-accent'
+                    "w-full px-3 py-2.5 text-sm text-left hover:bg-accent",
+                    "transition-colors border-b border-border last:border-0",
+                    value === project.id && "bg-accent"
                   )}
                 >
                   <div className="truncate">{project.name}</div>

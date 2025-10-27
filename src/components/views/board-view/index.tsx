@@ -3,20 +3,23 @@
  * แสดงงานในรูปแบบบอร์ด พร้อม drag-and-drop
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { DragDropContext, DropResult } from '@hello-pangea/dnd';
-import { StatusColumn } from './status-column';
-import { useProject } from '@/hooks/use-projects';
-import { useUpdateTask } from '@/hooks/use-tasks';
-import { useUIStore } from '@/stores/use-ui-store';
-import { usePersistedFilters } from '@/hooks/use-persisted-filters';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { TaskFilterBar } from '@/components/views/common/task-filter-bar';
-import { filterTasks, getUniqueAssignees } from '@/components/views/common/filter-tasks';
-import type { Task } from '@/hooks/use-tasks';
+import { useState, useEffect, useMemo } from "react";
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { StatusColumn } from "./status-column";
+import { useProject } from "@/hooks/use-projects";
+import { useUpdateTask } from "@/hooks/use-tasks";
+import { useUIStore } from "@/stores/use-ui-store";
+import { usePersistedFilters } from "@/hooks/use-persisted-filters";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TaskFilterBar } from "@/components/views/common/task-filter-bar";
+import {
+  filterTasks,
+  getUniqueAssignees,
+} from "@/components/views/common/filter-tasks";
+import type { Task } from "@/hooks/use-tasks";
 
 interface BoardViewProps {
   projectId: string;
@@ -138,7 +141,7 @@ export function BoardView({ projectId }: BoardViewProps) {
   if (!data) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <p className="text-sm text-muted-foreground">ไม่พบข้อมูลโปรเจค</p>
+        <p className="text-sm text-muted-foreground">ไม่พบข้อมูลโปรเจกต์</p>
       </div>
     );
   }

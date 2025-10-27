@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CheckSquare,
   FolderKanban,
   BarChart3,
   Users,
-} from "lucide-react"
+} from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { SyncStatusFooter } from "@/components/layout/sync-status-footer"
-import { WorkspaceNavigation } from "@/components/navigation/workspace-navigation"
-import { useAuth } from "@/hooks/use-auth"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { SyncStatusFooter } from "@/components/layout/sync-status-footer";
+import { WorkspaceNavigation } from "@/components/navigation/workspace-navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 const mainNavigation = [
   {
@@ -33,7 +33,7 @@ const mainNavigation = [
     requiredRoles: [], // All roles can access
   },
   {
-    name: "โปรเจค",
+    name: "โปรเจกต์",
     href: "/projects", // Project management page
     icon: FolderKanban,
     enabled: true,
@@ -53,20 +53,20 @@ const mainNavigation = [
     enabled: true, // ✅ Implemented 2025-10-24
     requiredRoles: ["ADMIN", "CHIEF", "LEADER", "HEAD"], // Only management roles
   },
-]
+];
 
 export function Sidebar() {
-  const pathname = usePathname()
-  const { user } = useAuth()
+  const pathname = usePathname();
+  const { user } = useAuth();
 
   // Filter navigation items based on user role
   const visibleNavigation = mainNavigation.filter((item) => {
     // If no role requirements, show to everyone
-    if (!item.requiredRoles || item.requiredRoles.length === 0) return true
+    if (!item.requiredRoles || item.requiredRoles.length === 0) return true;
 
     // Check if user role is in required roles
-    return user?.role && item.requiredRoles.includes(user.role)
-  })
+    return user?.role && item.requiredRoles.includes(user.role);
+  });
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card">
@@ -74,7 +74,8 @@ export function Sidebar() {
       <nav className="flex flex-col gap-2 px-4 pt-4 pb-4">
         {visibleNavigation.map((item) => {
           // Default active state logic
-          let isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
+          let isActive =
+            pathname === item.href || pathname?.startsWith(item.href + "/");
 
           // Special logic for "งาน" (Tasks) - should be active for all task-related views
           if (item.name === "งาน") {
@@ -83,18 +84,18 @@ export function Sidebar() {
             // - /projects/[projectId]/board
             // - /projects/[projectId]/calendar
             // - /projects/[projectId]/list
-            isActive = isActive ||
-              pathname?.includes('/projects/') && (
-                pathname?.endsWith('/board') ||
-                pathname?.endsWith('/calendar') ||
-                pathname?.endsWith('/list')
-              )
+            isActive =
+              isActive ||
+              (pathname?.includes("/projects/") &&
+                (pathname?.endsWith("/board") ||
+                  pathname?.endsWith("/calendar") ||
+                  pathname?.endsWith("/list")));
           }
 
-          // Special logic for "โปรเจค" (Projects) - should ONLY be active on /projects page
-          if (item.name === "โปรเจค") {
+          // Special logic for "โปรเจกต์" (Projects) - should ONLY be active on /projects page
+          if (item.name === "โปรเจกต์") {
             // Only active on exact /projects path, not on /projects/[projectId]/...
-            isActive = pathname === "/projects"
+            isActive = pathname === "/projects";
           }
 
           return (
@@ -118,11 +119,13 @@ export function Sidebar() {
                 <item.icon className="h-5 w-5" />
                 <span className="font-medium text-base">{item.name}</span>
                 {!item.enabled && (
-                  <span className="ml-auto text-xs text-muted-foreground">(เร็วๆ นี้)</span>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    (เร็วๆ นี้)
+                  </span>
                 )}
               </Button>
             </Link>
-          )
+          );
         })}
       </nav>
 
@@ -141,5 +144,5 @@ export function Sidebar() {
       {/* Footer - Fixed with Sync Status */}
       <SyncStatusFooter />
     </div>
-  )
+  );
 }

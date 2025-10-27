@@ -15,6 +15,7 @@
 **จุดประสงค์**: ค้นหาข้อมูลทั่วทั้งระบบด้วยคำค้นเดียว
 
 **ขอบเขตการทำงาน**:
+
 - ค้นหาข้ามหลาย entities (Tasks, Projects, Users)
 - Advanced filters และ search syntax
 - Search history และ suggestions
@@ -22,14 +23,17 @@
 - Search results pagination
 
 **ตำแหน่งในระบบ**:
+
 - Search bar ใน Navbar (ที่ถูก comment ไว้แล้วใน `src/components/layout/navbar.tsx`)
 - Modal สำหรับแสดงผลการค้นหา
 
 **เทคโนโลยี**:
+
 - Full-text search ใน PostgreSQL
 - หรือ Elasticsearch สำหรับการค้นหาที่ซับซ้อน
 
 **หมายเหตุ**:
+
 - TODO comment อยู่ที่ `src/components/layout/navbar.tsx` (lines 45-61)
 
 ---
@@ -39,7 +43,8 @@
 **จุดประสงค์**: บันทึก audit trail สำหรับ actions สำคัญทั้งหมดในระบบ
 
 **ขอบเขตการทำงาน**:
-- บันทึกการสร้าง/แก้ไข/ลบโปรเจค
+
+- บันทึกการสร้าง/แก้ไข/ลบโปรเจกต์
 - บันทึกการสร้าง/แก้ไข/ลบผู้ใช้
 - บันทึกการเปลี่ยนแปลง permissions
 - บันทึกการ login/logout
@@ -48,6 +53,7 @@
 - Export audit logs
 
 **Schema Design** (ตัวอย่าง):
+
 ```prisma
 model AuditLog {
   id          String   @id @default(cuid())
@@ -71,13 +77,15 @@ model AuditLog {
 ```
 
 **UI/UX**:
+
 - หน้า Audit Logs (สำหรับ ADMIN/CHIEF)
 - Filter by user, action, entity type, date range
 - Export to CSV/Excel
 
 **เหตุผล**:
+
 - ปัจจุบัน `History` table เก็บได้เฉพาะ task activities
-- ไม่มีการบันทึกการลบโปรเจคที่ไม่มีงาน
+- ไม่มีการบันทึกการลบโปรเจกต์ที่ไม่มีงาน
 - ต้องการ compliance และ security audit trail
 
 ---
@@ -87,6 +95,7 @@ model AuditLog {
 **จุดประสงค์**: ผู้บริหารสามารถส่งข้อความประกาศให้ผู้ใช้เห็นเมื่อล็อกอินครั้งแรก
 
 **ขอบเขตการทำงาน**:
+
 - ผู้บริหาร (ADMIN/CHIEF) สร้างข้อความประกาศ
 - แสดง modal/banner เมื่อผู้ใช้ล็อกอินครั้งแรกในแต่ละวัน
 - ผู้ใช้สามารถ "Mark as read" ได้
@@ -95,6 +104,7 @@ model AuditLog {
 - Rich text editor สำหรับข้อความ
 
 **Schema Design** (ตัวอย่าง):
+
 ```prisma
 model Announcement {
   id          String   @id @default(cuid())
@@ -130,12 +140,14 @@ model AnnouncementRead {
 ```
 
 **UI/UX**:
+
 - Modal แสดงประกาศเมื่อ login (ถ้ายังไม่ได้อ่าน)
 - หน้าจัดการประกาศสำหรับ ADMIN/CHIEF
 - Badge แสดงจำนวนประกาศที่ยังไม่ได้อ่านใน Navbar
 - Notification center แสดงประกาศทั้งหมด
 
 **Use Cases**:
+
 - ประกาศหยุดระบบ maintenance
 - ประกาศฟีเจอร์ใหม่
 - ข้อความสำคัญจากผู้บริหาร
@@ -148,6 +160,7 @@ model AnnouncementRead {
 **จุดประสงค์**: แสดงแผนงานและ timeline ของ tasks/projects ในรูปแบบ Gantt Chart
 
 **ขอบเขตการทำงาน**:
+
 - แสดง tasks ตาม timeline (startDate - dueDate)
 - Drag-and-drop เพื่อปรับ dates
 - แสดง dependencies ระหว่าง tasks
@@ -157,16 +170,19 @@ model AnnouncementRead {
 - Export to PDF/PNG
 
 **เทคโนโลยี**:
+
 - `@dhtmlx/gantt` หรือ `frappe-gantt`
 - React wrapper สำหรับ Gantt library
 - Custom styling ให้เข้ากับ design system
 
 **UI/UX**:
+
 - เพิ่ม "Gantt" tab ในหน้า Project views
 - Department Tasks view มี Gantt view ด้วย
 - Responsive design สำหรับ mobile
 
 **เอกสารอ้างอิง**:
+
 - `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md` มีแผนเบื้องต้นไว้แล้ว
 
 ---

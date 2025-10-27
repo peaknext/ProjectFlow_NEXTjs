@@ -27,6 +27,7 @@ Implement a comprehensive Create Task Modal matching the GAS implementation with
 ### Key Features from GAS (component.CreateTaskModal.html)
 
 **Form Fields:**
+
 1. **Task Name** (required) - Text input
 2. **Status** - Custom slider with visual feedback
 3. **Assignee** - Popover with multi-select + avatars
@@ -46,6 +47,7 @@ Implement a comprehensive Create Task Modal matching the GAS implementation with
    - For Subtask: Show parent task info, disable parent selector
 
 2. **Data Loading Strategy:**
+
    ```javascript
    // Cache-first approach
    if (appState.currentProjectId === projectId && appState.users.length > 0) {
@@ -58,6 +60,7 @@ Implement a comprehensive Create Task Modal matching the GAS implementation with
    ```
 
 3. **Optimistic UI Pattern:**
+
    ```javascript
    // 1. Create temporary task with tempId
    const tempTask = { ...formData, id: `temp_${Date.now()}`, isCreating: true };
@@ -123,24 +126,26 @@ src/
 **File**: `src/components/modals/create-task-modal.tsx`
 
 **Props**:
+
 ```typescript
 interface CreateTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  projectId?: string | null;              // Pre-filled project (from project view)
-  projectName?: string | null;            // Pre-filled project name
-  parentTaskId?: string | null;           // For creating subtasks
-  defaultStartDate?: string;              // Optional default start date
-  defaultDueDate?: string;                // Optional default due date
-  onSuccess?: (task: Task) => void;       // Callback after creation
+  projectId?: string | null; // Pre-filled project (from project view)
+  projectName?: string | null; // Pre-filled project name
+  parentTaskId?: string | null; // For creating subtasks
+  defaultStartDate?: string; // Optional default start date
+  defaultDueDate?: string; // Optional default due date
+  onSuccess?: (task: Task) => void; // Callback after creation
 }
 ```
 
 **State Management**:
+
 ```typescript
 // Form state
-const [taskName, setTaskName] = useState('');
-const [description, setDescription] = useState('');
+const [taskName, setTaskName] = useState("");
+const [description, setDescription] = useState("");
 const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 const [selectedStatus, setSelectedStatus] = useState<Status | null>(null);
 const [selectedPriority, setSelectedPriority] = useState(3); // Default: ปกติ
@@ -161,6 +166,7 @@ const [isLoadingProjectData, setIsLoadingProjectData] = useState(false);
 ```
 
 **Data Loading**:
+
 ```typescript
 // Load project-specific data when project is selected
 useEffect(() => {
@@ -174,21 +180,21 @@ async function loadProjectData(projectId: string) {
   try {
     // Use React Query to fetch project board data (cached)
     const { data } = await queryClient.fetchQuery({
-      queryKey: ['project-board', projectId],
+      queryKey: ["project-board", projectId],
       queryFn: () => api.get(`/api/projects/${projectId}/board`),
     });
 
     setProjectUsers(data.users || []);
     setProjectStatuses(data.statuses || []);
-    setProjectTasks(data.tasks?.filter(t => !t.parentTaskId) || []);
+    setProjectTasks(data.tasks?.filter((t) => !t.parentTaskId) || []);
 
     // Set default status to first status
     if (data.statuses && data.statuses.length > 0) {
       setSelectedStatus(data.statuses[0]);
     }
   } catch (error) {
-    console.error('Failed to load project data:', error);
-    toast.error('ไม่สามารถโหลดข้อมูลโปรเจคได้');
+    console.error("Failed to load project data:", error);
+    toast.error("ไม่สามารถโหลดข้อมูลโปรเจกต์ได้");
   } finally {
     setIsLoadingProjectData(false);
   }
@@ -196,6 +202,7 @@ async function loadProjectData(projectId: string) {
 ```
 
 **Form Submission**:
+
 ```typescript
 const createTask = useCreateTask();
 
@@ -240,6 +247,7 @@ async function handleSubmit() {
 ```
 
 **UI Structure**:
+
 ```tsx
 <Dialog open={open} onOpenChange={onOpenChange}>
   <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -301,11 +309,7 @@ async function handleSubmit() {
           value={startDate}
           onChange={setStartDate}
         />
-        <DatePicker
-          label="วันสิ้นสุด"
-          value={dueDate}
-          onChange={setDueDate}
-        />
+        <DatePicker label="วันสิ้นสุด" value={dueDate} onChange={setDueDate} />
         <ProjectSelector
           value={selectedProject}
           onChange={handleProjectChange}
@@ -352,7 +356,9 @@ async function handleSubmit() {
         ยกเลิก
       </Button>
       <Button onClick={handleSubmit} disabled={createTask.isPending}>
-        {createTask.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {createTask.isPending && (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        )}
         สร้างงาน
       </Button>
     </DialogFooter>
@@ -425,10 +431,10 @@ interface PrioritySelectorProps {
 }
 
 const PRIORITIES = [
-  { id: 1, name: 'ด่วนที่สุด', color: '#ef4444', icon: Flag },
-  { id: 2, name: 'ด่วน', color: '#f97316', icon: Flag },
-  { id: 3, name: 'ปกติ', color: '#eab308', icon: Flag },
-  { id: 4, name: 'ต่ำ', color: '#22c55e', icon: Flag },
+  { id: 1, name: "ด่วนที่สุด", color: "#ef4444", icon: Flag },
+  { id: 2, name: "ด่วน", color: "#f97316", icon: Flag },
+  { id: 3, name: "ปกติ", color: "#eab308", icon: Flag },
+  { id: 4, name: "ต่ำ", color: "#22c55e", icon: Flag },
 ];
 
 export function PrioritySelector({ value, onChange }: PrioritySelectorProps) {
@@ -443,7 +449,10 @@ export function PrioritySelector({ value, onChange }: PrioritySelectorProps) {
             variant="outline"
             className="w-full justify-start gap-2 mt-1 h-[46px]"
           >
-            <selected.icon className="h-4 w-4" style={{ color: selected.color }} />
+            <selected.icon
+              className="h-4 w-4"
+              style={{ color: selected.color }}
+            />
             <span>{selected.name}</span>
           </Button>
         </PopoverTrigger>
@@ -452,11 +461,14 @@ export function PrioritySelector({ value, onChange }: PrioritySelectorProps) {
             {PRIORITIES.map((priority) => (
               <Button
                 key={priority.id}
-                variant={value === priority.id ? 'default' : 'ghost'}
+                variant={value === priority.id ? "default" : "ghost"}
                 className="w-full justify-start gap-2"
                 onClick={() => onChange(priority.id)}
               >
-                <priority.icon className="h-4 w-4" style={{ color: priority.color }} />
+                <priority.icon
+                  className="h-4 w-4"
+                  style={{ color: priority.color }}
+                />
                 {priority.name}
               </Button>
             ))}
@@ -479,7 +491,11 @@ interface AssigneeSelectorProps {
   onChange: (userIds: string[]) => void;
 }
 
-export function AssigneeSelector({ users, value, onChange }: AssigneeSelectorProps) {
+export function AssigneeSelector({
+  users,
+  value,
+  onChange,
+}: AssigneeSelectorProps) {
   const selectedUsers = users.filter((u) => value.includes(u.id));
 
   const toggleUser = (userId: string) => {
@@ -502,7 +518,10 @@ export function AssigneeSelector({ users, value, onChange }: AssigneeSelectorPro
             {selectedUsers.length > 0 ? (
               <div className="flex -space-x-2">
                 {selectedUsers.slice(0, 3).map((user) => (
-                  <Avatar key={user.id} className="h-6 w-6 border-2 border-background">
+                  <Avatar
+                    key={user.id}
+                    className="h-6 w-6 border-2 border-background"
+                  >
                     <AvatarImage src={user.profileImageUrl} />
                     <AvatarFallback>{user.fullName.charAt(0)}</AvatarFallback>
                   </Avatar>
@@ -564,10 +583,15 @@ export function useCreateTask() {
       const projectId = data.projectId;
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['project-board', projectId] });
+      await queryClient.cancelQueries({
+        queryKey: ["project-board", projectId],
+      });
 
       // Get previous data
-      const previousData = queryClient.getQueryData(['project-board', projectId]);
+      const previousData = queryClient.getQueryData([
+        "project-board",
+        projectId,
+      ]);
 
       // Create temporary task for optimistic update
       const tempTask = {
@@ -576,12 +600,12 @@ export function useCreateTask() {
         assignees: [],
         dateCreated: new Date().toISOString(),
         dateUpdated: new Date().toISOString(),
-        creatorUserId: 'current-user', // TODO: Get from session
+        creatorUserId: "current-user", // TODO: Get from session
         isCreating: true, // Flag for UI
       };
 
       // Optimistically update cache
-      queryClient.setQueryData(['project-board', projectId], (old: any) => ({
+      queryClient.setQueryData(["project-board", projectId], (old: any) => ({
         ...old,
         tasks: [...(old?.tasks || []), tempTask],
       }));
@@ -594,7 +618,7 @@ export function useCreateTask() {
       const tempTask = context?.tempTask;
 
       // Replace temp task with real task from server
-      queryClient.setQueryData(['project-board', projectId], (old: any) => ({
+      queryClient.setQueryData(["project-board", projectId], (old: any) => ({
         ...old,
         tasks: old.tasks.map((t: any) =>
           t.id === tempTask?.id ? response.task : t
@@ -602,14 +626,14 @@ export function useCreateTask() {
       }));
 
       // Invalidate to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ['project-board', projectId] });
+      queryClient.invalidateQueries({ queryKey: ["project-board", projectId] });
     },
 
     onError: (error, variables, context) => {
       // Rollback on error
       if (context?.previousData) {
         queryClient.setQueryData(
-          ['project-board', variables.projectId],
+          ["project-board", variables.projectId],
           context.previousData
         );
       }
@@ -698,12 +722,12 @@ export const useUIStore = create<UIStore>((set) => ({
 **File**: `src/lib/validations/task-schema.ts`
 
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 export const createTaskSchema = z.object({
-  name: z.string().min(1, 'กรุณากรอกชื่องาน').max(500, 'ชื่องานยาวเกินไป'),
+  name: z.string().min(1, "กรุณากรอกชื่องาน").max(500, "ชื่องานยาวเกินไป"),
   description: z.string().optional(),
-  projectId: z.string().min(1, 'กรุณาเลือกโปรเจค'),
+  projectId: z.string().min(1, "กรุณาเลือกโปรเจกต์"),
   statusId: z.string().optional(),
   priority: z.number().int().min(1).max(4).default(3),
   difficulty: z.number().int().min(1).max(3).default(2),
@@ -725,14 +749,14 @@ export type CreateTaskData = z.infer<typeof createTaskSchema>;
 **File**: `src/components/common/create-task-button.tsx`
 
 ```tsx
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useUIStore } from '@/stores/use-ui-store';
-import { useParams } from 'next/navigation';
-import { useProjectBoard } from '@/hooks/use-projects';
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useUIStore } from "@/stores/use-ui-store";
+import { useParams } from "next/navigation";
+import { useProjectBoard } from "@/hooks/use-projects";
 
 interface CreateTaskButtonProps {
   className?: string;
@@ -768,8 +792,8 @@ export function CreateTaskButton({
       onClick={handleClick}
       size="lg"
       className={cn(
-        'h-12 text-primary-foreground',
-        fullWidth && 'w-full',
+        "h-12 text-primary-foreground",
+        fullWidth && "w-full",
         className
       )}
     >
@@ -785,9 +809,13 @@ export function CreateTaskButton({
 **File**: `src/app/(dashboard)/layout.tsx` (add to existing layout)
 
 ```tsx
-import { CreateTaskModal } from '@/components/modals/create-task-modal';
+import { CreateTaskModal } from "@/components/modals/create-task-modal";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex h-screen">
       {/* ... existing layout ... */}
@@ -804,7 +832,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 **File**: `src/components/task-panel/details-tab/subtasks-section.tsx`
 
 ```tsx
-import { useUIStore } from '@/stores/use-ui-store';
+import { useUIStore } from "@/stores/use-ui-store";
 
 export function SubtasksSection({ task }: { task: Task }) {
   const openCreateTaskModal = useUIStore((state) => state.openCreateTaskModal);
@@ -820,7 +848,11 @@ export function SubtasksSection({ task }: { task: Task }) {
     <div>
       {/* ... existing subtasks list ... */}
 
-      <Button onClick={handleCreateSubtask} variant="outline" className="w-full">
+      <Button
+        onClick={handleCreateSubtask}
+        variant="outline"
+        className="w-full"
+      >
         <Plus className="h-4 w-4 mr-2" />
         เพิ่มงานย่อย
       </Button>
@@ -836,6 +868,7 @@ export function SubtasksSection({ task }: { task: Task }) {
 ### Test Scenarios
 
 **1. Create Task from Project Board View**
+
 - ✅ Modal opens with project pre-filled
 - ✅ Users, statuses, tasks loaded from cache
 - ✅ All form fields work correctly
@@ -844,24 +877,28 @@ export function SubtasksSection({ task }: { task: Task }) {
 - ✅ Real task replaces temp task after server response
 
 **2. Create Task from Department View**
+
 - ✅ Modal opens with empty project
 - ✅ User selects project from list
 - ✅ Project data loads (users, statuses, tasks)
 - ✅ Task created in selected project
 
 **3. Create Subtask**
+
 - ✅ Modal opens with parent task info shown
 - ✅ Parent task selector disabled
 - ✅ Subtask created under parent
 - ✅ TaskPanel refreshes to show new subtask
 
 **4. Form Validation**
+
 - ✅ Task name required
 - ✅ Project required
 - ✅ Error messages displayed
 - ✅ Form cannot submit with validation errors
 
 **5. Project Switching**
+
 - ✅ Change project in modal
 - ✅ Users list updates
 - ✅ Statuses list updates
@@ -869,11 +906,13 @@ export function SubtasksSection({ task }: { task: Task }) {
 - ✅ Assignees reset
 
 **6. Error Handling**
+
 - ✅ Backend error removes temp task
 - ✅ Error toast displayed
 - ✅ User can retry
 
 **7. Multiple Views**
+
 - ✅ Works from Board View
 - ✅ Works from Calendar View
 - ✅ Works from List View
@@ -884,6 +923,7 @@ export function SubtasksSection({ task }: { task: Task }) {
 ## Implementation Checklist
 
 ### Phase 1: Core Components (2 hours)
+
 - [ ] Create CreateTaskModal component with Dialog
 - [ ] Implement StatusSlider component
 - [ ] Implement PrioritySelector component
@@ -892,6 +932,7 @@ export function SubtasksSection({ task }: { task: Task }) {
 - [ ] Create task form validation schema (Zod)
 
 ### Phase 2: Integration (1 hour)
+
 - [ ] Add createTaskModal state to useUIStore
 - [ ] Implement useCreateTask mutation hook
 - [ ] Update CreateTaskButton to use modal
@@ -899,12 +940,14 @@ export function SubtasksSection({ task }: { task: Task }) {
 - [ ] Connect subtask creation in TaskPanel
 
 ### Phase 3: Data Loading (1 hour)
+
 - [ ] Implement project data loading logic
 - [ ] Handle cache-first approach with React Query
 - [ ] Implement project switching updates
 - [ ] Add loading states and skeletons
 
 ### Phase 4: Testing & Polish (2 hours)
+
 - [ ] Test all form fields
 - [ ] Test validation
 - [ ] Test optimistic updates
@@ -920,6 +963,7 @@ export function SubtasksSection({ task }: { task: Task }) {
 ## Files to Create/Modify
 
 ### New Files (7)
+
 1. `src/components/modals/create-task-modal.tsx`
 2. `src/components/modals/status-slider.tsx`
 3. `src/components/modals/priority-selector.tsx`
@@ -929,6 +973,7 @@ export function SubtasksSection({ task }: { task: Task }) {
 7. `CREATE_TASK_MODAL_IMPLEMENTATION_LOG.md` (track progress)
 
 ### Modified Files (4)
+
 1. `src/hooks/use-tasks.ts` - Add useCreateTask mutation
 2. `src/stores/use-ui-store.ts` - Add createTaskModal state
 3. `src/components/common/create-task-button.tsx` - Connect to modal
@@ -939,6 +984,7 @@ export function SubtasksSection({ task }: { task: Task }) {
 ## Dependencies
 
 **shadcn/ui components needed:**
+
 - ✅ Dialog (already installed)
 - ✅ Button (already installed)
 - ✅ Input (already installed)
@@ -952,6 +998,7 @@ export function SubtasksSection({ task }: { task: Task }) {
 - ⚠️ Slider (need to check)
 
 **Check slider installation:**
+
 ```bash
 npx shadcn@latest add slider
 ```

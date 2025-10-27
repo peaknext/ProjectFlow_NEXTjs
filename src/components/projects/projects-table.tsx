@@ -68,7 +68,7 @@ export function ProjectsTable({
         <div className="flex flex-col items-center justify-center py-16">
           <FolderOpen className="h-16 w-16 text-muted-foreground mb-4" />
           <p className="text-lg font-medium text-foreground mb-2">
-            ไม่พบโปรเจค
+            ไม่พบโปรเจกต์
           </p>
           <p className="text-sm text-muted-foreground">
             ลองปรับเปลี่ยนตัวกรองหรือค้นหาด้วยคำอื่น
@@ -91,7 +91,7 @@ export function ProjectsTable({
                   onClick={() => onSort("name")}
                   className="h-auto p-0 hover:bg-transparent"
                 >
-                  <span className="font-semibold">ชื่อโปรเจค</span>
+                  <span className="font-semibold">ชื่อโปรเจกต์</span>
                   <SortIcon column="name" />
                 </Button>
               </TableHead>
@@ -101,7 +101,7 @@ export function ProjectsTable({
                   onClick={() => onSort("owner")}
                   className="h-auto p-0 hover:bg-transparent"
                 >
-                  <span className="font-semibold">เจ้าของโปรเจค</span>
+                  <span className="font-semibold">เจ้าของโปรเจกต์</span>
                   <SortIcon column="owner" />
                 </Button>
               </TableHead>

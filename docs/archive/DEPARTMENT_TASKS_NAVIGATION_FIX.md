@@ -16,6 +16,7 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 **Root Cause**: BYPASS_AUTH mode was using a hard-coded mock session with `userId: 'user001'`, but user001 in the database was actually a LEADER, not an ADMIN.
 
 **Solution**:
+
 - Modified `src/lib/api-middleware.ts` to fetch real user data from database based on `BYPASS_USER_ID` env variable
 - Created admin001 user with ADMIN role via `scripts/create-admin-user.ts`
 - Added `BYPASS_USER_ID=admin001` to `.env` for ADMIN testing
@@ -23,6 +24,7 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 **Result**: ADMIN users can now access all 9 Mission Groups and 72 Departments
 
 **Files Modified**:
+
 - `src/lib/api-middleware.ts` - Fetch real user from database
 - `scripts/create-admin-user.ts` - Script to create ADMIN user
 - `.env` - Added BYPASS_USER_ID variable
@@ -36,6 +38,7 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 **Root Cause**: Department tasks page was reading `departmentId` from `user.departmentId` instead of from URL query parameter.
 
 **Solution**:
+
 - Modified `src/app/(dashboard)/department/tasks/page.tsx` to read `departmentId` from `?departmentId=` query param using `useSearchParams()`
 - Updated `src/components/navigation/workspace-navigation.tsx` to navigate with `?departmentId=` when clicking departments
 - Updated `src/components/navigation/breadcrumb.tsx` to navigate with `?departmentId=` when switching departments
@@ -43,6 +46,7 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 **Result**: Department navigation now works correctly. When navigating to any department, the page updates to show that department's projects and tasks.
 
 **Files Modified**:
+
 - `src/app/(dashboard)/department/tasks/page.tsx` - Read departmentId from URL
 - `src/components/navigation/workspace-navigation.tsx` - Navigate with query param
 - `src/components/navigation/breadcrumb.tsx` - Navigate with query param
@@ -58,6 +62,7 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 **Root Cause**: Overly eager implementation added `if (sortedTasks.length === 0) return null;` which hid empty projects.
 
 **Solution**:
+
 - Removed the hiding logic from `src/components/views/department-tasks/department-tasks-view.tsx`
 - Added empty state message: "ไม่มีงานที่ตรงกับตัวกรอง" (No tasks matching filter)
 - Modified initial `collapsedProjects` state to auto-collapse projects with no tasks (but still show them)
@@ -65,6 +70,7 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 **Result**: All 8 projects now visible. Empty projects are collapsed by default but can be expanded by clicking the chevron.
 
 **Files Modified**:
+
 - `src/components/views/department-tasks/department-tasks-view.tsx` - Show all projects, collapse empty ones
 
 ---
@@ -78,6 +84,7 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 **Root Cause**: Overcomplicated logic trying to load from workspace cache, then fall back to department tasks cache, with multiple console.log statements.
 
 **Solution**: Simple parent-to-child data flow
+
 1. `DepartmentToolbar` filters projects by current department
 2. Passes filtered projects to both `Breadcrumb` AND `CreateTaskButton` via `availableProjects` prop
 3. `CreateTaskButton` passes to `useUIStore.openCreateTaskModal()`
@@ -86,6 +93,7 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 **Result**: Project selector in CreateTaskModal now shows the exact same projects as the breadcrumb selector.
 
 **Files Modified**:
+
 - `src/components/layout/department-toolbar.tsx` - Filter and pass projects to both Breadcrumb and CreateTaskButton
 - `src/components/common/create-task-button.tsx` - Accept and pass `availableProjects` prop
 - `src/stores/use-ui-store.ts` - Store `availableProjects` in modal state
@@ -98,61 +106,78 @@ Fixed multiple critical issues with ADMIN role access and department navigation 
 ### BYPASS_AUTH Enhancement
 
 **Before**:
+
 ```typescript
 // Hard-coded mock session
 authenticatedReq.session = {
-  userId: 'user001',
-  user: { /* hard-coded data */ }
+  userId: "user001",
+  user: {
+    /* hard-coded data */
+  },
 };
 ```
 
 **After**:
+
 ```typescript
 // Fetch real user from database
-const bypassUserId = process.env.BYPASS_USER_ID || 'user001';
+const bypassUserId = process.env.BYPASS_USER_ID || "user001";
 const user = await prisma.user.findUnique({
   where: { id: bypassUserId },
-  select: { /* all user fields */ }
+  select: {
+    /* all user fields */
+  },
 });
 
 authenticatedReq.session = {
   userId: user.id,
-  user: { /* real user data from database */ }
+  user: {
+    /* real user data from database */
+  },
 };
 ```
 
 ### URL-Based Navigation
 
 **Before**:
+
 ```typescript
 // Read from user's department
 const departmentId = user?.departmentId;
 ```
 
 **After**:
+
 ```typescript
 // Read from URL query parameter
 const searchParams = useSearchParams();
-const departmentIdFromUrl = searchParams.get('departmentId');
+const departmentIdFromUrl = searchParams.get("departmentId");
 const departmentId = departmentIdFromUrl || user?.departmentId;
 ```
 
 ### Simple Data Flow Pattern
 
 **Before** (Complex):
+
 ```typescript
 // Try workspace cache
-const cachedWorkspace = queryClient.getQueryData(['workspace']);
-if (cachedWorkspace) { /* filter projects */ }
+const cachedWorkspace = queryClient.getQueryData(["workspace"]);
+if (cachedWorkspace) {
+  /* filter projects */
+}
 
 // Fall back to department tasks cache
 if (projects.length === 0) {
-  const departmentTasksCache = queryClient.getQueriesData(['departmentTasks', departmentId]);
+  const departmentTasksCache = queryClient.getQueriesData([
+    "departmentTasks",
+    departmentId,
+  ]);
   // More complex logic...
 }
 ```
 
 **After** (Simple):
+
 ```typescript
 // DepartmentToolbar filters projects
 const departmentProjects = useMemo(() => {
@@ -178,6 +203,7 @@ BYPASS_USER_ID=admin001       # User ID to use (admin001 for ADMIN, user001 for 
 ```
 
 **Usage**:
+
 - Set `BYPASS_USER_ID=admin001` to test as ADMIN role (full access to all departments)
 - Set `BYPASS_USER_ID=user001` to test as LEADER role (limited to specific mission group)
 - Default: `user001` if not specified
@@ -198,13 +224,14 @@ BYPASS_USER_ID=admin001       # User ID to use (admin001 for ADMIN, user001 for 
 
 3. ✅ **Project Display**: Navigate to department with 8 projects (some empty)
    - Expected: All 8 projects visible, empty ones collapsed by default
-   - Actual: Working correctly, shows "แสดง 8 โปรเจค | รวม X งาน"
+   - Actual: Working correctly, shows "แสดง 8 โปรเจกต์ | รวม X งาน"
 
 4. ✅ **CreateTaskModal**: Click "Create Task" button in department tasks view
    - Expected: Project selector shows same projects as breadcrumb
    - Actual: Working correctly
 
 **Test URLs**:
+
 - http://localhost:3010/department/tasks?departmentId=DEPT-058
 - http://localhost:3010/department/tasks?departmentId=DEPT-059
 
@@ -242,28 +269,35 @@ Updated the following documentation:
 **Total**: 11 files modified, 1167 insertions, 120 deletions
 
 **Backend**:
+
 - `src/lib/api-middleware.ts` - BYPASS_AUTH enhancement
 - `scripts/create-admin-user.ts` - ADMIN user creation script (NEW)
 
 **Frontend - Pages**:
+
 - `src/app/(dashboard)/department/tasks/page.tsx` - URL-based navigation
 
 **Frontend - Navigation**:
+
 - `src/components/navigation/workspace-navigation.tsx` - Navigate with query param (NEW)
 - `src/components/navigation/breadcrumb.tsx` - Navigate with query param (NEW)
 - `src/components/layout/department-toolbar.tsx` - Filter and pass projects (NEW)
 
 **Frontend - Views**:
+
 - `src/components/views/department-tasks/department-tasks-view.tsx` - Show all projects
 
 **Frontend - Modals**:
+
 - `src/components/common/create-task-button.tsx` - Accept availableProjects prop
 - `src/components/modals/create-task-modal.tsx` - Use pre-filtered projects
 
 **Frontend - State**:
+
 - `src/stores/use-ui-store.ts` - Store availableProjects
 
 **Documentation**:
+
 - `CLAUDE.md` - Updated with all fixes and new patterns
 
 ---
@@ -281,6 +315,7 @@ Commit hash: `25e403a`
 ## Next Steps
 
 All issues are now resolved. Department tasks view is fully functional with:
+
 - ✅ ADMIN role authentication
 - ✅ URL-based navigation between departments
 - ✅ All projects visible (empty ones collapsed)
