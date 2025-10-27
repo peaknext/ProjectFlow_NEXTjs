@@ -92,6 +92,7 @@ async function getHandler(
           id: true,
           fullName: true,
           email: true,
+          profileImageUrl: true,
         },
       },
       closedBy: {
@@ -359,6 +360,21 @@ async function patchHandler(
             fullName: true,
             email: true,
             profileImageUrl: true,
+          },
+        },
+        assignees: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+                profileImageUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            assignedAt: 'asc',
           },
         },
         status: {
@@ -724,9 +740,13 @@ async function patchHandler(
       });
     }
 
+    // Extract assignee user IDs from assignees relation (for consistency with GET endpoint)
+    const assigneeUserIds = updatedTask.assignees.map(a => a.userId);
+
     return successResponse({
       task: {
         ...updatedTask,
+        assigneeUserIds, // ✅ BUG FIX: Add array of assignee user IDs
         startDate: updatedTask.startDate?.toISOString() || null,
         dueDate: updatedTask.dueDate?.toISOString() || null,
       },

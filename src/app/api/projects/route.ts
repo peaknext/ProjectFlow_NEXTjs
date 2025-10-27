@@ -28,11 +28,15 @@ const createProjectSchema = z.object({
     startDate: z.string().nullable().optional(),
     endDate: z.string().nullable().optional(),
   })).optional(),
+  // Status Type สำหรับแสดงความก้าวหน้าของงาน (ไม่ใช่การปิดงาน)
+  // ⚠️ IMPORTANT: ใช้เฉพาะ NOT_STARTED, IN_PROGRESS, DONE
+  // ❌ ห้ามใช้ ABORTED, COMPLETED, CANCELED - ค่าเหล่านี้เป็น CloseType ไม่ใช่ StatusType
+  // @see TASK_CLOSING_LOGIC.md, prisma/schema.prisma (StatusType enum)
   statuses: z.array(z.object({
     name: z.string(),
     color: z.string(),
     order: z.number(),
-    statusType: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'DONE', 'CANCELED']),
+    statusType: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'DONE']),
   })).optional(),
 });
 

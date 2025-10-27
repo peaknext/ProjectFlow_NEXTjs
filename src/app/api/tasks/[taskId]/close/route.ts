@@ -3,7 +3,6 @@
  * Close task (mark as completed or aborted)
  */
 
-import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/lib/api-middleware';
@@ -72,10 +71,16 @@ async function handler(
         userClosedId: req.session.userId,
       },
       include: {
-        assignee: {
+        assignees: {
           select: {
-            id: true,
-            fullName: true,
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+                profileImageUrl: true,
+              },
+            },
           },
         },
         closedBy: {
@@ -100,34 +105,48 @@ async function handler(
       },
     });
 
-    // Notify assignee if different from closer
-    if (
-      existingTask.assigneeUserId &&
-      existingTask.assigneeUserId !== req.session.userId
-    ) {
-      const notificationMessage =
-        closeType === 'COMPLETED'
-          ? `งานของคุณถูกปิดสำเร็จ: ${existingTask.name}`
-          : `งานของคุณถูกยกเลิก: ${existingTask.name}`;
+    // ✅ BUG FIX #1: Notify ALL assignees (not just the first one)
+    // Get all assignees from task_assignees table
+    const assignees = await prisma.taskAssignee.findMany({
+      where: { taskId },
+      select: { userId: true },
+    });
 
-      await prisma.notification.create({
-        data: {
-          userId: existingTask.assigneeUserId,
-          type: 'TASK_CLOSED',
-          message: notificationMessage,
-          triggeredByUserId: req.session.userId,
-        },
+    // Create notification message for assignees
+    const assigneeNotificationMessage =
+      closeType === 'COMPLETED'
+        ? `งานของคุณถูกปิดสำเร็จ: ${existingTask.name}`
+        : `งานของคุณถูกยกเลิก: ${existingTask.name}`;
+
+    // Prepare notifications for all assignees (except the person who closed the task)
+    const assigneeNotifications = assignees
+      .filter((a) => a.userId !== req.session.userId)
+      .map((a) => ({
+        userId: a.userId,
+        type: 'TASK_CLOSED' as const,
+        message: assigneeNotificationMessage,
+        taskId,
+        triggeredByUserId: req.session.userId,
+      }));
+
+    // Send notifications to all assignees
+    if (assigneeNotifications.length > 0) {
+      await prisma.notification.createMany({
+        data: assigneeNotifications,
       });
     }
 
-    // ✅ TASK OWNER NOTIFICATION: Notify task creator about task closure
+    // ✅ BUG FIX #2: Check if creator is assignee using task_assignees table
+    // Notify task creator about task closure (avoid duplicate if creator is also assignee)
     const taskCreatorId = existingTask.creatorUserId;
+    const creatorIsAssignee = assignees.some((a) => a.userId === taskCreatorId);
+
     if (
       taskCreatorId &&
       taskCreatorId !== req.session.userId && // Owner is not the one closing
-      taskCreatorId !== existingTask.assigneeUserId // Owner is not the assignee (avoid duplicate)
+      !creatorIsAssignee // ✅ Fixed: Check from task_assignees (not just assigneeUserId)
     ) {
-      const notificationMessage =
+      const creatorNotificationMessage =
         closeType === 'COMPLETED'
           ? `${req.session.user.fullName} ได้ปิดงาน "${existingTask.name}" ของคุณ (เสร็จสมบูรณ์)`
           : `${req.session.user.fullName} ได้ยกเลิกงาน "${existingTask.name}" ของคุณ${reason ? ` เหตุผล: ${reason}` : ''}`;
@@ -136,7 +155,7 @@ async function handler(
         data: {
           userId: taskCreatorId,
           type: 'TASK_CLOSED',
-          message: notificationMessage,
+          message: creatorNotificationMessage,
           taskId,
           triggeredByUserId: req.session.userId,
         },

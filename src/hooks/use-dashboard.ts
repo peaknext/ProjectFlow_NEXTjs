@@ -16,7 +16,7 @@ export const dashboardKeys = {
 /**
  * Fetch dashboard data
  *
- * @param options - Query options (limit, offset for pagination)
+ * @param options - Query options (separate pagination for each widget)
  * @returns Dashboard data including stats, tasks, activities, etc.
  */
 export function useDashboard(options?: UseDashboardOptions) {
@@ -24,11 +24,19 @@ export function useDashboard(options?: UseDashboardOptions) {
     queryKey: dashboardKeys.detail(options),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (options?.limit) {
-        params.append("limit", options.limit.toString());
+
+      // Separate pagination for each widget
+      if (options?.myCreatedTasksLimit) {
+        params.append("myCreatedTasksLimit", options.myCreatedTasksLimit.toString());
       }
-      if (options?.offset) {
-        params.append("offset", options.offset.toString());
+      if (options?.myCreatedTasksOffset) {
+        params.append("myCreatedTasksOffset", options.myCreatedTasksOffset.toString());
+      }
+      if (options?.assignedToMeTasksLimit) {
+        params.append("assignedToMeTasksLimit", options.assignedToMeTasksLimit.toString());
+      }
+      if (options?.assignedToMeTasksOffset) {
+        params.append("assignedToMeTasksOffset", options.assignedToMeTasksOffset.toString());
       }
 
       const response = await api.get<{ data: DashboardData }>(
@@ -70,8 +78,12 @@ export function useActivities() {
 /**
  * Load more tasks (for pagination)
  *
+ * DEPRECATED: No longer used - Dashboard now uses separate pagination
+ * for myCreatedTasks and assignedToMeTasks via useDashboard() options
+ *
  * Appends new tasks to the existing myTasks list
  */
+/* COMMENTED OUT - Dead code, not used anywhere
 export function useLoadMoreTasks() {
   const queryClient = useQueryClient();
 
@@ -104,6 +116,7 @@ export function useLoadMoreTasks() {
     },
   });
 }
+*/
 
 /**
  * Refresh dashboard data

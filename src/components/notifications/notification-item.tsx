@@ -61,14 +61,14 @@ export function NotificationItem({
                   {notification.triggeredBy.fullName.charAt(0)}
                 </AvatarFallback>
               </Avatar>
-              {/* Icon badge on avatar */}
+              {/* Icon badge on avatar - positioned at bottom-right corner with overlap */}
               <span
                 className={cn(
-                  "absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-white",
+                  "absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full text-white border-2 border-white dark:border-gray-800",
                   bgColor
                 )}
               >
-                <IconComponent className="h-3 w-3" />
+                <IconComponent className="h-3.5 w-3.5" />
               </span>
             </>
           ) : (

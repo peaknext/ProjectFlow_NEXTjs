@@ -143,15 +143,11 @@ export function TaskRow({
   };
 
   const handleQuickAssigneeChange = (assigneeUserIds: string[]) => {
-    const assignees = assigneeUserIds
-      .map((id) => users.find((u) => u.id === id))
-      .filter(Boolean) as any;
-
+    // ✅ BUG FIX: Only send assigneeUserIds to API
+    // API will handle updating assignees relation table
+    // Don't send full user objects - they'll be fetched on next render
     handleQuickUpdate({
       assigneeUserIds,
-      assignees: assignees as any,
-      assigneeUserId: assigneeUserIds[0] || null,
-      assignee: assignees[0] as any || null,
     });
   };
 

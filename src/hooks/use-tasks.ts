@@ -25,8 +25,11 @@ export interface Task {
   parentTaskId: string | null;
   isClosed: boolean;
   closeType: 'COMPLETED' | 'ABORTED' | null;
-  closedAt: string | null;
-  closedBy: string | null;
+  closeDate: string | null;  // ✅ BUG FIX #5: Changed from closedAt to match API & database
+  closedBy: {  // ✅ BUG FIX #5: Changed from string to object to match API response
+    id: string;
+    fullName: string;
+  } | null;
   difficulty: number | null;
   dateCreated: string;
   dateModified: string;
@@ -84,7 +87,7 @@ export interface UpdateTaskInput {
 
 export interface CloseTaskInput {
   type: 'COMPLETED' | 'ABORTED';
-  comment?: string;
+  reason?: string;  // ✅ BUG FIX #4: Changed from 'comment' to match API schema
 }
 
 // Query keys
@@ -177,7 +180,7 @@ export function useCreateTask() {
         dueDate: data.dueDate || null,
         isClosed: false,
         closeType: null,
-        closedAt: null,
+        closeDate: null,  // ✅ BUG FIX #5: Changed from closedAt
         closedBy: null,
         dateCreated: new Date().toISOString(),
         dateModified: new Date().toISOString(),
@@ -632,14 +635,16 @@ export function useCreateChecklistItem(taskId: string) {
     onMutate: async (newItem) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: taskKeys.checklists(taskId) });
+      await queryClient.cancelQueries({ queryKey: dashboardKeys.all });
 
-      // Snapshot previous value
-      const previousData = queryClient.getQueryData(taskKeys.checklists(taskId));
+      // Snapshot previous values
+      const previousChecklistData = queryClient.getQueryData(taskKeys.checklists(taskId));
+      const previousDashboardData = queryClient.getQueriesData({ queryKey: dashboardKeys.all });
 
       // Generate tempId for tracking
       const tempId = `temp-${Date.now()}`;
 
-      // Optimistically add new item
+      // Optimistically add new item to task checklists cache
       queryClient.setQueryData(taskKeys.checklists(taskId), (old: any) => {
         if (!old) return old;
 
@@ -658,7 +663,39 @@ export function useCreateChecklistItem(taskId: string) {
         };
       });
 
-      return { previousData, tempId };
+      // ✅ OPTIMISTIC UPDATE: Add new item to dashboard checklists widget
+      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (old: any) => {
+        if (!old?.myChecklists) return old;
+
+        // Find the task group for this taskId
+        const taskGroupIndex = old.myChecklists.findIndex((group: any) => group.taskId === taskId);
+
+        if (taskGroupIndex >= 0) {
+          // Task group exists, add item to it
+          const updatedGroups = [...old.myChecklists];
+          updatedGroups[taskGroupIndex] = {
+            ...updatedGroups[taskGroupIndex],
+            items: [
+              ...updatedGroups[taskGroupIndex].items,
+              {
+                id: tempId,
+                name: newItem.name,
+                isChecked: false,
+              },
+            ],
+          };
+
+          return {
+            ...old,
+            myChecklists: updatedGroups,
+          };
+        }
+
+        // Task group doesn't exist yet (shouldn't happen, but handle gracefully)
+        return old;
+      });
+
+      return { previousChecklistData, previousDashboardData, tempId };
     },
     onSuccess: (response, _variables, context) => {
       // Replace temporary item with real item from server
@@ -674,17 +711,43 @@ export function useCreateChecklistItem(taskId: string) {
           ),
         };
       });
+
+      // Replace temp item in dashboard cache
+      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (old: any) => {
+        if (!old?.myChecklists) return old;
+
+        return {
+          ...old,
+          myChecklists: old.myChecklists.map((group: any) =>
+            group.taskId === taskId
+              ? {
+                  ...group,
+                  items: group.items.map((item: any) =>
+                    item.id === tempId ? { ...item, id: response.item.id } : item
+                  ),
+                }
+              : group
+          ),
+        };
+      });
     },
     onError: (error, newItem, context) => {
-      // Rollback on error
-      if (context?.previousData) {
-        queryClient.setQueryData(taskKeys.checklists(taskId), context.previousData);
+      // Rollback checklist cache
+      if (context?.previousChecklistData) {
+        queryClient.setQueryData(taskKeys.checklists(taskId), context.previousChecklistData);
+      }
+      // Rollback dashboard caches
+      if (context?.previousDashboardData) {
+        context.previousDashboardData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
     },
     onSettled: () => {
       // Sync with server
       queryClient.invalidateQueries({ queryKey: taskKeys.checklists(taskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.history(taskId) });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
@@ -728,6 +791,7 @@ export function useUpdateChecklistItem(taskId: string) {
       // Sync with server
       queryClient.invalidateQueries({ queryKey: taskKeys.checklists(taskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.history(taskId) });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
@@ -744,11 +808,13 @@ export function useDeleteChecklistItem(taskId: string) {
     onMutate: async ({ itemId }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: taskKeys.checklists(taskId) });
+      await queryClient.cancelQueries({ queryKey: dashboardKeys.all });
 
       // Save previous data
-      const previousData = queryClient.getQueryData(taskKeys.checklists(taskId));
+      const previousChecklistData = queryClient.getQueryData(taskKeys.checklists(taskId));
+      const previousDashboardData = queryClient.getQueriesData({ queryKey: dashboardKeys.all });
 
-      // Optimistically remove checklist item
+      // Optimistically remove checklist item from task checklists cache
       queryClient.setQueryData(taskKeys.checklists(taskId), (old: any) => {
         if (!old?.items) return old;
         return {
@@ -757,18 +823,42 @@ export function useDeleteChecklistItem(taskId: string) {
         };
       });
 
-      return { previousData };
+      // ✅ OPTIMISTIC UPDATE: Remove item from dashboard checklists widget
+      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (old: any) => {
+        if (!old?.myChecklists) return old;
+
+        return {
+          ...old,
+          myChecklists: old.myChecklists.map((group: any) =>
+            group.taskId === taskId
+              ? {
+                  ...group,
+                  items: group.items.filter((item: any) => item.id !== itemId),
+                }
+              : group
+          ),
+        };
+      });
+
+      return { previousChecklistData, previousDashboardData };
     },
     onError: (error, variables, context) => {
-      // Rollback on error
-      if (context?.previousData) {
-        queryClient.setQueryData(taskKeys.checklists(taskId), context.previousData);
+      // Rollback checklist cache
+      if (context?.previousChecklistData) {
+        queryClient.setQueryData(taskKeys.checklists(taskId), context.previousChecklistData);
+      }
+      // Rollback dashboard caches
+      if (context?.previousDashboardData) {
+        context.previousDashboardData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
     },
     onSettled: () => {
       // Sync with server
       queryClient.invalidateQueries({ queryKey: taskKeys.checklists(taskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.history(taskId) });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }

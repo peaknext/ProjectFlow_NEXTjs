@@ -191,36 +191,36 @@ export function MyCreatedTasksWidget({
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {/* Task List */}
-        <div className="divide-y max-h-[600px] overflow-y-auto">
+        {/* Task List - No scrollable, expand infinitely */}
+        <div className="divide-y">
           {filteredTasks.map((task) => (
             <TaskRow key={task.id} task={task} />
           ))}
-
-          {/* Load More Section */}
-          {myCreatedTasks.hasMore && (
-            <div className="p-4 border-t bg-muted/20">
-              <Button
-                variant="outline"
-                onClick={onLoadMore}
-                disabled={isLoadingMore}
-                className="w-full"
-              >
-                {isLoadingMore ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    กำลังโหลด...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    โหลดงานเพิ่ม
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
         </div>
+
+        {/* Load More Section */}
+        {myCreatedTasks.hasMore && (
+          <div className="p-4 border-t bg-muted/20">
+            <Button
+              variant="outline"
+              onClick={onLoadMore}
+              disabled={isLoadingMore}
+              className="w-full"
+            >
+              {isLoadingMore ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  กำลังโหลด...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  โหลดงานเพิ่ม
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -267,7 +267,7 @@ function TaskRow({ task }: { task: DashboardTask }) {
 
   return (
     <div
-      className="relative py-4 pl-6 pr-4 hover:bg-muted/50 cursor-pointer transition-colors"
+      className="relative py-3 pl-6 pr-4 hover:bg-muted/50 cursor-pointer transition-colors"
       onClick={handleRowClick}
     >
       {/* Department Badge (top right) */}
@@ -275,7 +275,7 @@ function TaskRow({ task }: { task: DashboardTask }) {
         <div className="absolute top-2 right-4">
           <Badge
             variant="outline"
-            className="text-[12px] px-2 py-0.5 bg-background/80"
+            className="text-[11px] px-1.5 py-0 bg-background/80"
           >
             {task.project.department.name}
           </Badge>
@@ -283,13 +283,13 @@ function TaskRow({ task }: { task: DashboardTask }) {
       )}
 
       {/* Line 1: Checkbox + Task Name */}
-      <div className="flex items-start gap-3 mb-2">
+      <div className="flex items-start gap-2.5 mb-1.5">
         <div onClick={handleCheckboxChange} className="pt-0.5">
-          <Checkbox checked={isCompleted} className="h-5 w-5" />
+          <Checkbox checked={isCompleted} className="h-4 w-4" />
         </div>
         <span
           className={cn(
-            "font-medium flex-1",
+            "text-sm font-medium flex-1",
             isCompleted && "line-through text-muted-foreground"
           )}
         >
@@ -298,10 +298,10 @@ function TaskRow({ task }: { task: DashboardTask }) {
       </div>
 
       {/* Line 2: Metadata (Project + Due Date) */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground ml-8">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground ml-7">
         {/* Project */}
         <div className="flex items-center gap-1">
-          <Folder className="h-3.5 w-3.5" />
+          <Folder className="h-3 w-3" />
           <span>{task.project.name}</span>
         </div>
 
@@ -314,7 +314,7 @@ function TaskRow({ task }: { task: DashboardTask }) {
                 isOverdue && "text-red-600 dark:text-red-400 font-medium"
               )}
             >
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3 w-3" />
               <span>
                 {format(new Date(task.dueDate), "d MMM yyyy", { locale: th })}
               </span>
