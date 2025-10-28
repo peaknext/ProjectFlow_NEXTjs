@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/hooks/use-auth";
+import { usePrivacyConsent } from "@/hooks/use-privacy-consent";
+import { PrivacyNoticeModal } from "@/components/privacy/privacy-notice-modal";
 import { Logo } from "@/components/common/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +24,12 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login, isLoggingIn, loginError } = useAuth();
+  const {
+    showPrivacyModal,
+    acceptAll,
+    declineOptional,
+    closeModal,
+  } = usePrivacyConsent();
 
   // Local state for persistent error (recommended by TanStack Query for forms)
   const [displayError, setDisplayError] = useState<string | null>(null);
@@ -90,8 +98,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center w-full">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
+    <>
+      <PrivacyNoticeModal
+        open={showPrivacyModal}
+        onAcceptAll={acceptAll}
+        onDeclineOptional={declineOptional}
+        onClose={closeModal}
+        canClose={false}
+      />
+
+      <div className="flex items-center justify-center w-full">
+        <div className="w-full max-w-md p-8 space-y-6 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
         {/* Logo + Title */}
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
@@ -183,7 +200,8 @@ export default function LoginPage() {
             ลงทะเบียน
           </Link>
         </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

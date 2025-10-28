@@ -125,6 +125,25 @@ export function useAuth() {
         description: `ยินดีต้อนรับ ${data.user.fullName}`,
       });
 
+      // Privacy: Extend consent on successful login (auto-refresh 15 day expiration)
+      if (typeof window !== 'undefined') {
+        try {
+          const consentStr = localStorage.getItem('privacy_consent');
+          if (consentStr) {
+            const consent = JSON.parse(consentStr);
+            if (consent.accepted) {
+              const updatedConsent = {
+                ...consent,
+                timestamp: Date.now(),  // Extend by 15 days from now
+              };
+              localStorage.setItem('privacy_consent', JSON.stringify(updatedConsent));
+            }
+          }
+        } catch (error) {
+          console.error('Failed to extend privacy consent:', error);
+        }
+      }
+
       // Redirect to dashboard
       router.push('/dashboard');
     },
