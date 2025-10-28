@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.30.0 (2025-10-28)
-**Last Major Update**: Mobile Layout Phase 1 - Responsive Infrastructure (Hybrid Approach)
+**Version**: 2.31.0 (2025-10-28)
+**Last Major Update**: Mobile Layout Phase 2 - Bottom Navigation Features (My Tasks, Notifications, Hamburger Menu)
 
 ---
 
@@ -73,11 +73,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🎯 Current Priority
 
-**What to work on next**: Mobile Layout Phase 2 - Bottom Navigation Features (My Tasks Page, Notifications Page, Hamburger Menu)
+**What to work on next**: Mobile Layout Phase 3 - Mobile Top Bar Enhancement (Dynamic page titles, context-specific actions, improved back button logic)
 
 **Current Status**:
 - **Mobile Layout Phase 1**: ✅ Complete (Responsive infrastructure at 768px breakpoint)
-- **Mobile Layout Phase 2**: 🔄 In Progress (Creating missing pages and menus)
+- **Mobile Layout Phase 2**: ✅ Complete (5-tab bottom nav, My Tasks page, Notifications page, Hamburger menu)
+- **Mobile Layout Phase 3**: ⏳ Pending (Top bar enhancements)
+- **Mobile Layout Progress**: 2 / 8 phases complete (25%)
 - **Version 1.5**: Near completion (47/48 components)
 
 **Dashboard Implementation Status**: ✅ **COMPLETE WITH UI/UX REFINEMENT** (7/7 widgets)
@@ -157,6 +159,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Mobile Layout Phase 2 - Bottom Nav Features (2025-10-28 Session 7)** - Completed all bottom navigation features enabling 5-tab navigation system with full functionality. Created 3 new pages/components: (1) `/my-tasks` page (201 lines) - Personal task management with 2 tabs ("งานที่ได้รับ" Assigned to Me + "งานที่สร้าง" Created by Me), displaying touch-friendly task cards with project name, priority badges, due dates, and assignee avatars that open Task Panel on click. (2) `/notifications` page (199 lines) - Dedicated notifications center with 2 tabs ("ทั้งหมด" All + "ยังไม่ได้อ่าน" Unread), badge counts, mark all as read button, and click-to-open Task Panel functionality. (3) `mobile-menu.tsx` (280 lines) - Full-featured hamburger drawer with user profile section (avatar, role, department), collapsible workspace/project selector (first 10 projects), navigation links (Reports, Users, Settings) with permission-based visibility, dark mode toggle switch, and logout button. **Integration**: Mobile menu integrated in both bottom nav Menu tab and mobile top bar hamburger icon. **Type Fixes**: Fixed 4 type errors (myTasks property → myCreatedTasks/assignedToMeTasks, removed disabled properties, added Separator component, fixed useProjects params). **Testing**: Type-check passed (0 errors). **Status**: Phase 2 Complete (2/8 phases, 25% of mobile implementation). Files created: 4 files, modified: 4 files, total: ~700 lines. Commit: `e7070ab`. Next: Phase 3 (Mobile Top Bar enhancements). See `MOBILE_LAYOUT_DESIGN.md` for updated roadmap. 📱✅
 - ✅ **Mobile Layout Phase 1 - Foundation (2025-10-28 Session 6)** - Implemented responsive layout infrastructure with Hybrid Approach that switches between desktop and mobile layouts at 768px breakpoint. Created 5 new components: (1) `use-media-query.ts` hook with utility functions (`useIsMobile`, `useIsDesktop`, etc.) for SSR-safe breakpoint detection, (2) `desktop-layout.tsx` - Refactored existing layout with Sidebar + Top Navbar, (3) `mobile-layout.tsx` - Mobile layout with Bottom Navigation + Mobile Top Bar, (4) `bottom-navigation.tsx` - Facebook-style 5-tab bottom nav (Home, My Tasks, Create, Notifications, Menu) with active states, notification badges, and 48x48px touch-friendly tap targets, (5) `mobile-top-bar.tsx` - Dynamic top bar with back button logic and page titles. Updated `(dashboard)/layout.tsx` to responsive wrapper using `useIsMobile()` hook for conditional rendering. **What Works**: Layout switching at 768px, Home tab navigation, Create button opens modal, notification badge, touch-friendly UI. **What's Disabled**: My Tasks & Notifications tabs (Phase 2), Hamburger menu (Phase 2). Files created: 5 files (587 lines). Type-check: 0 errors. Commit: `bd21b24`. Next: Phase 2 (create /my-tasks and /notifications pages, implement hamburger menu drawer). See `MOBILE_LAYOUT_DESIGN.md` for complete design documentation (620+ lines). 📱
 - ✅ **Privacy Consent System + Mobile Design Doc (2025-10-28 Session 5)** - Implemented comprehensive privacy notice and cookie consent system with 15-day expiration and auto-extension on login. Created 3 new components: (1) `use-privacy-consent.ts` hook with localStorage persistence and version tracking, (2) `privacy-notice-modal.tsx` with 2 tabs (Privacy Policy + Cookie Notice in Thai), (3) `cookie-settings-modal.tsx` with granular controls for 3 cookie categories (Necessary, Functional, Analytics). Integrated with login page - modal shows on first visit and cannot be dismissed until consent given. Added consent extension logic to `use-auth.ts` login mutation that refreshes timestamp on successful login. Created `MOBILE_LAYOUT_DESIGN.md` (620+ lines) - Comprehensive mobile UI/UX design document with wireframes, implementation roadmap (11 phases, 18-26 hours), technical specs, and best practices inspired by Facebook and ClickUp patterns. Files created: 4 files (1,757 insertions). Commit: `06115d2`. All content in Thai with Tailwind CSS (text-sm) styling. 🔒
 - ✅ **Production 403 Forbidden Fix (2025-10-28 Session 4)** - Fixed critical production issue where all POST/PATCH/DELETE requests were blocked with 403 Forbidden errors after deploying security improvements. Root cause: CSRF and CORS protection configs had incorrect production domain (`projectflows.render.com` instead of `projectflows.app` and `projectflows.onrender.com`). All state-changing operations (create/edit/delete tasks, projects, users) were blocked in production. Solution: Updated `allowedOrigins` in both `src/lib/csrf.ts` and `src/middleware.ts` to include correct production domains: `https://projectflows.app` (custom domain) and `https://projectflows.onrender.com` (Render default). Also fixed typo where `render.com` should be `onrender.com`. Files modified: 2 files (csrf.ts, middleware.ts). Production now working correctly with full CSRF/CORS protection. Commits: 8961bbf (initial fix) + 3959bb7 (typo correction). **CRITICAL FIX** - Unblocked all production CRUD operations. 🎉
@@ -2096,9 +2099,58 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.29.0** (2025-10-28)
+**End of CLAUDE.md v2.31.0** (2025-10-28)
 
 ## Changelog
+
+### v2.31.0 (2025-10-28) - Mobile Layout Phase 2 Complete
+
+**Major changes:**
+- ✅ Completed Phase 2 of mobile layout implementation (2/8 phases, 25% complete)
+- ✅ Created 3 new pages/components (~700 lines total):
+  - `/my-tasks` page (201 lines) - Personal task management with 2 tabs
+  - `/notifications` page (199 lines) - Dedicated notifications center
+  - `mobile-menu.tsx` (280 lines) - Full-featured hamburger drawer
+- ✅ Integrated mobile menu in both bottom nav and top bar
+- ✅ Fixed 4 TypeScript type errors (myTasks property, disabled properties, Separator import, useProjects params)
+- ✅ Type-check passed (0 errors)
+- ✅ Updated MOBILE_LAYOUT_DESIGN.md (removed merged phases 4-6, renumbered to 8 phases)
+- ✅ Updated Current Priority to Phase 3 (Mobile Top Bar Enhancement)
+
+**Features Implemented:**
+- My Tasks Page: Shows "งานที่ได้รับ" (Assigned) and "งานที่สร้าง" (Created) in separate tabs
+- Notifications Page: "ทั้งหมด" (All) and "ยังไม่ได้อ่าน" (Unread) tabs with badge counts
+- Hamburger Menu: User profile, workspace selector, nav links, dark mode toggle, logout
+- Touch-friendly cards with click to open Task Panel
+- Permission-based navigation link visibility
+
+**Commit**: e7070ab
+
+**Files Modified:**
+- Created: 4 files (my-tasks/page.tsx, notifications/page.tsx, mobile-menu.tsx, separator.tsx)
+- Modified: 4 files (bottom-navigation.tsx, mobile-top-bar.tsx, package.json, package-lock.json)
+- Updated: 2 docs (MOBILE_LAYOUT_DESIGN.md, CLAUDE.md)
+
+**Next:** Phase 3 - Mobile Top Bar Enhancement (dynamic titles, context-specific actions)
+
+### v2.30.0 (2025-10-28) - Mobile Layout Phase 1 Complete
+
+**Major changes:**
+- ✅ Implemented responsive layout infrastructure with Hybrid Approach
+- ✅ Created 5 new components (587 lines):
+  - use-media-query.ts hook (163 lines)
+  - mobile-layout.tsx (67 lines)
+  - desktop-layout.tsx (61 lines)
+  - bottom-navigation.tsx (202 lines)
+  - mobile-top-bar.tsx (94 lines)
+- ✅ Updated (dashboard)/layout.tsx to responsive wrapper (39 lines)
+- ✅ Layout switches at 768px breakpoint
+- ✅ Created MOBILE_LAYOUT_DESIGN.md (620+ lines) with wireframes and 11-phase roadmap
+- ✅ Type-check passed (0 errors)
+
+**Commit**: bd21b24
+
+**Next:** Phase 2 - Bottom Navigation Features (My Tasks, Notifications, Hamburger Menu)
 
 ### v2.29.0 (2025-10-28) - Production 403 Forbidden Fix
 
