@@ -111,7 +111,7 @@ export function validateRequestOrigin(req: NextRequest): boolean {
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,   // Production domain (from env)
     "https://projectflows.app",        // Production custom domain
-    "https://projectflows.render.com", // Render default domain
+    "https://projectflows.onrender.com", // Render default domain
     // Development origins
     "http://localhost:3000",
     "http://localhost:3010",

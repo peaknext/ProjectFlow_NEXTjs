@@ -72,7 +72,7 @@ export function middleware(request: NextRequest) {
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,   // Production domain (from env)
     'https://projectflows.app',        // Production custom domain
-    'https://projectflows.render.com', // Render default domain
+    'https://projectflows.onrender.com', // Render default domain
   ].filter(Boolean); // Remove undefined values
 
   // Development: Allow localhost
