@@ -11,8 +11,8 @@
  * 3. SameSite cookie attributes (if using cookies)
  */
 
-import crypto from 'crypto';
-import { NextRequest } from 'next/server';
+import crypto from "crypto";
+import { NextRequest } from "next/server";
 
 const CSRF_TOKEN_LENGTH = 32; // 256 bits
 const CSRF_TOKEN_EXPIRY = 60 * 60 * 1000; // 1 hour
@@ -30,7 +30,7 @@ const csrfTokenStore = new Map<
  * @returns CSRF token string
  */
 export function generateCsrfToken(userId?: string): string {
-  const token = crypto.randomBytes(CSRF_TOKEN_LENGTH).toString('hex');
+  const token = crypto.randomBytes(CSRF_TOKEN_LENGTH).toString("hex");
   const expiresAt = Date.now() + CSRF_TOKEN_EXPIRY;
 
   csrfTokenStore.set(token, {
@@ -49,10 +49,7 @@ export function generateCsrfToken(userId?: string): string {
  * @param userId - Optional user ID to validate against
  * @returns true if token is valid, false otherwise
  */
-export function validateCsrfToken(
-  token: string,
-  userId?: string
-): boolean {
+export function validateCsrfToken(token: string, userId?: string): boolean {
   const storedToken = csrfTokenStore.get(token);
 
   if (!storedToken) {
@@ -106,19 +103,22 @@ setInterval(cleanupExpiredCsrfTokens, 10 * 60 * 1000);
  * @returns true if origin is valid, false otherwise
  */
 export function validateRequestOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get('origin');
-  const referer = req.headers.get('referer');
-  const host = req.headers.get('host');
+  const origin = req.headers.get("origin");
+  const referer = req.headers.get("referer");
+  const host = req.headers.get("host");
 
   // List of allowed origins
   const allowedOrigins = [
-    process.env.NEXT_PUBLIC_APP_URL,
-    'https://projectflows.render.com',
+    process.env.NEXT_PUBLIC_APP_URL,   // Production domain (from env)
+    "https://projectflows.app",        // Production custom domain
+    "https://projectflows.render.com", // Render default domain
     // Development origins
-    'http://localhost:3000',
-    'http://localhost:3010',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3010',
+    "http://localhost:3000",
+    "http://localhost:3010",
+    "http://localhost:10000",
+    "http://10.16.12.241:10000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3010",
     // Add more allowed origins here
   ].filter(Boolean);
 
@@ -135,7 +135,9 @@ export function validateRequestOrigin(req: NextRequest): boolean {
       origin.startsWith(allowed as string)
     );
     if (!isAllowed) {
-      console.warn(`🚨 CSRF: Blocked request from unauthorized origin: ${origin}`);
+      console.warn(
+        `🚨 CSRF: Blocked request from unauthorized origin: ${origin}`
+      );
       return false;
     }
   }
@@ -146,7 +148,9 @@ export function validateRequestOrigin(req: NextRequest): boolean {
       referer.startsWith(allowed as string)
     );
     if (!isAllowed) {
-      console.warn(`🚨 CSRF: Blocked request from unauthorized referer: ${referer}`);
+      console.warn(
+        `🚨 CSRF: Blocked request from unauthorized referer: ${referer}`
+      );
       return false;
     }
   }
@@ -157,8 +161,8 @@ export function validateRequestOrigin(req: NextRequest): boolean {
     if (requestHost && !requestHost.includes(host)) {
       // Allow localhost for development
       if (
-        process.env.NODE_ENV === 'development' &&
-        (host.includes('localhost') || host.includes('127.0.0.1'))
+        process.env.NODE_ENV === "development" &&
+        (host.includes("localhost") || host.includes("127.0.0.1"))
       ) {
         return true;
       }
@@ -182,7 +186,7 @@ export function validateRequestOrigin(req: NextRequest): boolean {
  * @returns true if method requires CSRF protection
  */
 export function requiresCsrfProtection(method: string): boolean {
-  return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+  return ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
 }
 
 /**
@@ -195,12 +199,12 @@ export function requiresCsrfProtection(method: string): boolean {
  */
 export function extractCsrfToken(req: NextRequest): string | null {
   // Check X-CSRF-Token header (preferred method)
-  const headerToken = req.headers.get('x-csrf-token');
+  const headerToken = req.headers.get("x-csrf-token");
   if (headerToken) return headerToken;
 
   // Check query parameter (fallback for GET requests)
   const url = new URL(req.url);
-  const queryToken = url.searchParams.get('csrf_token');
+  const queryToken = url.searchParams.get("csrf_token");
   if (queryToken) return queryToken;
 
   return null;
@@ -221,7 +225,7 @@ export function validateCsrfProtection(
 ): { success: boolean; error?: string } {
   // Skip CSRF validation in development (for easier testing)
   // Security: This is acceptable because CSRF attacks require production-like environment
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     return { success: true };
   }
 
@@ -230,7 +234,7 @@ export function validateCsrfProtection(
     if (!validateRequestOrigin(req)) {
       return {
         success: false,
-        error: 'Invalid request origin',
+        error: "Invalid request origin",
       };
     }
 
@@ -241,7 +245,7 @@ export function validateCsrfProtection(
       if (!validateCsrfToken(csrfToken, userId)) {
         return {
           success: false,
-          error: 'Invalid or expired CSRF token',
+          error: "Invalid or expired CSRF token",
         };
       }
     }
@@ -260,9 +264,9 @@ export function validateCsrfProtection(
 export function getCsrfCookieOptions() {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const,
-    path: '/',
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+    path: "/",
     maxAge: CSRF_TOKEN_EXPIRY / 1000, // Convert to seconds
   };
 }
