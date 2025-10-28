@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.28.0 (2025-10-28)
-**Last Major Update**: Department Tasks View Assignee Selector Sync Fix
+**Version**: 2.29.0 (2025-10-28)
+**Last Major Update**: Production 403 Forbidden Fix - CSRF/CORS Domain Configuration
 
 ---
 
@@ -154,6 +154,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Production 403 Forbidden Fix (2025-10-28 Session 4)** - Fixed critical production issue where all POST/PATCH/DELETE requests were blocked with 403 Forbidden errors after deploying security improvements. Root cause: CSRF and CORS protection configs had incorrect production domain (`projectflows.render.com` instead of `projectflows.app` and `projectflows.onrender.com`). All state-changing operations (create/edit/delete tasks, projects, users) were blocked in production. Solution: Updated `allowedOrigins` in both `src/lib/csrf.ts` and `src/middleware.ts` to include correct production domains: `https://projectflows.app` (custom domain) and `https://projectflows.onrender.com` (Render default). Also fixed typo where `render.com` should be `onrender.com`. Files modified: 2 files (csrf.ts, middleware.ts). Production now working correctly with full CSRF/CORS protection. Commits: 8961bbf (initial fix) + 3959bb7 (typo correction). **CRITICAL FIX** - Unblocked all production CRUD operations. 🎉
 - ✅ **Department Tasks View Assignee Selector Sync (2025-10-28 Session 3)** - Fixed critical bug where Task Panel assignee changes didn't sync to Department Tasks View inline editor. Root cause: Task Panel uses `useUpdateTask` which only invalidated `projectKeys.board` (for List/Board/Calendar views) but NOT `departmentTasksKeys.all` (for Department Tasks view). List View worked because it shares the same `projectKeys.board` cache. Solution: (1) Added `departmentTasksKeys.all` invalidation to `useUpdateTask.onSettled` in use-tasks.ts for Task Panel → Department Tasks sync, (2) Added comprehensive cache invalidation to 3 department mutations (`useUpdateDepartmentTask`, `useToggleDepartmentTaskPin`, `useCloseDepartmentTask`) in use-department-tasks.ts for bidirectional sync. Lesson learned: **Different views may use different query caches** - always check which cache keys each view uses and invalidate ALL relevant caches in mutation hooks. Files modified: 2 files (use-tasks.ts, use-department-tasks.ts). All view combinations now sync correctly: Task Panel ↔ List View ✅, Task Panel ↔ Department Tasks View ✅, Dashboard widgets ✅. 🎉
 - ✅ **Profile Settings UX Improvements (2025-10-28 Session 2)** - Fixed 2 critical UX issues on Profile Settings page: (1) Browser autofill filling in old password - Added proper `autocomplete` attributes (`current-password` for current, `new-password` for new/confirm fields). (2) firstName/lastName fields empty on first load - Root cause: Seed data only has `fullName` field without split firstName/lastName. Solution: Added automatic name splitting logic that removes title prefix (นาย, นาง, ดร., etc.) and splits by space (first part = firstName, rest = lastName). Added console.log for debugging. Files modified: 1 file (profile-settings.tsx). Users can now properly change password and see their names correctly. ✅
 - ✅ **Dashboard Checklist Widget Sync Fixes (2025-10-28 Session 2)** - Fixed 3 synchronization issues between Task Panel and Dashboard Checklist Widget: (1) Delete checklist item in Task Panel → widget doesn't update, (2) Check/uncheck item in Task Panel → widget doesn't update, (3) Deleted items persist even after refresh. Root cause: Task Panel checklist mutations (`useCreateChecklistItem`, `useUpdateChecklistItem`, `useDeleteChecklistItem`) only invalidated task-specific caches (`taskKeys.checklists`, `taskKeys.history`) but NOT dashboard cache (`dashboardKeys.all`). Solution: Added `dashboardKeys.all` invalidation to all 3 mutation hooks in `use-tasks.ts`. Verified API routes properly filter `deletedAt: null`. Dashboard widget now updates instantly when checklist items are created/updated/deleted in Task Panel. Files modified: 1 file (use-tasks.ts). ✅
@@ -1408,6 +1409,69 @@ PORT=3010 npm run dev
 
 **Prevention**: If you make significant changes to multiple files, consider clearing cache before restart.
 
+### Production 403 Forbidden (CSRF/CORS Blocking)
+
+**Symptom**:
+- All POST/PATCH/DELETE requests fail with 403 Forbidden in production
+- Browser console: `Failed to load resource: the server responded with a status of 403`
+- Server logs: `🚨 CSRF: Blocked request from unauthorized origin: https://...`
+- Affects: Create tasks, edit tasks, delete operations, user management
+
+**Root Cause**:
+Production domain not in CSRF/CORS `allowedOrigins` whitelist.
+
+**Common Causes**:
+1. Custom domain (e.g., `projectflows.app`) not added to whitelist
+2. Wrong Render domain (`projectflows.render.com` instead of `projectflows.onrender.com`)
+3. Environment variable `NEXT_PUBLIC_APP_URL` not set or incorrect
+
+**Solution**:
+
+**1. Update allowed origins in code:**
+
+```typescript
+// src/lib/csrf.ts (line ~112)
+// src/middleware.ts (line ~72)
+const allowedOrigins = [
+  process.env.NEXT_PUBLIC_APP_URL,     // From env var
+  "https://projectflows.app",          // ✅ Custom domain
+  "https://projectflows.onrender.com", // ✅ Render default (note: onrender, not render)
+  // ... dev origins
+];
+```
+
+**2. Set environment variable in Render:**
+- Go to Render Dashboard → Environment tab
+- Add: `NEXT_PUBLIC_APP_URL=https://your-production-domain.com`
+- Click "Save Changes"
+- Redeploy
+
+**3. Verify fix:**
+```bash
+# After deploy, test create/edit/delete operations
+# Should succeed without 403 errors
+```
+
+**Quick Fix** (if blocked and need immediate resolution):
+```typescript
+// TEMPORARY - src/lib/csrf.ts line ~224
+// Only for emergency - remove after adding proper domain
+if (process.env.NODE_ENV === 'production') {
+  return { success: true }; // ⚠️ Disables CSRF protection
+}
+```
+
+**Files to check**:
+- `src/lib/csrf.ts` - CSRF origin validation
+- `src/middleware.ts` - CORS origin validation
+- `.env` - Environment variables
+- Render Dashboard → Environment - Production env vars
+
+**Prevention**:
+- Always test CRUD operations after deploying security changes
+- Document all production domains in both files
+- Set `NEXT_PUBLIC_APP_URL` for flexibility
+
 ---
 
 ## Quick Start for New Claude Instances
@@ -2027,9 +2091,35 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.28.0** (2025-10-28)
+**End of CLAUDE.md v2.29.0** (2025-10-28)
 
 ## Changelog
+
+### v2.29.0 (2025-10-28) - Production 403 Forbidden Fix
+
+**Major changes:**
+- ✅ Fixed critical production bug where all POST/PATCH/DELETE requests were blocked with 403 Forbidden
+- ✅ Root cause: CSRF/CORS protection configs had incorrect production domains
+- ✅ Updated `allowedOrigins` in csrf.ts and middleware.ts to include:
+  - `https://projectflows.app` (custom domain)
+  - `https://projectflows.onrender.com` (Render default - fixed typo from render.com)
+- ✅ All production CRUD operations now working correctly
+- ✅ Added troubleshooting guide for production 403 errors
+
+**Commits:**
+- 8961bbf: Initial fix - added projectflows.app domain
+- 3959bb7: Typo correction - render.com → onrender.com
+
+**Impact:**
+Unblocked all state-changing operations in production (create/edit/delete tasks, projects, users). CSRF/CORS protection remains fully active with correct domain whitelist.
+
+**Files Modified:**
+- src/lib/csrf.ts (updated allowedOrigins)
+- src/middleware.ts (updated allowedOrigins)
+- CLAUDE.md (added troubleshooting entry, updated version)
+
+**Lesson Learned:**
+After implementing security features like CSRF/CORS protection, always verify production domains are correctly whitelisted. Test all CRUD operations on staging/production before releasing. Custom domains and Render default domains must both be included.
 
 ### v2.28.0 (2025-10-28) - Department Tasks View Assignee Selector Sync Fix
 
