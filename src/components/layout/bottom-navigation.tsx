@@ -18,6 +18,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -31,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useNotifications } from '@/hooks/use-notifications';
 import { Badge } from '@/components/ui/badge';
+import { MobileMenu } from '@/components/layout/mobile-menu';
 
 const tabs = [
   {
@@ -46,8 +48,6 @@ const tabs = [
     icon: CheckSquare,
     href: '/my-tasks',
     type: 'link' as const,
-    // TODO: Create /my-tasks page in Phase 5
-    disabled: true, // Temporarily disabled until page is created
   },
   {
     id: 'create',
@@ -64,8 +64,6 @@ const tabs = [
     href: '/notifications',
     type: 'link' as const,
     showBadge: true,
-    // TODO: Create /notifications page in Phase 6
-    disabled: true, // Temporarily disabled until page is created
   },
   {
     id: 'menu',
@@ -81,9 +79,11 @@ export function BottomNavigation() {
   const pathname = usePathname();
   const openCreateTaskModal = useUIStore((state) => state.openCreateTaskModal);
 
-  // TODO: Implement mobile menu in Phase 4
+  // Mobile menu state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const openMobileMenu = () => {
-    console.log('Mobile menu not yet implemented');
+    setMobileMenuOpen(true);
   };
 
   // Get unread notifications count for badge
@@ -91,8 +91,6 @@ export function BottomNavigation() {
   const unreadCount = notificationsData?.notifications?.filter(n => !n.isRead).length || 0;
 
   const handleTabClick = (tab: typeof tabs[number]) => {
-    if (tab.disabled) return;
-
     if (tab.type === 'action') {
       // Handle action tabs (Create, Menu)
       if (tab.action === 'create') {
@@ -126,8 +124,7 @@ export function BottomNavigation() {
             'min-h-[48px] min-w-[48px]', // Touch-friendly tap target
             'transition-colors duration-200',
             'relative', // For badge positioning
-            tab.disabled && 'opacity-40 cursor-not-allowed',
-            !tab.disabled && !active && 'text-muted-foreground hover:text-foreground',
+            !active && 'text-muted-foreground hover:text-foreground',
             active && 'text-primary'
           );
 
@@ -166,7 +163,7 @@ export function BottomNavigation() {
           );
 
           // Render Link for link tabs, button for action tabs
-          if (tab.type === 'link' && !tab.disabled && tab.href) {
+          if (tab.type === 'link' && tab.href) {
             return (
               <Link
                 key={tab.id}
@@ -180,14 +177,13 @@ export function BottomNavigation() {
             );
           }
 
-          // Render button for action tabs or disabled tabs
+          // Render button for action tabs
           return (
             <button
               key={tab.id}
               type="button"
               onClick={() => handleTabClick(tab)}
               className={tabClassName}
-              disabled={tab.disabled}
               aria-label={tab.label}
               aria-current={active ? 'page' : undefined}
             >
@@ -196,6 +192,9 @@ export function BottomNavigation() {
           );
         })}
       </div>
+
+      {/* Mobile Menu Drawer */}
+      <MobileMenu open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} />
     </nav>
   );
 }

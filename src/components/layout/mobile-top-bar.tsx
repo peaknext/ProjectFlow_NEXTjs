@@ -12,21 +12,24 @@
  * ┌────────────────────────────────────────┐
  * │ [←/☰]  Page Title        [🔍] [⋮]    │
  * └────────────────────────────────────────┘
- *
- * TODO Phase 3: Full implementation with dynamic behavior
  */
 
 'use client';
 
+import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, Menu, Search, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { MobileMenu } from '@/components/layout/mobile-menu';
 
 export function MobileTopBar() {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Mobile menu state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Determine page title based on route
   const getPageTitle = (): string => {
@@ -46,9 +49,8 @@ export function MobileTopBar() {
     return !mainPages.includes(pathname);
   };
 
-  // TODO Phase 4: Implement mobile menu drawer
   const openMobileMenu = () => {
-    console.log('Mobile menu not yet implemented');
+    setMobileMenuOpen(true);
   };
 
   const handleBackClick = () => {
@@ -134,6 +136,9 @@ export function MobileTopBar() {
           <MoreVertical className="h-5 w-5" />
         </Button> */}
       </div>
+
+      {/* Mobile Menu Drawer */}
+      <MobileMenu open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} />
     </header>
   );
 }
