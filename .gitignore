@@ -41,3 +41,4 @@ coverage
 *.log
 .cache
 nul
+*.tsbuildinfo
