@@ -1,15 +1,16 @@
 -- ProjectFlow Database Seed Script
 -- Creates test data for integration testing
+-- Security: VULN-001 Fix - Using bcrypt password hashing
 
 -- 1. Create Admin User
--- Password: SecurePass123! (SHA256 with salt)
+-- Password: SecurePass123! (bcrypt with 12 rounds)
 INSERT INTO users (id, email, "fullName", "passwordHash", salt, role, "userStatus", "isVerified", "jobTitle", "jobLevel", "createdAt", "updatedAt")
 VALUES (
   'admin001',
   'admin@hospital.test',
   'System Administrator',
-  '511d3401e1485e7cc4445127a363bf2d9564ad56c31237b5b7287a4785c03e93', -- SHA256(SecurePass123! + randomsalt123)
-  'randomsalt123',
+  '$2b$12$XAl7naBgrIzgZOsFQp2RaOxaJvcWM07ey1yf.YhrhMa6mzoH21jOu', -- bcrypt hash
+  '', -- No longer used with bcrypt
   'ADMIN',
   'ACTIVE',
   true,
@@ -20,12 +21,12 @@ VALUES (
 ) ON CONFLICT (email) DO NOTHING;
 
 -- 2. Create Additional Users
--- All passwords: SecurePass123!
+-- All passwords: SecurePass123! (bcrypt with 12 rounds)
 INSERT INTO users (id, email, "fullName", "passwordHash", salt, role, "userStatus", "isVerified", "departmentId", "jobTitle", "jobLevel", "createdAt", "updatedAt")
 VALUES
-  ('user001', 'somchai@hospital.test', 'สมชาย ใจดี', '8c511b7456e0c04831ce5098c6c526603eb379f917733562aff65b1f2bdaaf87', 'salt001', 'LEADER', 'ACTIVE', true, NULL, 'Developer', 'Staff', NOW(), NOW()),
-  ('user002', 'somying@hospital.test', 'สมหญิง สุขสันต์', '5abceb3a820242754507ada7298a4e1737a0d2d0a884f50f3f779357b5172ec7', 'salt002', 'MEMBER', 'ACTIVE', true, NULL, 'Developer', 'Staff', NOW(), NOW()),
-  ('user003', 'wichai@hospital.test', 'วิชัย พัฒนา', 'a53b5fddaed329d1166d1c5b42554cd15976f4dec3008f11d5a6b207f284cdcb', 'salt003', 'MEMBER', 'ACTIVE', true, NULL, 'Developer', 'Staff', NOW(), NOW())
+  ('user001', 'somchai@hospital.test', 'สมชาย ใจดี', '$2b$12$/N79e7nRYyveplYIODM2nuz8av0fKKzSKE2Pq7n3YjgB8UCQF3tx2', '', 'LEADER', 'ACTIVE', true, NULL, 'Developer', 'Staff', NOW(), NOW()),
+  ('user002', 'somying@hospital.test', 'สมหญิง สุขสันต์', '$2b$12$.xZKVBjdPL.jtUfNgABZDOegeVprrl9er2yggc4ToHoARXQ9ZUJZC', '', 'MEMBER', 'ACTIVE', true, NULL, 'Developer', 'Staff', NOW(), NOW()),
+  ('user003', 'wichai@hospital.test', 'วิชัย พัฒนา', '$2b$12$Vg94iUZcmrstn9UjPfD8LOB2Ck.QvgSzFtCkKKGEaUW219UV6hpLG', '', 'MEMBER', 'ACTIVE', true, NULL, 'Developer', 'Staff', NOW(), NOW())
 ON CONFLICT (email) DO NOTHING;
 
 -- 3. Create Mission Group

@@ -57,7 +57,7 @@
 ```prisma
 model AuditLog {
   id          String   @id @default(cuid())
-  action      String   // CREATE, UPDATE, DELETE, LOGIN, etc.
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, READ, etc.
   entityType  String   // PROJECT, TASK, USER, etc.
   entityId    String?  // ID of affected entity
   userId      String   // User who performed action

@@ -1,6 +1,8 @@
 /**
  * API Client - Axios wrapper for backend API calls
  * Handles authentication, error handling, and response formatting
+ *
+ * Security: VULN-003 Fix - Session managed via httpOnly cookies instead of localStorage
  */
 
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
@@ -30,18 +32,16 @@ const axiosInstance: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 seconds
+  withCredentials: true, // Security: VULN-003 Fix - Send httpOnly cookies with requests
 });
 
-// Request interceptor - add auth token
+// Request interceptor
+// Security: VULN-003 Fix - No manual token management needed
+// httpOnly cookies are automatically sent by the browser
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Get token from localStorage (client-side only)
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('sessionToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
+    // No need to manually add auth header
+    // Browser automatically sends httpOnly session cookie with every request
     return config;
   },
   (error) => {
@@ -66,8 +66,9 @@ axiosInstance.interceptors.response.use(
 
         // Only redirect if NOT on auth page and NOT calling auth API
         if (!isAuthPage && !isAuthAPI) {
-          localStorage.removeItem('sessionToken');
-          localStorage.removeItem('currentUser');
+          // Security: VULN-003 Fix - No localStorage cleanup needed
+          // Session cookie is automatically cleared by the server on logout
+          // or expires automatically
           window.location.href = '/login';
         }
       }

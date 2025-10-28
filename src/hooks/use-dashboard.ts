@@ -70,40 +70,13 @@ export function useActivities() {
 /**
  * Load more tasks (for pagination)
  *
- * Appends new tasks to the existing myTasks list
+ * NOTE: This function is deprecated and no longer used.
+ * Dashboard widgets now use their own infinite scroll implementation.
+ * Kept for reference only - will be removed in future cleanup.
  */
-export function useLoadMoreTasks() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (currentOffset: number) => {
-      const limit = 10;
-      const newOffset = currentOffset + limit;
-      const params = new URLSearchParams();
-      params.append("limit", limit.toString());
-      params.append("offset", newOffset.toString());
-
-      const response = await api.get<DashboardData>(
-        `/api/dashboard?${params}`
-      );
-      return { newTasks: response.myTasks.tasks, hasMore: response.myTasks.hasMore, newOffset };
-    },
-    onSuccess: ({ newTasks, hasMore }) => {
-      // Append new tasks to ALL existing dashboard caches (future-proof)
-      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          myTasks: {
-            ...old.myTasks,
-            tasks: [...old.myTasks.tasks, ...newTasks],
-            hasMore,
-          },
-        };
-      });
-    },
-  });
-}
+// export function useLoadMoreTasks() {
+//   // Deprecated - no longer compatible with new myCreatedTasks/assignedToMeTasks structure
+// }
 
 /**
  * Refresh dashboard data

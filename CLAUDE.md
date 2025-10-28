@@ -4,20 +4,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Version**: 2.26.0 (2025-10-27)
 **Last Major Update**: Task Ownership System Implementation (4 Phases Complete)
+**File Size**: ~2,100 lines
+**Reading Time**: ~30 minutes for full read | 5 minutes for [Quick Start](#quick-start-for-new-claude-instances)
 
 ---
 
 ## Quick Navigation
 
+**Getting Started** (⭐ Start here for new Claude instances)
 - [Project Overview](#project-overview) - Status, tech stack, current priorities
-- [Quick Start](#quick-start-for-new-claude-instances) - ⭐ **START HERE** - Critical development rules
+- [Quick Start](#quick-start-for-new-claude-instances) - ⭐ **MANDATORY READ** - Critical development rules
 - [Next.js 15 Migration Lessons](#nextjs-15-migration-lessons) - ⭐ **MANDATORY READ** - Prevent deployment failures
-- [Commands](#commands) - Development, database, testing commands
-- [Architecture](#architecture) - Database, API, frontend structure
-- [Key Files to Know](#key-files-to-know) - Essential files for backend/frontend work
-- [Common Workflows](#common-workflows) - Adding views, endpoints, testing
+
+**Daily Development**
+- [Commands](#commands) - Dev, database, testing commands (includes platform-specific)
+- [Common Workflows](#common-workflows) - Adding views, endpoints, testing changes
+- [Debugging Workflow](#debugging-workflow) - Step-by-step debugging procedures
 - [Troubleshooting](#troubleshooting) - Common issues and solutions
-- [Documentation Index](#documentation-index) - All project documentation
+
+**Reference & Architecture**
+- [Architecture](#architecture) - Database schema, API routes, frontend patterns
+- [Key Files to Know](#key-files-to-know) - Essential files for backend/frontend work
+- [Documentation Index](#documentation-index) - All 40+ project documentation files
 
 ---
 
@@ -50,10 +58,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**DO NOT REVERT ANYTHING IF I DON'T REQUEST**
-**DO NOT GIT COMMIT ANYTHING IF I DON'T REQUEST**
-**DO NOT UPDATE CLAUDE.md IF I DON'T REQUEST**
-**Never use any emoji in this project except in .md files**
+---
+
+> **⚠️ IMPORTANT CONSTRAINTS - READ FIRST:**
+>
+> - **DO NOT** revert any code unless explicitly requested by the user
+> - **DO NOT** create Git commits unless explicitly requested by the user
+> - **DO NOT** update CLAUDE.md unless explicitly requested by the user
+> - **DO NOT** use emojis in code or UI (only in .md files)
+
+---
 
 **ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system built with Next.js 15 + PostgreSQL. Designed for healthcare organizations with hierarchical role-based access control. Successfully deployed to production on Render (2025-10-27).
 
@@ -225,6 +239,39 @@ node tests/api/test-runner.js      # Run API tests directly
 - Test credentials: `admin@hospital.test` / `SecurePass123!`
 - For development: Set `BYPASS_AUTH=true` in `.env` to skip authentication
 - Use `BYPASS_USER_ID=admin001` for ADMIN role, `user001` for LEADER role
+
+### Platform-Specific Commands
+
+**Windows (Command Prompt)**:
+```bash
+set PORT=3010 && npm run dev          # Start dev server
+rd /s /q .next                        # Clear Next.js cache
+taskkill /F /PID <PID>                # Kill process
+netstat -ano | findstr :<PORT>        # Find process using port
+```
+
+**Windows (PowerShell)**:
+```powershell
+$env:PORT=3010; npm run dev           # Start dev server
+Remove-Item -Recurse -Force .next     # Clear Next.js cache
+Stop-Process -Id <PID> -Force         # Kill process
+Get-NetTCPConnection -LocalPort <PORT> # Find process using port
+```
+
+**Unix/Mac/Linux**:
+```bash
+PORT=3010 npm run dev                 # Start dev server
+rm -rf .next                          # Clear Next.js cache
+kill -9 <PID>                         # Kill process
+lsof -ti:<PORT> | xargs kill -9       # Kill process on port
+```
+
+**Git Bash (Windows)**:
+```bash
+PORT=3010 npm run dev                 # Start dev server (Unix-style)
+rm -rf .next                          # Clear Next.js cache (Unix commands work)
+taskkill //F //PID <PID>              # Kill process (use // instead of /)
+```
 
 ---
 
@@ -699,6 +746,47 @@ curl -X POST http://localhost:3010/api/batch \
 # LEADER sees division scope, HEAD sees department scope
 curl http://localhost:3010/api/departments/DEPT-058/tasks?view=grouped
 ```
+
+### Debugging Workflow
+
+**When development server crashes:**
+
+1. Check terminal for syntax errors in recently changed files
+2. Clear Next.js cache: `rm -rf .next` (or `rd /s /q .next` on Windows)
+3. Restart dev server: `PORT=3010 npm run dev`
+4. If still failing, check for type errors: `npm run type-check`
+5. If port conflict: Find and kill process (see Platform-Specific Commands)
+
+**When production build fails:**
+
+1. Run `npm run type-check` first (faster than full build)
+2. Fix type errors file by file (start with largest files)
+3. Run `npm run build` to verify fixes
+4. Check for missing files: `git status`
+5. Review Next.js 15 requirements (Promise params, Suspense for useSearchParams)
+
+**When API returns unexpected data:**
+
+1. Verify database state with Prisma Studio: `npm run prisma:studio`
+2. Check recent schema changes: `git log --oneline prisma/schema.prisma`
+3. Regenerate Prisma client: `npm run prisma:generate`
+4. Review API route with `console.log()` (check terminal output)
+5. Test API directly with curl (see Common Test Scenarios above)
+
+**When React Query cache is stale:**
+
+1. Check stale time in hook configuration (should be 2-5 minutes)
+2. Force invalidate: `queryClient.invalidateQueries({ queryKey: [...] })`
+3. Clear all cache on logout (see DATA_LEAKAGE_SECURITY_FIX.md)
+4. Use React Query DevTools to inspect cache state
+
+**When permissions don't work as expected:**
+
+1. Check user role and additionalRoles in Prisma Studio
+2. Review permission definition in `src/lib/permissions.ts`
+3. Check context object passed to `checkPermission()`
+4. See PERMISSION_GUIDELINE.md for detailed permission matrix
+5. Test with different user roles using BYPASS_USER_ID
 
 ---
 
@@ -1916,7 +2004,7 @@ npm run prisma:studio
 - [x] Authentication & authorization
 - [x] Permission system with 6 roles + additionalRoles
 
-**Frontend**: 🔄 ~68% Complete
+**Frontend**: ✅ ~98% Complete (47/48 major components for Version 1.5)
 
 - [x] Core infrastructure (Layout, Theme, Auth)
 - [x] 3 Project views (Board, Calendar, List)
@@ -1925,25 +2013,32 @@ npm run prisma:studio
 - [x] User Management (full CRUD)
 - [x] Department Tasks View
 - [x] Reports Dashboard
-- [x] User Dashboard (7 widgets + 4 stat cards) ✅ NEW
-- [ ] Additional modals (2 remaining)
-- [ ] Selectors (9 remaining)
-- [ ] Advanced features (6 remaining)
+- [x] User Dashboard (7 widgets + 4 stat cards)
+- [x] Profile Settings Page
+- [x] Permission System (23+ permissions, multi-layer security)
+- [x] Task Ownership System (delete/assignment permissions, notifications)
+- [ ] Date Filter Preset (remaining for Version 1.5)
+- [ ] File Link Attachments (remaining for Version 1.5)
+
+**Version 2.0 Planned** (9 advanced components - see roadmap above)
 
 **Critical Bugs**: ✅ All resolved
 
-**Deployment Infrastructure**: ❌ Not ready
+**Deployment Infrastructure**: ✅ **PRODUCTION DEPLOYED** (2025-10-27)
 
-- [ ] Production database setup
-- [ ] Environment variables configured
-- [ ] CI/CD pipeline
-- [ ] Monitoring & logging
-- [ ] Backup strategy
-- [ ] SSL/TLS certificates
-- [ ] Rate limiting
-- [ ] Security audit
+- [x] Production database setup (PostgreSQL on Render)
+- [x] Environment variables configured (Render dashboard)
+- [x] Build pipeline (Next.js 15 on Render)
+- [x] Production URL (live and accessible)
+- [ ] CI/CD pipeline (manual deployment currently)
+- [ ] Monitoring & logging (basic Render logging)
+- [ ] Backup strategy (database backups needed)
+- [ ] SSL/TLS certificates (Render provides automatically)
+- [ ] Rate limiting (not yet implemented)
+- [ ] Security audit (basic review complete)
 
-**⚠️ ESTIMATE TO PRODUCTION-READY**: 5-6 weeks
+**Current Status**: 🚀 **LIVE IN PRODUCTION** on Render
+**Next Steps**: CI/CD automation, enhanced monitoring, backup strategy
 
 ---
 
@@ -2023,9 +2118,29 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.25.0** (2025-10-27)
+**End of CLAUDE.md v2.26.0** (2025-10-27)
 
 ## Changelog
+
+### v2.26.0 (2025-10-27) - Documentation Improvements & Accuracy Fixes
+
+**Critical Fixes**:
+- ✅ Fixed version number inconsistency (v2.26.0 throughout)
+- ✅ Fixed contradictory frontend completion status (98% vs 68%)
+- ✅ Updated Deployment Infrastructure status to reflect production deployment
+
+**New Sections Added**:
+- ✅ Platform-Specific Commands - Windows (CMD/PowerShell), Unix/Mac, Git Bash
+- ✅ Debugging Workflow - 5 common scenarios with step-by-step procedures
+- ✅ File size & reading time metadata at top
+- ✅ Improved Quick Navigation with 3 categories (Getting Started, Daily Dev, Reference)
+
+**Visual Improvements**:
+- ✅ Enhanced DO NOT warnings visibility with blockquote format
+- ✅ Improved frontend checklist with all completed features
+- ✅ Updated deployment checklist with production status details
+
+**Purpose**: Improve documentation accuracy and usability for new Claude instances
 
 ### v2.25.0 (2025-10-27) - Critical Development Rules Reorganization
 

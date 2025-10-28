@@ -3,6 +3,9 @@
  * PATCH /api/tasks/:taskId
  * DELETE /api/tasks/:taskId
  * Single task operations
+ *
+ * Security:
+ * - VULN-009 Fix: Input sanitization to prevent XSS in descriptions
  */
 
 import { NextRequest } from 'next/server';
@@ -16,6 +19,7 @@ import {
   handleApiError,
 } from '@/lib/api-response';
 import { canUserViewTask, canUserEditTask, canUserDeleteTask } from '@/lib/permissions';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 const updateTaskSchema = z.object({
   name: z.string().min(1).max(255).optional(),
@@ -218,9 +222,12 @@ async function patchHandler(
     }
 
     if (updates.description !== undefined) {
-      updateData.description = updates.description;
+      // Sanitize description to prevent XSS
+      // Security: VULN-009 Fix - Remove dangerous HTML/scripts
+      const sanitizedDescription = updates.description ? sanitizeHtml(updates.description) : null;
+      updateData.description = sanitizedDescription;
       changes.before.description = existingTask.description;
-      changes.after.description = updates.description;
+      changes.after.description = sanitizedDescription;
     }
 
     // Handle assignee updates (support both old single and new multi-assignee)

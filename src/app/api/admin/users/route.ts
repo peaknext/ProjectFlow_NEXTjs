@@ -127,8 +127,8 @@ async function handler(req: AuthenticatedRequest) {
 
     // Generate secure random password
     const randomPassword = generateSecurePassword();
-    const salt = generateSecureToken();
-    const passwordHash = hashPassword(randomPassword, salt);
+    // Security: VULN-001 Fix - using bcrypt instead of SHA256
+    const passwordHash = await hashPassword(randomPassword);
 
     // Generate reset token for first-time password setup
     const resetToken = generateSecureToken();
@@ -143,7 +143,7 @@ async function handler(req: AuthenticatedRequest) {
         lastName,
         fullName, // Auto-generated for backward compatibility
         passwordHash,
-        salt,
+        salt: '', // Legacy field - not used with bcrypt
         departmentId,
         role,
         jobTitleId: jobTitleId || null,

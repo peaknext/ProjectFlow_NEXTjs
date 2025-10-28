@@ -6,7 +6,8 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api-middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
-import { hashPassword, verifyPassword, generateSecureToken } from '@/lib/auth';
+import { hashPassword, verifyPassword } from '@/lib/auth';
+import { passwordSchema } from '@/lib/validations/password-schema';
 
 async function handler(req: AuthenticatedRequest) {
   const userId = req.session.userId;
@@ -20,8 +21,10 @@ async function handler(req: AuthenticatedRequest) {
   }
 
   // Validate new password strength
-  if (newPassword.length < 8) {
-    return errorResponse('BAD_REQUEST', 'New password must be at least 8 characters long', 400);
+  // Security: VULN-008 Fix - using password validation schema
+  const passwordValidation = passwordSchema.safeParse(newPassword);
+  if (!passwordValidation.success) {
+    return errorResponse('BAD_REQUEST', passwordValidation.error.issues[0].message, 400);
   }
 
   // Get current user with password hash
@@ -39,21 +42,22 @@ async function handler(req: AuthenticatedRequest) {
   }
 
   // Verify current password
-  const isValidPassword = verifyPassword(currentPassword, user.salt, user.passwordHash);
+  // Security: VULN-001 Fix - using bcrypt verification
+  const isValidPassword = await verifyPassword(currentPassword, user.passwordHash);
   if (!isValidPassword) {
     return errorResponse('UNAUTHORIZED', 'Current password is incorrect', 401);
   }
 
-  // Generate new salt and hash
-  const newSalt = generateSecureToken();
-  const newPasswordHash = hashPassword(newPassword, newSalt);
+  // Hash new password with bcrypt
+  // Security: VULN-001 Fix - using bcrypt instead of SHA256
+  const newPasswordHash = await hashPassword(newPassword);
 
   // Update password
   await prisma.user.update({
     where: { id: userId },
     data: {
       passwordHash: newPasswordHash,
-      salt: newSalt,
+      salt: '', // Legacy field - not used with bcrypt
     },
   });
 

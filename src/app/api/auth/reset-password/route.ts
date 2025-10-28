@@ -1,25 +1,51 @@
 /**
  * POST /api/auth/reset-password
  * Reset password with token
+ *
+ * Security:
+ * - VULN-001 Fix: bcrypt password hashing
+ * - VULN-008 Fix: Server-side password validation
+ * - VULN-004 Fix: Rate limiting (3 attempts per hour)
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { hashPassword, generateSecureToken } from '@/lib/auth';
+import { hashPassword } from '@/lib/auth';
 import {
   successResponse,
   errorResponse,
   handleApiError,
 } from '@/lib/api-response';
+import { passwordSchema } from '@/lib/validations/password-schema';
+import { rateLimiters, addRateLimitHeaders } from '@/lib/rate-limiter';
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Reset token is required'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  newPassword: passwordSchema, // VULN-008 Fix: Server-side password validation
 });
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting check
+    // Security: VULN-004 Fix - Prevent brute force token guessing
+    const rateLimit = rateLimiters.passwordReset(req);
+
+    if (!rateLimit.success) {
+      const response = NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: rateLimit.message,
+          },
+        },
+        { status: 429 }
+      );
+      addRateLimitHeaders(response.headers, rateLimit);
+      return response;
+    }
+
     // Parse and validate request body
     const body = await req.json();
     const { token, newPassword } = resetPasswordSchema.parse(body);
@@ -47,16 +73,16 @@ export async function POST(req: NextRequest) {
       return errorResponse('TOKEN_EXPIRED', 'Reset token has expired', 400);
     }
 
-    // Generate new salt and hash password
-    const salt = generateSecureToken();
-    const passwordHash = hashPassword(newPassword, salt);
+    // Hash password with bcrypt
+    // Security: VULN-001 Fix - using bcrypt instead of SHA256
+    const passwordHash = await hashPassword(newPassword);
 
     // Update user password and clear reset token
     await prisma.user.update({
       where: { id: user.id },
       data: {
         passwordHash,
-        salt,
+        salt: '', // Legacy field - not used with bcrypt
         resetToken: null,
         resetTokenExpiry: null,
       },

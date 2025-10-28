@@ -1,9 +1,12 @@
 /**
  * POST /api/auth/request-reset
  * Request password reset token
+ *
+ * Security:
+ * - VULN-004 Fix: Rate limiting (3 attempts per hour)
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { generateSecureToken } from '@/lib/auth';
@@ -13,6 +16,7 @@ import {
   handleApiError,
 } from '@/lib/api-response';
 import { sendPasswordResetEmail } from '@/lib/email';
+import { rateLimiters, addRateLimitHeaders } from '@/lib/rate-limiter';
 
 const requestResetSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -20,6 +24,25 @@ const requestResetSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting check
+    // Security: VULN-004 Fix - Prevent password reset spam/abuse
+    const rateLimit = rateLimiters.passwordReset(req);
+
+    if (!rateLimit.success) {
+      const response = NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: rateLimit.message,
+          },
+        },
+        { status: 429 }
+      );
+      addRateLimitHeaders(response.headers, rateLimit);
+      return response;
+    }
+
     // Parse and validate request body
     const body = await req.json();
     const { email } = requestResetSchema.parse(body);

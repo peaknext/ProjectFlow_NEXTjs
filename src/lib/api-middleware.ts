@@ -1,6 +1,9 @@
 /**
  * API Middleware
  * Authentication and permission wrapper for API routes
+ *
+ * Security:
+ * - VULN-006 Fix: CSRF protection via origin validation
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -8,6 +11,7 @@ import { getSession, type Session } from './auth';
 import { checkPermission } from './permissions';
 import { ErrorResponses, handleApiError } from './api-response';
 import { prisma } from './db';
+import { validateCsrfProtection } from './csrf';
 
 // Extend NextRequest to include session
 export interface AuthenticatedRequest extends NextRequest {
@@ -32,8 +36,13 @@ type NextRouteHandler<T = any> = (
 export function withAuth<T = any>(handler: ApiHandler<T>): NextRouteHandler<T> {
   return async (req: NextRequest, context: T) => {
     try {
-      // BYPASS AUTH FOR TESTING (controlled by .env)
-      if (process.env.BYPASS_AUTH === 'true') {
+      // BYPASS AUTH FOR TESTING - DEVELOPMENT ONLY
+      // Security: Only allow in development environment to prevent accidental production bypass
+      if (
+        process.env.NODE_ENV === 'development' &&
+        process.env.BYPASS_AUTH === 'true'
+      ) {
+        console.warn('⚠️  BYPASS_AUTH is ENABLED - Development mode only!');
         const authenticatedReq = req as AuthenticatedRequest;
 
         // Fetch real user from database (defaults to user001, or use BYPASS_USER_ID env)
@@ -57,7 +66,8 @@ export function withAuth<T = any>(handler: ApiHandler<T>): NextRouteHandler<T> {
         }
 
         // Create session from real user data
-        authenticatedReq.session = { sessionToken: 'bypass-token',
+        authenticatedReq.session = {
+          sessionToken: 'bypass-token',
           userId: user.id,
           user: {
             id: user.id,
@@ -69,7 +79,30 @@ export function withAuth<T = any>(handler: ApiHandler<T>): NextRouteHandler<T> {
             profileImageUrl: user.profileImageUrl,
           },
         };
+
+        // CSRF Protection (still needed in bypass mode for security testing)
+        const csrfValidation = validateCsrfProtection(req, user.id);
+        if (!csrfValidation.success) {
+          console.warn('🚨 CSRF validation failed (bypass mode):', csrfValidation.error);
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: 'CSRF_VALIDATION_FAILED',
+                message: csrfValidation.error || 'CSRF validation failed',
+              },
+            },
+            { status: 403 }
+          );
+        }
+
         return await handler(authenticatedReq, context);
+      }
+
+      // Production: Ensure BYPASS_AUTH is never enabled
+      if (process.env.BYPASS_AUTH === 'true') {
+        console.error('🚨 SECURITY ALERT: BYPASS_AUTH is enabled in production! This is a critical security vulnerability.');
+        // In production, ignore BYPASS_AUTH and require proper authentication
       }
 
       const session = await getSession(req);
@@ -81,6 +114,23 @@ export function withAuth<T = any>(handler: ApiHandler<T>): NextRouteHandler<T> {
       // Attach session to request
       const authenticatedReq = req as AuthenticatedRequest;
       authenticatedReq.session = session;
+
+      // CSRF Protection
+      // Security: VULN-006 Fix - Validate request origin for state-changing operations
+      const csrfValidation = validateCsrfProtection(req, session.userId);
+      if (!csrfValidation.success) {
+        console.warn('🚨 CSRF validation failed:', csrfValidation.error);
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'CSRF_VALIDATION_FAILED',
+              message: csrfValidation.error || 'CSRF validation failed',
+            },
+          },
+          { status: 403 }
+        );
+      }
 
       return await handler(authenticatedReq, context);
     } catch (error) {

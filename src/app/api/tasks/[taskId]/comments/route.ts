@@ -3,6 +3,9 @@
  * GET /api/tasks/:taskId/comments
  * POST /api/tasks/:taskId/comments
  * Task comments management
+ *
+ * Security:
+ * - VULN-009 Fix: Input sanitization to prevent XSS
  */
 
 import { NextRequest } from 'next/server';
@@ -15,6 +18,7 @@ import {
   errorResponse,
   handleApiError,
 } from '@/lib/api-response';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 const createCommentSchema = z.object({
   content: z.string().min(1, 'Comment content is required'),
@@ -106,12 +110,16 @@ async function postHandler(
     const body = await req.json();
     const { content, mentionedUserIds = [] } = createCommentSchema.parse(body);
 
+    // Sanitize comment content to prevent XSS
+    // Security: VULN-009 Fix - Remove dangerous HTML/scripts
+    const sanitizedContent = sanitizeHtml(content);
+
     // Create comment
     const comment = await prisma.comment.create({
       data: {
         taskId,
         commentorUserId: req.session.userId,
-        commentText: content,
+        commentText: sanitizedContent,
         mentions: mentionedUserIds.length > 0 ? mentionedUserIds : null,
       },
       include: {
@@ -127,7 +135,7 @@ async function postHandler(
     });
 
     // Log history
-    const commentPreview = content.length > 50 ? content.substring(0, 50) + '...' : content;
+    const commentPreview = sanitizedContent.length > 50 ? sanitizedContent.substring(0, 50) + '...' : sanitizedContent;
     await prisma.history.create({
       data: {
         taskId,

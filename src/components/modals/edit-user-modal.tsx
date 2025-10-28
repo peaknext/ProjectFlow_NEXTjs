@@ -482,7 +482,7 @@ export function EditUserModal() {
                       variant="outline"
                       className="w-full justify-between mt-1 h-[46px] text-base bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                     >
-                      <span className={cn(!watchDepartmentId && "text-muted-foreground truncate")}>
+                      <span className={cn("truncate", !watchDepartmentId && "text-muted-foreground")}>
                         {watchDepartmentId
                           ? departments.find(d => d.id === watchDepartmentId)?.name
                           : "เลือกหน่วยงาน"}
@@ -511,7 +511,7 @@ export function EditUserModal() {
                               watchDepartmentId === dept.id && "bg-accent"
                             )}
                             onClick={() => {
-                              setValue('departmentId', dept.id);
+                              setValue('departmentId', dept.id, { shouldDirty: true });
                               setDepartmentPopoverOpen(false);
                               setDepartmentSearch('');
                             }}

@@ -1,9 +1,14 @@
 /**
  * POST /api/auth/register
  * User registration endpoint
+ *
+ * Security:
+ * - VULN-004 Fix: Rate limiting (3 attempts per hour)
+ * - VULN-008 Fix: Server-side password validation
+ * - VULN-001 Fix: bcrypt password hashing
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { hashPassword, generateSecureToken } from '@/lib/auth';
@@ -14,10 +19,12 @@ import {
 } from '@/lib/api-response';
 import { sendVerificationEmail } from '@/lib/email';
 import { formatFullName } from '@/lib/user-utils';
+import { passwordSchema } from '@/lib/validations/password-schema';
+import { rateLimiters, addRateLimitHeaders } from '@/lib/rate-limiter';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: passwordSchema, // VULN-008 Fix: Server-side password validation
   titlePrefix: z.string().optional(),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
@@ -28,6 +35,25 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting check
+    // Security: VULN-004 Fix - Prevent spam registrations
+    const rateLimit = rateLimiters.register(req);
+
+    if (!rateLimit.success) {
+      const response = NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: rateLimit.message,
+          },
+        },
+        { status: 429 }
+      );
+      addRateLimitHeaders(response.headers, rateLimit);
+      return response;
+    }
+
     // Parse and validate request body
     const body = await req.json();
     const data = registerSchema.parse(body);
@@ -60,9 +86,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate salt and hash password
-    const salt = generateSecureToken();
-    const passwordHash = hashPassword(data.password, salt);
+    // Hash password with bcrypt
+    // Security: VULN-001 Fix - using bcrypt instead of SHA256
+    const passwordHash = await hashPassword(data.password);
 
     // Generate email verification token
     const verificationToken = generateSecureToken();
@@ -83,7 +109,7 @@ export async function POST(req: NextRequest) {
         lastName: data.lastName,
         fullName, // Auto-generated
         passwordHash,
-        salt,
+        salt: '', // Legacy field - kept for backward compatibility, not used with bcrypt
         departmentId: data.departmentId || null,
         jobTitleId: null,
         jobLevel: data.jobLevel || null,

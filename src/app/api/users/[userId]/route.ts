@@ -172,9 +172,9 @@ async function patchHandler(
 
     // Handle password change
     if (updates.password) {
-      const salt = generateSecureToken();
-      updateData.salt = salt;
-      updateData.passwordHash = hashPassword(updates.password, salt);
+      // Security: VULN-001 Fix - using bcrypt instead of SHA256
+      updateData.salt = ''; // Legacy field - not used with bcrypt
+      updateData.passwordHash = await hashPassword(updates.password);
     }
 
     // Update user

@@ -53,8 +53,9 @@ interface RegisterRequest {
 }
 
 interface LoginResponse {
-  sessionToken: string;
+  // Security: VULN-003 Fix - sessionToken is now in httpOnly cookie, not in response body
   user: User;
+  expiresAt: string;
 }
 
 interface RegisterResponse {
@@ -73,6 +74,7 @@ export function useAuth() {
   const { toast } = useToast();
 
   // Get current user from session
+  // Security: VULN-003 Fix - No localStorage needed, session is in httpOnly cookie
   const { data: user, isLoading } = useQuery({
     queryKey: authKeys.user(),
     queryFn: async () => {
@@ -81,18 +83,17 @@ export function useAuth() {
         return null;
       }
 
-      const token = localStorage.getItem('sessionToken');
-      if (!token) {
-        return null;
-      }
+      // Security: VULN-003 Fix - No localStorage check needed
+      // The browser automatically sends the httpOnly session cookie
+      // If cookie is valid, API returns user data; if not, returns 401
 
       try {
         const response = await api.get<User>('/api/users/me');
         // api.get already extracts .data field, so response is the user object
         return response ?? null;
       } catch (error) {
-        // Token invalid or expired
-        localStorage.removeItem('sessionToken');
+        // Session cookie invalid or expired
+        // No cleanup needed - cookie is httpOnly and managed by server
         return null;
       }
     },
@@ -112,8 +113,9 @@ export function useAuth() {
       // This prevents data leakage between user sessions (notifications, tasks, etc.)
       queryClient.removeQueries();
 
-      // Store session token
-      localStorage.setItem('sessionToken', data.sessionToken);
+      // Security: VULN-003 Fix - No localStorage needed
+      // Session token is automatically stored in httpOnly cookie by the server
+      // Browser will send it with every subsequent request
 
       // Update query cache with new user data
       queryClient.setQueryData(authKeys.user(), data.user);
@@ -169,8 +171,8 @@ export function useAuth() {
       await api.post('/api/auth/logout', {});
     },
     onSettled: () => {
-      // Clear session token
-      localStorage.removeItem('sessionToken');
+      // Security: VULN-003 Fix - No localStorage cleanup needed
+      // Session cookie is cleared by the server (httpOnly cookie)
 
       // Clear query cache
       queryClient.setQueryData(authKeys.user(), null);
