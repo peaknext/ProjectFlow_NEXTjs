@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CreateTaskButton } from "@/components/common/create-task-button";
 import { RefreshCw } from "lucide-react";
@@ -14,16 +14,101 @@ import { RecentActivitiesWidget } from "@/components/dashboard/recent-activities
 import { MyChecklistWidget } from "@/components/dashboard/my-checklist-widget";
 import { useDashboard, useRefreshDashboard } from "@/hooks/use-dashboard";
 import { cn } from "@/lib/utils";
+import type { DashboardTask, MyTasksData } from "@/types/dashboard";
 
 export default function DashboardPage() {
-  // Fetch dashboard data
-  const { data, isLoading, refetch } = useDashboard();
+  // Pagination state for each widget
+  const [myCreatedTasksOffset, setMyCreatedTasksOffset] = useState(0);
+  const [assignedToMeTasksOffset, setAssignedToMeTasksOffset] = useState(0);
+  const [isLoadingMoreCreated, setIsLoadingMoreCreated] = useState(false);
+  const [isLoadingMoreAssigned, setIsLoadingMoreAssigned] = useState(false);
+
+  // Accumulated tasks state
+  const [accumulatedCreatedTasks, setAccumulatedCreatedTasks] = useState<DashboardTask[]>([]);
+  const [accumulatedAssignedTasks, setAccumulatedAssignedTasks] = useState<DashboardTask[]>([]);
+
+  // Fetch dashboard data with pagination options
+  const { data, isLoading, refetch } = useDashboard({
+    myCreatedTasksLimit: 10,
+    myCreatedTasksOffset,
+    assignedToMeTasksLimit: 10,
+    assignedToMeTasksOffset,
+  });
   const refresh = useRefreshDashboard();
 
+  // Update accumulated tasks when data changes
+  useEffect(() => {
+    if (data?.myCreatedTasks?.tasks) {
+      if (myCreatedTasksOffset === 0) {
+        // Initial load - replace
+        setAccumulatedCreatedTasks(data.myCreatedTasks.tasks);
+      } else {
+        // Load more - append (filter out duplicates)
+        setAccumulatedCreatedTasks((prev) => [
+          ...prev,
+          ...data.myCreatedTasks.tasks.filter(
+            (newTask) => !prev.some((existingTask) => existingTask.id === newTask.id)
+          ),
+        ]);
+      }
+      setIsLoadingMoreCreated(false);
+    }
+  }, [data?.myCreatedTasks?.tasks, myCreatedTasksOffset]);
+
+  useEffect(() => {
+    if (data?.assignedToMeTasks?.tasks) {
+      if (assignedToMeTasksOffset === 0) {
+        // Initial load - replace
+        setAccumulatedAssignedTasks(data.assignedToMeTasks.tasks);
+      } else {
+        // Load more - append (filter out duplicates)
+        setAccumulatedAssignedTasks((prev) => [
+          ...prev,
+          ...data.assignedToMeTasks.tasks.filter(
+            (newTask) => !prev.some((existingTask) => existingTask.id === newTask.id)
+          ),
+        ]);
+      }
+      setIsLoadingMoreAssigned(false);
+    }
+  }, [data?.assignedToMeTasks?.tasks, assignedToMeTasksOffset]);
+
   // Handle refresh
-  const handleRefresh = () => {
-    refresh();
-    refetch();
+  const handleRefresh = async () => {
+    // Reset pagination first
+    setMyCreatedTasksOffset(0);
+    setAssignedToMeTasksOffset(0);
+
+    // ✅ BUG FIX: Don't clear accumulated tasks immediately
+    // Let refetch complete first, then useEffect will update with fresh data
+
+    // Refetch dashboard data
+    await refetch();
+  };
+
+  // Handle load more for "งานที่ฉันสร้าง"
+  const handleLoadMoreCreated = () => {
+    setIsLoadingMoreCreated(true);
+    setMyCreatedTasksOffset((prev) => prev + 10);
+  };
+
+  // Handle load more for "งานที่มอบหมายให้ฉัน"
+  const handleLoadMoreAssigned = () => {
+    setIsLoadingMoreAssigned(true);
+    setAssignedToMeTasksOffset((prev) => prev + 10);
+  };
+
+  // Prepare data with accumulated tasks
+  const myCreatedTasksData: MyTasksData = {
+    tasks: accumulatedCreatedTasks,
+    total: data?.myCreatedTasks?.total || 0,
+    hasMore: data?.myCreatedTasks?.hasMore || false,
+  };
+
+  const assignedToMeTasksData: MyTasksData = {
+    tasks: accumulatedAssignedTasks,
+    total: data?.assignedToMeTasks?.total || 0,
+    hasMore: data?.assignedToMeTasks?.hasMore || false,
   };
 
   return (
@@ -82,22 +167,18 @@ export default function DashboardPage() {
 
           {/* My Created Tasks Widget */}
           <MyCreatedTasksWidget
-            myCreatedTasks={
-              data?.myCreatedTasks || { tasks: [], total: 0, hasMore: false }
-            }
-            isLoading={isLoading}
-            onLoadMore={() => {}}
-            isLoadingMore={false}
+            myCreatedTasks={myCreatedTasksData}
+            isLoading={isLoading && myCreatedTasksOffset === 0}
+            onLoadMore={handleLoadMoreCreated}
+            isLoadingMore={isLoadingMoreCreated}
           />
 
           {/* Assigned to Me Tasks Widget */}
           <MyTasksWidget
-            myTasks={
-              data?.assignedToMeTasks || { tasks: [], total: 0, hasMore: false }
-            }
-            isLoading={isLoading}
-            onLoadMore={() => {}}
-            isLoadingMore={false}
+            myTasks={assignedToMeTasksData}
+            isLoading={isLoading && assignedToMeTasksOffset === 0}
+            onLoadMore={handleLoadMoreAssigned}
+            isLoadingMore={isLoadingMoreAssigned}
           />
         </div>
 

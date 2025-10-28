@@ -235,18 +235,6 @@ export function EditUserModal() {
       return;
     }
 
-    if (!data.email.trim()) {
-      toast.error('กรุณากรอกอีเมล');
-      return;
-    }
-
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      toast.error('รูปแบบอีเมลไม่ถูกต้อง');
-      return;
-    }
-
     if (!data.departmentId) {
       toast.error('กรุณาเลือกหน่วยงาน');
       return;
@@ -262,8 +250,6 @@ export function EditUserModal() {
       {
         userId: user.id,
         data: {
-        // @ts-ignore - email field
-          email: data.email.trim(),
           titlePrefix: data.titlePrefix?.trim() || undefined,
           firstName: data.firstName.trim(),
           lastName: data.lastName.trim(),
@@ -284,7 +270,8 @@ export function EditUserModal() {
             ? `${data.titlePrefix}${data.firstName} ${data.lastName}`
             : `${data.firstName} ${data.lastName}`;
           toast.success(`แก้ไขข้อมูล "${fullName}" สำเร็จ`);
-          handleClose();
+          // Close modal directly without dirty check (already saved successfully)
+          closeEditUserModal();
         },
         onError: (error: any) => {
           console.error('[EditUserModal] Error updating user:', error);
@@ -451,17 +438,18 @@ export function EditUserModal() {
               </div>
             </div>
 
-            {/* Email */}
+            {/* Email (Read-Only) */}
             <div>
               <Label htmlFor="email" className="text-sm font-medium">
-                อีเมล <span className="text-red-500">*</span>
+                อีเมล <span className="text-xs text-muted-foreground italic">(ไม่สามารถแก้ไขได้)</span>
               </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="email@example.com"
                 {...register('email')}
-                className="mt-1 h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                disabled
+                className="mt-1 h-[46px] bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 cursor-not-allowed text-muted-foreground"
               />
             </div>
 

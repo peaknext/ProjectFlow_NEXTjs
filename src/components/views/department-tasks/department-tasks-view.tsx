@@ -128,7 +128,7 @@ export function DepartmentTasksView({
       const collapsed = new Set<string>();
       projects.forEach((project) => {
         const nonPinnedTasks = project.tasks.filter(
-          (task) => !task.isPinned && !task.isClosed
+          (task) => !task.isPinned
         );
         if (nonPinnedTasks.length === 0) {
           collapsed.add(project.id);
@@ -147,7 +147,7 @@ export function DepartmentTasksView({
   // Must pass the same filters used in the query for cache key matching
   const apiFilters = {
     view: "grouped" as const,
-    includeCompleted: false,
+    includeCompleted: true, // Always fetch all tasks, let frontend filter decide
     sortBy: "dueDate" as const,
     sortDir: "asc" as const,
   };
@@ -207,7 +207,7 @@ export function DepartmentTasksView({
     const tasks: Task[] = [];
     projects.forEach((project) => {
       project.tasks.forEach((task) => {
-        if (task.isPinned && !task.isClosed) {
+        if (task.isPinned) {
           tasks.push(task);
         }
       });

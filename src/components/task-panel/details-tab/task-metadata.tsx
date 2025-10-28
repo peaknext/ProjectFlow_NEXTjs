@@ -2,11 +2,13 @@
 
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface Creator {
   id: string;
   fullName: string;
   email: string;
+  profileImageUrl?: string | null;
 }
 
 interface Department {
@@ -54,6 +56,14 @@ export function TaskMetadata({ creator, createdAt, department }: TaskMetadataPro
       <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <span>สร้างโดย:</span>
+          {creator && (
+            <Avatar className="h-5 w-5">
+              <AvatarImage src={creator.profileImageUrl || undefined} alt={creator.fullName} />
+              <AvatarFallback className="text-[10px]">
+                {creator.fullName.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+          )}
           <span className="font-medium text-foreground">
             {creator?.fullName || '-'}
           </span>

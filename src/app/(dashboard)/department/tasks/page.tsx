@@ -23,12 +23,12 @@ export default function DepartmentTasksPage() {
 
   const { setDepartment } = useNavigationStore();
 
-  // Fetch department tasks
+  // Fetch department tasks (always include completed, filter on frontend)
   const { data, isLoading, error } = useDepartmentTasks(
     departmentId || "",
     {
       view: "grouped",
-      includeCompleted: false,
+      includeCompleted: true, // Always fetch all tasks, let frontend filter decide
       sortBy: "dueDate",
       sortDir: "asc",
     },

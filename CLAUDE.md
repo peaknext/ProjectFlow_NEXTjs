@@ -2,30 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.26.0 (2025-10-27)
-**Last Major Update**: Task Ownership System Implementation (4 Phases Complete)
-**File Size**: ~2,100 lines
-**Reading Time**: ~30 minutes for full read | 5 minutes for [Quick Start](#quick-start-for-new-claude-instances)
+**Version**: 2.28.0 (2025-10-28)
+**Last Major Update**: Department Tasks View Assignee Selector Sync Fix
 
 ---
 
 ## Quick Navigation
 
-**Getting Started** (⭐ Start here for new Claude instances)
 - [Project Overview](#project-overview) - Status, tech stack, current priorities
-- [Quick Start](#quick-start-for-new-claude-instances) - ⭐ **MANDATORY READ** - Critical development rules
+- [Quick Start](#quick-start-for-new-claude-instances) - ⭐ **START HERE** - Critical development rules
 - [Next.js 15 Migration Lessons](#nextjs-15-migration-lessons) - ⭐ **MANDATORY READ** - Prevent deployment failures
-
-**Daily Development**
-- [Commands](#commands) - Dev, database, testing commands (includes platform-specific)
-- [Common Workflows](#common-workflows) - Adding views, endpoints, testing changes
-- [Debugging Workflow](#debugging-workflow) - Step-by-step debugging procedures
-- [Troubleshooting](#troubleshooting) - Common issues and solutions
-
-**Reference & Architecture**
-- [Architecture](#architecture) - Database schema, API routes, frontend patterns
+- [Commands](#commands) - Development, database, testing commands
+- [Architecture](#architecture) - Database, API, frontend structure
 - [Key Files to Know](#key-files-to-know) - Essential files for backend/frontend work
-- [Documentation Index](#documentation-index) - All 40+ project documentation files
+- [Common Workflows](#common-workflows) - Adding views, endpoints, testing
+- [Troubleshooting](#troubleshooting) - Common issues and solutions
+- [Documentation Index](#documentation-index) - All project documentation
 
 ---
 
@@ -58,16 +50,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
----
-
-> **⚠️ IMPORTANT CONSTRAINTS - READ FIRST:**
->
-> - **DO NOT** revert any code unless explicitly requested by the user
-> - **DO NOT** create Git commits unless explicitly requested by the user
-> - **DO NOT** update CLAUDE.md unless explicitly requested by the user
-> - **DO NOT** use emojis in code or UI (only in .md files)
-
----
+**DO NOT REVERT ANYTHING IF I DON'T REQUEST**
+**DO NOT GIT COMMIT ANYTHING IF I DON'T REQUEST**
+**DO NOT UPDATE CLAUDE.md IF I DON'T REQUEST**
+**Never use any emoji in this project except in .md files**
 
 **ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system built with Next.js 15 + PostgreSQL. Designed for healthcare organizations with hierarchical role-based access control. Successfully deployed to production on Render (2025-10-27).
 
@@ -168,6 +154,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Department Tasks View Assignee Selector Sync (2025-10-28 Session 3)** - Fixed critical bug where Task Panel assignee changes didn't sync to Department Tasks View inline editor. Root cause: Task Panel uses `useUpdateTask` which only invalidated `projectKeys.board` (for List/Board/Calendar views) but NOT `departmentTasksKeys.all` (for Department Tasks view). List View worked because it shares the same `projectKeys.board` cache. Solution: (1) Added `departmentTasksKeys.all` invalidation to `useUpdateTask.onSettled` in use-tasks.ts for Task Panel → Department Tasks sync, (2) Added comprehensive cache invalidation to 3 department mutations (`useUpdateDepartmentTask`, `useToggleDepartmentTaskPin`, `useCloseDepartmentTask`) in use-department-tasks.ts for bidirectional sync. Lesson learned: **Different views may use different query caches** - always check which cache keys each view uses and invalidate ALL relevant caches in mutation hooks. Files modified: 2 files (use-tasks.ts, use-department-tasks.ts). All view combinations now sync correctly: Task Panel ↔ List View ✅, Task Panel ↔ Department Tasks View ✅, Dashboard widgets ✅. 🎉
+- ✅ **Profile Settings UX Improvements (2025-10-28 Session 2)** - Fixed 2 critical UX issues on Profile Settings page: (1) Browser autofill filling in old password - Added proper `autocomplete` attributes (`current-password` for current, `new-password` for new/confirm fields). (2) firstName/lastName fields empty on first load - Root cause: Seed data only has `fullName` field without split firstName/lastName. Solution: Added automatic name splitting logic that removes title prefix (นาย, นาง, ดร., etc.) and splits by space (first part = firstName, rest = lastName). Added console.log for debugging. Files modified: 1 file (profile-settings.tsx). Users can now properly change password and see their names correctly. ✅
+- ✅ **Dashboard Checklist Widget Sync Fixes (2025-10-28 Session 2)** - Fixed 3 synchronization issues between Task Panel and Dashboard Checklist Widget: (1) Delete checklist item in Task Panel → widget doesn't update, (2) Check/uncheck item in Task Panel → widget doesn't update, (3) Deleted items persist even after refresh. Root cause: Task Panel checklist mutations (`useCreateChecklistItem`, `useUpdateChecklistItem`, `useDeleteChecklistItem`) only invalidated task-specific caches (`taskKeys.checklists`, `taskKeys.history`) but NOT dashboard cache (`dashboardKeys.all`). Solution: Added `dashboardKeys.all` invalidation to all 3 mutation hooks in `use-tasks.ts`. Verified API routes properly filter `deletedAt: null`. Dashboard widget now updates instantly when checklist items are created/updated/deleted in Task Panel. Files modified: 1 file (use-tasks.ts). ✅
+- ✅ **Assignee Selector Bug Fixes (2025-10-28 Session 1)** - Fixed 2 critical bugs with assignee selector display: (1) Task Panel assignee selector showing incorrect values after save - Root cause: PATCH API not returning `assigneeUserIds` in response. Solution: Added `assignees` relation to query and extracted `assigneeUserIds` for consistency with GET endpoint. (2) Inline editor (List/Board View) assignee selector not updating optimistically - Root cause: `handleQuickAssigneeChange` sending unnecessary full user objects causing cache conflicts. Solution: Simplified to send only `assigneeUserIds` array. Files modified: 2 files (task API route, task-row component). Both Task Panel and inline editors now display assignees correctly in real-time. 🎉
 - ✅ **Task Ownership System Implementation (2025-10-27 Session 5)** - Implemented complete task ownership system in 4 phases: (1) Delete Permission - Only task creator can delete own tasks (fixed security flaw where assignees could delete), (2) Assignment Permission - Only creator, management, or current assignee can assign/re-assign tasks, (3) Widget Separation - Split dashboard into "งานที่ฉันสร้าง" (blue icon) and "งานที่มอบหมายให้ฉัน" (green icon) with no overlap, (4) Task Owner Notifications - 7 notification types (ASSIGNED, UPDATED, CLOSED, COMMENT, CHECKLIST CREATE/UPDATE/DELETE). Task creators now receive notifications for ALL changes made by others. Files modified: 13 files (7 API routes, 4 frontend components, 2 docs). **See TASK_OWNERSHIP_SYSTEM.md for complete documentation** 🎉
 - ✅ **DEPLOYMENT SUCCESS + Type Error Fix (2025-10-27 Session 4)** - Successfully deployed to production on Render! Fixed 156 TypeScript errors (100% reduction) using hybrid approach: (1) Temporarily disabled strict mode in tsconfig, (2) Fixed largest files first (list-view: 43 errors), (3) Fixed by pattern (openTaskPanel signatures, type casts, Prisma ts-nocheck), (4) Added Suspense boundaries for useSearchParams in verify-email & reset-password pages. **Build passed on Render!** Time saved: 780 minutes (vs Render feedback loop). Files modified: 32 files. Strategy documented in [TypeScript Error Prevention](#7-typescript-error-prevention--best-practices-). Next: Test production, Phase 6 (re-enable strict mode). **CURRENT STATUS: DEPLOYED TO PRODUCTION** 🚀
 - ✅ **Render Deployment + Next.js 15 Migration (2025-10-27 Session 3)** - Successfully deployed to Render with 5 critical fixes: (1) Moved build tools (autoprefixer, postcss, tailwindcss, @tanstack/react-query-devtools) to dependencies, (2) Added 39 missing files to Git (API routes, components, hooks), (3) Updated 16 API routes to use Promise-based params (`await params`), (4) Fixed middleware types to return `NextRouteHandler` for Next.js 15 compatibility, (5) Documented Next.js 15 migration lessons in CLAUDE.md. Build time: ~3-5 minutes. Total changes: 5 commits, 135+ files, +9,000 lines. See [Next.js 15 Migration Lessons](#nextjs-15-migration-lessons)
@@ -239,39 +229,6 @@ node tests/api/test-runner.js      # Run API tests directly
 - Test credentials: `admin@hospital.test` / `SecurePass123!`
 - For development: Set `BYPASS_AUTH=true` in `.env` to skip authentication
 - Use `BYPASS_USER_ID=admin001` for ADMIN role, `user001` for LEADER role
-
-### Platform-Specific Commands
-
-**Windows (Command Prompt)**:
-```bash
-set PORT=3010 && npm run dev          # Start dev server
-rd /s /q .next                        # Clear Next.js cache
-taskkill /F /PID <PID>                # Kill process
-netstat -ano | findstr :<PORT>        # Find process using port
-```
-
-**Windows (PowerShell)**:
-```powershell
-$env:PORT=3010; npm run dev           # Start dev server
-Remove-Item -Recurse -Force .next     # Clear Next.js cache
-Stop-Process -Id <PID> -Force         # Kill process
-Get-NetTCPConnection -LocalPort <PORT> # Find process using port
-```
-
-**Unix/Mac/Linux**:
-```bash
-PORT=3010 npm run dev                 # Start dev server
-rm -rf .next                          # Clear Next.js cache
-kill -9 <PID>                         # Kill process
-lsof -ti:<PORT> | xargs kill -9       # Kill process on port
-```
-
-**Git Bash (Windows)**:
-```bash
-PORT=3010 npm run dev                 # Start dev server (Unix-style)
-rm -rf .next                          # Clear Next.js cache (Unix commands work)
-taskkill //F //PID <PID>              # Kill process (use // instead of /)
-```
 
 ---
 
@@ -746,47 +703,6 @@ curl -X POST http://localhost:3010/api/batch \
 # LEADER sees division scope, HEAD sees department scope
 curl http://localhost:3010/api/departments/DEPT-058/tasks?view=grouped
 ```
-
-### Debugging Workflow
-
-**When development server crashes:**
-
-1. Check terminal for syntax errors in recently changed files
-2. Clear Next.js cache: `rm -rf .next` (or `rd /s /q .next` on Windows)
-3. Restart dev server: `PORT=3010 npm run dev`
-4. If still failing, check for type errors: `npm run type-check`
-5. If port conflict: Find and kill process (see Platform-Specific Commands)
-
-**When production build fails:**
-
-1. Run `npm run type-check` first (faster than full build)
-2. Fix type errors file by file (start with largest files)
-3. Run `npm run build` to verify fixes
-4. Check for missing files: `git status`
-5. Review Next.js 15 requirements (Promise params, Suspense for useSearchParams)
-
-**When API returns unexpected data:**
-
-1. Verify database state with Prisma Studio: `npm run prisma:studio`
-2. Check recent schema changes: `git log --oneline prisma/schema.prisma`
-3. Regenerate Prisma client: `npm run prisma:generate`
-4. Review API route with `console.log()` (check terminal output)
-5. Test API directly with curl (see Common Test Scenarios above)
-
-**When React Query cache is stale:**
-
-1. Check stale time in hook configuration (should be 2-5 minutes)
-2. Force invalidate: `queryClient.invalidateQueries({ queryKey: [...] })`
-3. Clear all cache on logout (see DATA_LEAKAGE_SECURITY_FIX.md)
-4. Use React Query DevTools to inspect cache state
-
-**When permissions don't work as expected:**
-
-1. Check user role and additionalRoles in Prisma Studio
-2. Review permission definition in `src/lib/permissions.ts`
-3. Check context object passed to `checkPermission()`
-4. See PERMISSION_GUIDELINE.md for detailed permission matrix
-5. Test with different user roles using BYPASS_USER_ID
 
 ---
 
@@ -2004,7 +1920,7 @@ npm run prisma:studio
 - [x] Authentication & authorization
 - [x] Permission system with 6 roles + additionalRoles
 
-**Frontend**: ✅ ~98% Complete (47/48 major components for Version 1.5)
+**Frontend**: 🔄 ~68% Complete
 
 - [x] Core infrastructure (Layout, Theme, Auth)
 - [x] 3 Project views (Board, Calendar, List)
@@ -2013,32 +1929,25 @@ npm run prisma:studio
 - [x] User Management (full CRUD)
 - [x] Department Tasks View
 - [x] Reports Dashboard
-- [x] User Dashboard (7 widgets + 4 stat cards)
-- [x] Profile Settings Page
-- [x] Permission System (23+ permissions, multi-layer security)
-- [x] Task Ownership System (delete/assignment permissions, notifications)
-- [ ] Date Filter Preset (remaining for Version 1.5)
-- [ ] File Link Attachments (remaining for Version 1.5)
-
-**Version 2.0 Planned** (9 advanced components - see roadmap above)
+- [x] User Dashboard (7 widgets + 4 stat cards) ✅ NEW
+- [ ] Additional modals (2 remaining)
+- [ ] Selectors (9 remaining)
+- [ ] Advanced features (6 remaining)
 
 **Critical Bugs**: ✅ All resolved
 
-**Deployment Infrastructure**: ✅ **PRODUCTION DEPLOYED** (2025-10-27)
+**Deployment Infrastructure**: ❌ Not ready
 
-- [x] Production database setup (PostgreSQL on Render)
-- [x] Environment variables configured (Render dashboard)
-- [x] Build pipeline (Next.js 15 on Render)
-- [x] Production URL (live and accessible)
-- [ ] CI/CD pipeline (manual deployment currently)
-- [ ] Monitoring & logging (basic Render logging)
-- [ ] Backup strategy (database backups needed)
-- [ ] SSL/TLS certificates (Render provides automatically)
-- [ ] Rate limiting (not yet implemented)
-- [ ] Security audit (basic review complete)
+- [ ] Production database setup
+- [ ] Environment variables configured
+- [ ] CI/CD pipeline
+- [ ] Monitoring & logging
+- [ ] Backup strategy
+- [ ] SSL/TLS certificates
+- [ ] Rate limiting
+- [ ] Security audit
 
-**Current Status**: 🚀 **LIVE IN PRODUCTION** on Render
-**Next Steps**: CI/CD automation, enhanced monitoring, backup strategy
+**⚠️ ESTIMATE TO PRODUCTION-READY**: 5-6 weeks
 
 ---
 
@@ -2118,29 +2027,46 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.26.0** (2025-10-27)
+**End of CLAUDE.md v2.28.0** (2025-10-28)
 
 ## Changelog
 
-### v2.26.0 (2025-10-27) - Documentation Improvements & Accuracy Fixes
+### v2.28.0 (2025-10-28) - Department Tasks View Assignee Selector Sync Fix
 
-**Critical Fixes**:
-- ✅ Fixed version number inconsistency (v2.26.0 throughout)
-- ✅ Fixed contradictory frontend completion status (98% vs 68%)
-- ✅ Updated Deployment Infrastructure status to reflect production deployment
+**Major changes:**
+- ✅ Fixed critical cache invalidation bug in Department Tasks View
+- ✅ Task Panel assignee changes now sync to all views (List, Board, Calendar, Department Tasks, Dashboard)
+- ✅ Added `departmentTasksKeys.all` invalidation to `useUpdateTask` in use-tasks.ts
+- ✅ Added comprehensive cache invalidation to 3 department mutations in use-department-tasks.ts
+- ✅ Documented lesson: Different views use different query caches - must invalidate ALL relevant caches
 
-**New Sections Added**:
-- ✅ Platform-Specific Commands - Windows (CMD/PowerShell), Unix/Mac, Git Bash
-- ✅ Debugging Workflow - 5 common scenarios with step-by-step procedures
-- ✅ File size & reading time metadata at top
-- ✅ Improved Quick Navigation with 3 categories (Getting Started, Daily Dev, Reference)
+**Lesson Learned:**
+When mutations don't sync between views, check which query cache each view uses:
+- List/Board/Calendar Views → `projectKeys.board`
+- Department Tasks View → `departmentTasksKeys.list`
+- Dashboard Widgets → `dashboardKeys.all`
+- Task Panel → `taskKeys.detail`
 
-**Visual Improvements**:
-- ✅ Enhanced DO NOT warnings visibility with blockquote format
-- ✅ Improved frontend checklist with all completed features
-- ✅ Updated deployment checklist with production status details
+Mutation hooks must invalidate ALL relevant caches, not just the one used by the current view.
 
-**Purpose**: Improve documentation accuracy and usability for new Claude instances
+**Files Modified:**
+- src/hooks/use-tasks.ts (added departmentTasksKeys.all invalidation)
+- src/hooks/use-department-tasks.ts (added taskKeys/projectKeys/dashboardKeys invalidation)
+
+### v2.27.0 (2025-10-28) - Dashboard Checklist Sync + Profile Settings UX
+
+**Major changes:**
+- ✅ Fixed Dashboard Checklist Widget not syncing with Task Panel checklist mutations
+- ✅ Fixed Profile Settings page autocomplete issues and name splitting logic
+- ✅ All dashboard widgets now update instantly when checklist items change
+
+### v2.26.0 (2025-10-28) - Assignee Selector Bug Fixes + Refresh Fix + Checklist Widget
+
+**Major changes:**
+- ✅ Fixed Task Panel assignee selector showing incorrect values after save
+- ✅ Fixed inline editor assignee selector not updating optimistically
+- ✅ Fixed refresh button making dashboard content disappear
+- ✅ Fixed checklist widget showing empty (missing created tasks)
 
 ### v2.25.0 (2025-10-27) - Critical Development Rules Reorganization
 

@@ -96,6 +96,7 @@ async function getHandler(
           id: true,
           fullName: true,
           email: true,
+          profileImageUrl: true,
         },
       },
       closedBy: {
@@ -359,13 +360,45 @@ async function patchHandler(
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: updateData,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        projectId: true, // ✅ BUG FIX: Include projectId for cache invalidation
+        statusId: true,
+        priority: true,
+        difficulty: true,
+        startDate: true,
+        dueDate: true,
+        assigneeUserId: true,
+        creatorUserId: true,
+        parentTaskId: true,
+        isClosed: true,
+        closeType: true,
+        closeDate: true,
+        createdAt: true,
+        updatedAt: true,
         assignee: {
           select: {
             id: true,
             fullName: true,
             email: true,
             profileImageUrl: true,
+          },
+        },
+        assignees: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+                profileImageUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            assignedAt: 'asc',
           },
         },
         status: {
@@ -731,9 +764,13 @@ async function patchHandler(
       });
     }
 
+    // Extract assignee user IDs from assignees relation (for consistency with GET endpoint)
+    const assigneeUserIds = updatedTask.assignees.map(a => a.userId);
+
     return successResponse({
       task: {
         ...updatedTask,
+        assigneeUserIds, // ✅ BUG FIX: Add array of assignee user IDs
         startDate: updatedTask.startDate?.toISOString() || null,
         dueDate: updatedTask.dueDate?.toISOString() || null,
       },

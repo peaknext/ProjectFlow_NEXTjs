@@ -44,11 +44,22 @@ interface Phase {
   order: number;
 }
 
+/**
+ * Status Type สำหรับแสดงความก้าวหน้าของงาน (ไม่ใช่การปิดงาน)
+ * - NOT_STARTED: งานยังไม่เริ่ม (order = 1 เสมอ)
+ * - IN_PROGRESS: งานกำลังดำเนินการ (order ระหว่าง 1 กับ max)
+ * - DONE: งานเสร็จสมบูรณ์ (order = max เสมอ)
+ *
+ * ⚠️ ห้ามใช้ ABORTED, COMPLETED - ค่าเหล่านี้เป็น CloseType ไม่ใช่ StatusType
+ * ⚠️ statusType จะถูก auto-calculate ตาม order ใน onSubmit
+ *
+ * @see TASK_CLOSING_LOGIC.md สำหรับคำอธิบายเพิ่มเติม
+ */
 interface Status {
   name: string;
   color: string;
   order: number;
-  statusType: "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "ABORTED";
+  statusType: "NOT_STARTED" | "IN_PROGRESS" | "DONE";
 }
 
 interface ProjectFormData {
@@ -307,12 +318,21 @@ export function CreateProjectModal() {
         endDate: phase.endDate || null,
       }));
 
-    // Format statuses data
-    const statusesData = data.statuses.map((status, index) => ({
+    // Format statuses data with auto-calculated statusType
+    // ⚠️ IMPORTANT: statusType ถูกกำหนดตาม order อัตโนมัติ
+    // - order = 1 → NOT_STARTED (สถานะแรก)
+    // - order = max → DONE (สถานะสุดท้าย)
+    // - order ระหว่าง 1 กับ max → IN_PROGRESS
+    const statusesData = data.statuses.map((status, index, array) => ({
       name: status.name.trim(),
       color: status.color,
       order: index + 1,
-      statusType: status.statusType,
+      statusType:
+        index === 0
+          ? "NOT_STARTED"
+          : index === array.length - 1
+          ? "DONE"
+          : "IN_PROGRESS",
     })) as any;
 
     // Close modal immediately (optimistic)
@@ -358,8 +378,36 @@ export function CreateProjectModal() {
       name: "",
       color: nextColor,
       order: statusFields.length + 1,
+      // statusType จะถูก recalculate ใน onSubmit ตาม order จริง
+      // ค่าชั่วคราวเป็น IN_PROGRESS (เพราะส่วนใหญ่สถานะใหม่จะอยู่ตรงกลาง)
       statusType: "IN_PROGRESS",
     });
+  };
+
+  // Handle remove status with auto-recalculation
+  // ⚠️ IMPORTANT: หลังลบสถานะ ต้อง recalculate statusType ของสถานะที่เหลือ
+  // เพื่อให้สอดคล้องกับกฎ: order=1→NOT_STARTED, order=max→DONE
+  const handleRemoveStatus = (index: number) => {
+    removeStatus(index);
+
+    // Recalculate statusType หลังลบ (รอให้ form update ก่อน)
+    setTimeout(() => {
+      const currentStatuses = watch("statuses");
+      if (!currentStatuses || currentStatuses.length === 0) return;
+
+      currentStatuses.forEach((status, i, array) => {
+        const correctType =
+          i === 0
+            ? "NOT_STARTED"
+            : i === array.length - 1
+            ? "DONE"
+            : "IN_PROGRESS";
+
+        if (status.statusType !== correctType) {
+          setValue(`statuses.${i}.statusType`, correctType);
+        }
+      });
+    }, 0);
   };
 
   // Don't render if not open
@@ -800,7 +848,7 @@ export function CreateProjectModal() {
                       type="button"
                       size="icon"
                       variant="ghost"
-                      onClick={() => removeStatus(index)}
+                      onClick={() => handleRemoveStatus(index)}
                       className="h-10 w-10 p-2 text-muted-foreground hover:text-destructive flex-shrink-0 self-end pb-2"
                       title="ลบ Status"
                     >

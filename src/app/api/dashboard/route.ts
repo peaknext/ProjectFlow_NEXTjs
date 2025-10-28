@@ -13,16 +13,22 @@ import { getUserAccessibleScope } from "@/lib/permissions";
  * - HEAD: Department-level data
  * - MEMBER/USER: Personal tasks only
  *
- * Query params:
- * - limit: Number of tasks to return for My Tasks (default: 10)
- * - offset: Pagination offset for My Tasks (default: 0)
+ * Query params (separate pagination for each widget):
+ * - myCreatedTasksLimit: Number of created tasks to return (default: 10)
+ * - myCreatedTasksOffset: Pagination offset for created tasks (default: 0)
+ * - assignedToMeTasksLimit: Number of assigned tasks to return (default: 10)
+ * - assignedToMeTasksOffset: Pagination offset for assigned tasks (default: 0)
  */
 async function handler(req: AuthenticatedRequest) {
   try {
     const userId = req.session.userId;
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const offset = parseInt(searchParams.get("offset") || "0");
+
+    // Separate pagination for each widget
+    const myCreatedTasksLimit = parseInt(searchParams.get("myCreatedTasksLimit") || "10");
+    const myCreatedTasksOffset = parseInt(searchParams.get("myCreatedTasksOffset") || "0");
+    const assignedToMeTasksLimit = parseInt(searchParams.get("assignedToMeTasksLimit") || "10");
+    const assignedToMeTasksOffset = parseInt(searchParams.get("assignedToMeTasksOffset") || "0");
 
     // Get user details with role
     const user = await prisma.user.findUnique({
@@ -275,8 +281,8 @@ async function handler(req: AuthenticatedRequest) {
           },
         },
         orderBy: [{ dueDate: "asc" }, { priority: "asc" }],
-        skip: offset,
-        take: limit,
+        skip: myCreatedTasksOffset,
+        take: myCreatedTasksLimit,
       }),
 
       // 8. MY CREATED TASKS - Count total for pagination
@@ -317,8 +323,8 @@ async function handler(req: AuthenticatedRequest) {
           },
         },
         orderBy: [{ dueDate: "asc" }, { priority: "asc" }],
-        skip: offset,
-        take: limit,
+        skip: assignedToMeTasksOffset,
+        take: assignedToMeTasksLimit,
       }),
 
       // 10. ASSIGNED TO ME TASKS - Count total for pagination (exclude tasks user created)
@@ -399,13 +405,23 @@ async function handler(req: AuthenticatedRequest) {
         take: 5,
       }),
 
-      // 13. MY CHECKLISTS - Get checklists from assigned tasks
+      // 13. MY CHECKLISTS - Get checklists from assigned tasks OR created tasks
       prisma.checklist.findMany({
         where: {
+          deletedAt: null, // Filter out deleted checklist items
           task: {
-            assignees: {
-              some: { userId },
-            },
+            OR: [
+              {
+                // Tasks where user is assigned
+                assignees: {
+                  some: { userId },
+                },
+              },
+              {
+                // Tasks created by user
+                creatorUserId: userId,
+              },
+            ],
             deletedAt: null,
           },
         },
@@ -428,8 +444,8 @@ async function handler(req: AuthenticatedRequest) {
       }),
     ]);
 
-    const myCreatedTasksHasMore = offset + limit < myCreatedTasksTotal;
-    const assignedToMeTasksHasMore = offset + limit < assignedToMeTasksTotal;
+    const myCreatedTasksHasMore = myCreatedTasksOffset + myCreatedTasksLimit < myCreatedTasksTotal;
+    const assignedToMeTasksHasMore = assignedToMeTasksOffset + assignedToMeTasksLimit < assignedToMeTasksTotal;
 
     // Group checklists by task
     const checklistsByTask = myChecklists.reduce((acc, checklist) => {

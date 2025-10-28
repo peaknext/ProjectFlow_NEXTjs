@@ -136,6 +136,8 @@ export interface DashboardResponse {
 }
 
 export interface UseDashboardOptions {
-  limit?: number;
-  offset?: number;
+  myCreatedTasksLimit?: number;
+  myCreatedTasksOffset?: number;
+  assignedToMeTasksLimit?: number;
+  assignedToMeTasksOffset?: number;
 }

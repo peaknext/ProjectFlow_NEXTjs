@@ -16,7 +16,7 @@ export const dashboardKeys = {
 /**
  * Fetch dashboard data
  *
- * @param options - Query options (limit, offset for pagination)
+ * @param options - Query options (separate pagination for each widget)
  * @returns Dashboard data including stats, tasks, activities, etc.
  */
 export function useDashboard(options?: UseDashboardOptions) {
@@ -24,11 +24,19 @@ export function useDashboard(options?: UseDashboardOptions) {
     queryKey: dashboardKeys.detail(options),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (options?.limit) {
-        params.append("limit", options.limit.toString());
+
+      // Separate pagination for each widget
+      if (options?.myCreatedTasksLimit) {
+        params.append("myCreatedTasksLimit", options.myCreatedTasksLimit.toString());
       }
-      if (options?.offset) {
-        params.append("offset", options.offset.toString());
+      if (options?.myCreatedTasksOffset) {
+        params.append("myCreatedTasksOffset", options.myCreatedTasksOffset.toString());
+      }
+      if (options?.assignedToMeTasksLimit) {
+        params.append("assignedToMeTasksLimit", options.assignedToMeTasksLimit.toString());
+      }
+      if (options?.assignedToMeTasksOffset) {
+        params.append("assignedToMeTasksOffset", options.assignedToMeTasksOffset.toString());
       }
 
       const response = await api.get<{ data: DashboardData }>(
@@ -70,13 +78,45 @@ export function useActivities() {
 /**
  * Load more tasks (for pagination)
  *
- * NOTE: This function is deprecated and no longer used.
- * Dashboard widgets now use their own infinite scroll implementation.
- * Kept for reference only - will be removed in future cleanup.
+ * DEPRECATED: No longer used - Dashboard now uses separate pagination
+ * for myCreatedTasks and assignedToMeTasks via useDashboard() options
+ *
+ * Appends new tasks to the existing myTasks list
  */
-// export function useLoadMoreTasks() {
-//   // Deprecated - no longer compatible with new myCreatedTasks/assignedToMeTasks structure
-// }
+/* COMMENTED OUT - Dead code, not used anywhere
+export function useLoadMoreTasks() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (currentOffset: number) => {
+      const limit = 10;
+      const newOffset = currentOffset + limit;
+      const params = new URLSearchParams();
+      params.append("limit", limit.toString());
+      params.append("offset", newOffset.toString());
+
+      const response = await api.get<DashboardData>(
+        `/api/dashboard?${params}`
+      );
+      return { newTasks: response.myTasks.tasks, hasMore: response.myTasks.hasMore, newOffset };
+    },
+    onSuccess: ({ newTasks, hasMore }) => {
+      // Append new tasks to ALL existing dashboard caches (future-proof)
+      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          myTasks: {
+            ...old.myTasks,
+            tasks: [...old.myTasks.tasks, ...newTasks],
+            hasMore,
+          },
+        };
+      });
+    },
+  });
+}
+*/
 
 /**
  * Refresh dashboard data

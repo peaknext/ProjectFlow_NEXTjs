@@ -1,6 +1,9 @@
 import { useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useSyncMutation } from "@/lib/use-sync-mutation";
+import { taskKeys } from "@/hooks/use-tasks";
+import { projectKeys } from "@/hooks/use-projects";
+import { dashboardKeys } from "@/hooks/use-dashboard";
 
 // ============================================
 // TYPES
@@ -225,9 +228,17 @@ export function useUpdateDepartmentTask(departmentId: string, filters?: Departme
         queryClient.setQueryData(queryKey, context.previousData);
       }
     },
-    onSettled: () => {
+    onSettled: (response) => {
       // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey });
+
+      // ✅ BUG FIX: Invalidate task panel and project board caches
+      if (response?.task) {
+        queryClient.invalidateQueries({ queryKey: taskKeys.detail(response.task.id) });
+        queryClient.invalidateQueries({ queryKey: projectKeys.board(response.task.projectId) });
+        queryClient.invalidateQueries({ queryKey: taskKeys.history(response.task.id) });
+        queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      }
     },
   });
 }
@@ -283,6 +294,8 @@ export function useToggleDepartmentTaskPin(departmentId: string, filters?: Depar
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+      // ✅ BUG FIX: Also invalidate dashboard cache (pinned tasks widget)
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
@@ -329,8 +342,16 @@ export function useCloseDepartmentTask(departmentId: string, filters?: Departmen
         queryClient.setQueryData(queryKey, context.previousData);
       }
     },
-    onSettled: () => {
+    onSettled: (response) => {
       queryClient.invalidateQueries({ queryKey });
+
+      // ✅ BUG FIX: Invalidate task panel and project board caches
+      if (response?.task) {
+        queryClient.invalidateQueries({ queryKey: taskKeys.detail(response.task.id) });
+        queryClient.invalidateQueries({ queryKey: projectKeys.board(response.task.projectId) });
+        queryClient.invalidateQueries({ queryKey: taskKeys.history(response.task.id) });
+        queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      }
     },
   });
 }
