@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.29.0 (2025-10-28)
-**Last Major Update**: Production 403 Forbidden Fix - CSRF/CORS Domain Configuration
+**Version**: 2.30.0 (2025-10-28)
+**Last Major Update**: Mobile Layout Phase 1 - Responsive Infrastructure (Hybrid Approach)
 
 ---
 
@@ -73,9 +73,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🎯 Current Priority
 
-**What to work on next**: Version 1.5 - Date Filter Preset + File Link Attachments
+**What to work on next**: Mobile Layout Phase 2 - Bottom Navigation Features (My Tasks Page, Notifications Page, Hamburger Menu)
 
-**Current Status**: Version 1.5 - Near completion (47/48 components)
+**Current Status**:
+- **Mobile Layout Phase 1**: ✅ Complete (Responsive infrastructure at 768px breakpoint)
+- **Mobile Layout Phase 2**: 🔄 In Progress (Creating missing pages and menus)
+- **Version 1.5**: Near completion (47/48 components)
 
 **Dashboard Implementation Status**: ✅ **COMPLETE WITH UI/UX REFINEMENT** (7/7 widgets)
 
@@ -154,6 +157,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Mobile Layout Phase 1 - Foundation (2025-10-28 Session 6)** - Implemented responsive layout infrastructure with Hybrid Approach that switches between desktop and mobile layouts at 768px breakpoint. Created 5 new components: (1) `use-media-query.ts` hook with utility functions (`useIsMobile`, `useIsDesktop`, etc.) for SSR-safe breakpoint detection, (2) `desktop-layout.tsx` - Refactored existing layout with Sidebar + Top Navbar, (3) `mobile-layout.tsx` - Mobile layout with Bottom Navigation + Mobile Top Bar, (4) `bottom-navigation.tsx` - Facebook-style 5-tab bottom nav (Home, My Tasks, Create, Notifications, Menu) with active states, notification badges, and 48x48px touch-friendly tap targets, (5) `mobile-top-bar.tsx` - Dynamic top bar with back button logic and page titles. Updated `(dashboard)/layout.tsx` to responsive wrapper using `useIsMobile()` hook for conditional rendering. **What Works**: Layout switching at 768px, Home tab navigation, Create button opens modal, notification badge, touch-friendly UI. **What's Disabled**: My Tasks & Notifications tabs (Phase 2), Hamburger menu (Phase 2). Files created: 5 files (587 lines). Type-check: 0 errors. Commit: `bd21b24`. Next: Phase 2 (create /my-tasks and /notifications pages, implement hamburger menu drawer). See `MOBILE_LAYOUT_DESIGN.md` for complete design documentation (620+ lines). 📱
+- ✅ **Privacy Consent System + Mobile Design Doc (2025-10-28 Session 5)** - Implemented comprehensive privacy notice and cookie consent system with 15-day expiration and auto-extension on login. Created 3 new components: (1) `use-privacy-consent.ts` hook with localStorage persistence and version tracking, (2) `privacy-notice-modal.tsx` with 2 tabs (Privacy Policy + Cookie Notice in Thai), (3) `cookie-settings-modal.tsx` with granular controls for 3 cookie categories (Necessary, Functional, Analytics). Integrated with login page - modal shows on first visit and cannot be dismissed until consent given. Added consent extension logic to `use-auth.ts` login mutation that refreshes timestamp on successful login. Created `MOBILE_LAYOUT_DESIGN.md` (620+ lines) - Comprehensive mobile UI/UX design document with wireframes, implementation roadmap (11 phases, 18-26 hours), technical specs, and best practices inspired by Facebook and ClickUp patterns. Files created: 4 files (1,757 insertions). Commit: `06115d2`. All content in Thai with Tailwind CSS (text-sm) styling. 🔒
 - ✅ **Production 403 Forbidden Fix (2025-10-28 Session 4)** - Fixed critical production issue where all POST/PATCH/DELETE requests were blocked with 403 Forbidden errors after deploying security improvements. Root cause: CSRF and CORS protection configs had incorrect production domain (`projectflows.render.com` instead of `projectflows.app` and `projectflows.onrender.com`). All state-changing operations (create/edit/delete tasks, projects, users) were blocked in production. Solution: Updated `allowedOrigins` in both `src/lib/csrf.ts` and `src/middleware.ts` to include correct production domains: `https://projectflows.app` (custom domain) and `https://projectflows.onrender.com` (Render default). Also fixed typo where `render.com` should be `onrender.com`. Files modified: 2 files (csrf.ts, middleware.ts). Production now working correctly with full CSRF/CORS protection. Commits: 8961bbf (initial fix) + 3959bb7 (typo correction). **CRITICAL FIX** - Unblocked all production CRUD operations. 🎉
 - ✅ **Department Tasks View Assignee Selector Sync (2025-10-28 Session 3)** - Fixed critical bug where Task Panel assignee changes didn't sync to Department Tasks View inline editor. Root cause: Task Panel uses `useUpdateTask` which only invalidated `projectKeys.board` (for List/Board/Calendar views) but NOT `departmentTasksKeys.all` (for Department Tasks view). List View worked because it shares the same `projectKeys.board` cache. Solution: (1) Added `departmentTasksKeys.all` invalidation to `useUpdateTask.onSettled` in use-tasks.ts for Task Panel → Department Tasks sync, (2) Added comprehensive cache invalidation to 3 department mutations (`useUpdateDepartmentTask`, `useToggleDepartmentTaskPin`, `useCloseDepartmentTask`) in use-department-tasks.ts for bidirectional sync. Lesson learned: **Different views may use different query caches** - always check which cache keys each view uses and invalidate ALL relevant caches in mutation hooks. Files modified: 2 files (use-tasks.ts, use-department-tasks.ts). All view combinations now sync correctly: Task Panel ↔ List View ✅, Task Panel ↔ Department Tasks View ✅, Dashboard widgets ✅. 🎉
 - ✅ **Profile Settings UX Improvements (2025-10-28 Session 2)** - Fixed 2 critical UX issues on Profile Settings page: (1) Browser autofill filling in old password - Added proper `autocomplete` attributes (`current-password` for current, `new-password` for new/confirm fields). (2) firstName/lastName fields empty on first load - Root cause: Seed data only has `fullName` field without split firstName/lastName. Solution: Added automatic name splitting logic that removes title prefix (นาย, นาง, ดร., etc.) and splits by space (first part = firstName, rest = lastName). Added console.log for debugging. Files modified: 1 file (profile-settings.tsx). Users can now properly change password and see their names correctly. ✅
