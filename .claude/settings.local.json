@@ -290,7 +290,8 @@
       "Bash(cut:*)",
       "Bash(git push:*)",
       "Bash(mv:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

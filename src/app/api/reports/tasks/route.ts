@@ -21,6 +21,7 @@ import { withAuth } from '@/lib/api-middleware';
 import type { AuthenticatedRequest } from '@/lib/api-middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { getUserAccessibleScope } from '@/lib/permissions';
+import { buildFiscalYearFilter } from '@/lib/fiscal-year';
 
 /**
  * Get fiscal year start date (Thai fiscal year: Oct 1 - Sep 30)
@@ -40,7 +41,14 @@ function getFiscalYearStartDate(): Date {
 async function handler(req: AuthenticatedRequest) {
   const { searchParams } = new URL(req.url);
 
+  // Parse fiscal year filter
+  const fiscalYearsParam = searchParams.get('fiscalYears');
+  const fiscalYears = fiscalYearsParam
+    ? fiscalYearsParam.split(',').map(Number).filter(n => !isNaN(n))
+    : [];
+
   // Parse date filters with default to last 90 days (prevents unbounded queries)
+  // Note: fiscalYears takes precedence over startDate/endDate
   const startDateParam = searchParams.get('startDate');
   const endDateParam = searchParams.get('endDate');
 
@@ -57,8 +65,8 @@ async function handler(req: AuthenticatedRequest) {
     endDate = new Date(endDateParam);
   }
 
-  // Validate date range
-  if (startDate > endDate) {
+  // Validate date range (only if not using fiscal years)
+  if (fiscalYears.length === 0 && startDate > endDate) {
     return errorResponse(
       'INVALID_DATE_RANGE',
       'Start date must be before or equal to end date',
@@ -225,11 +233,18 @@ async function handler(req: AuthenticatedRequest) {
     ],
   };
 
-  // Apply date range filter (now always present - defaults to 90 days)
-  taskFilter.createdAt = {
-    gte: startDate,
-    lte: endDate,
-  };
+  // Apply date filter (fiscalYears takes precedence over startDate/endDate)
+  if (fiscalYears.length > 0) {
+    // Use fiscal year filter (createdAt OR startDate OR dueDate)
+    const fiscalYearFilter = buildFiscalYearFilter(fiscalYears);
+    Object.assign(taskFilter, fiscalYearFilter);
+  } else {
+    // Use date range filter (createdAt only)
+    taskFilter.createdAt = {
+      gte: startDate,
+      lte: endDate,
+    };
+  }
 
   // Apply department filter (for both ADMIN and non-ADMIN users)
   // The departmentIds array was already filtered based on organization selectors above

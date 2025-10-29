@@ -280,6 +280,9 @@ model Task {
   @@index([dueDate])
   @@index([isClosed])
   @@index([parentTaskId])
+  @@index([createdAt])
+  @@index([startDate])
+  @@index([createdAt, startDate, dueDate]) // Composite index for fiscal year filtering
   @@map("tasks")
 }
 

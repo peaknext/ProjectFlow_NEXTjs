@@ -4,6 +4,7 @@ import { withAuth, AuthenticatedRequest } from "@/lib/api-middleware";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { getUserAccessibleScope } from "@/lib/permissions";
 import { calculateProgress } from "@/lib/calculate-progress";
+import { buildFiscalYearFilter } from "@/lib/fiscal-year";
 
 /**
  * GET /api/departments/[departmentId]/tasks
@@ -40,6 +41,12 @@ async function handler(
     const sortBy = searchParams.get("sortBy") || "dueDate";
     const sortDir = (searchParams.get("sortDir") || "asc") as "asc" | "desc";
     const includeCompleted = searchParams.get("includeCompleted") === "true";
+    const fiscalYearsParam = searchParams.get('fiscalYears');
+
+    // Parse fiscal years: "2567,2568" → [2567, 2568]
+    const fiscalYears = fiscalYearsParam
+      ? fiscalYearsParam.split(',').map(Number).filter(n => !isNaN(n))
+      : [];
 
     // 1. Check permissions using scope-based access control (supports additionalRoles)
     const scope = await getUserAccessibleScope(req.session.userId);
@@ -56,6 +63,7 @@ async function handler(
     // 2. Build task filters
     const taskWhereClause: any = {
       deletedAt: null,
+      ...buildFiscalYearFilter(fiscalYears),
     };
 
     // Filter by status

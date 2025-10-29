@@ -3,6 +3,7 @@ import { withAuth, AuthenticatedRequest } from "@/lib/api-middleware";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { getUserAccessibleScope } from "@/lib/permissions";
+import { buildFiscalYearFilter } from "@/lib/fiscal-year";
 
 /**
  * GET /api/dashboard
@@ -29,6 +30,13 @@ async function handler(req: AuthenticatedRequest) {
     const myCreatedTasksOffset = parseInt(searchParams.get("myCreatedTasksOffset") || "0");
     const assignedToMeTasksLimit = parseInt(searchParams.get("assignedToMeTasksLimit") || "10");
     const assignedToMeTasksOffset = parseInt(searchParams.get("assignedToMeTasksOffset") || "0");
+
+    // Fiscal year filter
+    const fiscalYearsParam = searchParams.get('fiscalYears');
+    const fiscalYears = fiscalYearsParam
+      ? fiscalYearsParam.split(',').map(Number).filter(n => !isNaN(n))
+      : [];
+    const fiscalYearFilter = buildFiscalYearFilter(fiscalYears);
 
     // Get user details with role
     const user = await prisma.user.findUnique({
@@ -81,6 +89,7 @@ async function handler(req: AuthenticatedRequest) {
     // Base task query filter based on role
     let taskWhereClause: any = {
       deletedAt: null,
+      ...fiscalYearFilter,
     };
 
     if (user.role === "ADMIN" || user.role === "CHIEF") {

@@ -24,21 +24,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 🚀 Quick Reference Card
 
 **⭐ CRITICAL - Write Code Correctly First:**
+
 1. **Never accumulate type errors** - Fix as you code (run `npm run type-check` every 30 min)
 2. **useSearchParams()** - MUST wrap in `<Suspense>` boundary (NOT direct use in page)
 3. **Route params** - MUST use `Promise<{ id: string }>` and `await params` (NOT direct access)
 
-**⭐ CRITICAL - Before FINAL Commit/Push:**
-4. **Git tracking** - Run `git status` before push (check for untracked files)
-5. **Type-check** - Run `npm run type-check` before FINAL commit (2-3 min)
-6. **Build test** - Run `npm run build` before FINAL push (catches 80% of errors)
+**⭐ CRITICAL - Before FINAL Commit/Push:** 4. **Git tracking** - Run `git status` before push (check for untracked files) 5. **Type-check** - Run `npm run type-check` before FINAL commit (2-3 min) 6. **Build test** - Run `npm run build` before FINAL push (catches 80% of errors)
 
 **Development:**
+
 - **Running the app**: `PORT=3010 npm run dev` (Windows: `set PORT=3010 && npm run dev`)
 - **After schema changes**: `npm run prisma:generate` (ALWAYS!)
 - **Setup .env**: Copy `.env.example` to `.env` and edit with your values
 
 **Code patterns:**
+
 - **Import Prisma**: `import { prisma } from "@/lib/db"` (NOT from @prisma/client)
 - **Soft deletes**: `update({ data: { deletedAt: new Date() } })` (NEVER use .delete())
 - **Multi-assignee**: Use `assigneeUserIds` array (NOT `assigneeUserId`)
@@ -51,9 +51,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 **DO NOT REVERT ANYTHING IF I DON'T REQUEST**
-**DO NOT GIT COMMIT ANYTHING IF I DON'T REQUEST**
+**DO NOT GIT COMMIT & PUSH ANYTHING IF I DON'T REQUEST**
 **DO NOT UPDATE CLAUDE.md IF I DON'T REQUEST**
-**Never use any emoji in this project except in .md files**
+**NEVER USE ANY EMOJI IN THIS PROJECT EXCEPT IN .MD FILES**
 
 **ProjectFlows** (formerly ProjectFlow) is a comprehensive project and task management system built with Next.js 15 + PostgreSQL. Designed for healthcare organizations with hierarchical role-based access control. Successfully deployed to production on Render (2025-10-27).
 
@@ -76,6 +76,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **What to work on next**: Mobile Layout Phase 4 - Task Panel Mobile (Full-screen task panel on mobile devices)
 
 **Current Status**:
+
 - **Mobile Layout Phase 1**: ✅ Complete (Responsive infrastructure at 768px breakpoint)
 - **Mobile Layout Phase 2**: ✅ Complete (5-tab bottom nav, My Tasks page, Notifications page, Hamburger menu)
 - **Mobile Layout Phase 3**: ✅ Complete (Dynamic titles, context actions, animations)
@@ -116,12 +117,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Status**: 98% Complete (47/48 components)
 
 **Completed**:
+
 - ✅ All core features (Dashboard, Projects, Tasks, Users, Reports)
 - ✅ Task closing via action menu (List View) and Task Panel button
 - ✅ Bulk actions via List View toolbar (select multiple → bulk update)
 - ✅ Production deployment on Render
 
 **Remaining** (1 component):
+
 - ⏳ Date Filter Preset (Today, Yesterday, This Week, This Month, etc.)
 - ⏳ File Link Attachments (Google Drive/OneDrive links)
 
@@ -130,6 +133,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Version 2.0 (Future) - Planned Features
 
 **Advanced Components** (9 components):
+
 - 📅 Date Range Picker (advanced with presets)
 - 👥 Multi User Selector (with avatars, department filtering)
 - 🏷️ Tag Selector/Manager (create, edit, color picker, autocomplete)
@@ -154,6 +158,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Ideas (No Timeline Yet)
 
 **Advanced Features** (3 ideas):
+
 - 💡 Advanced Inline Editor (rich text, markdown, @mention, attachments)
 - 💡 Batch Operations UI (select all, operation toolbar, progress, undo)
 - 💡 Keyboard Shortcuts Panel (list all, searchable, customizable)
@@ -1423,6 +1428,7 @@ PORT=3010 npm run dev
 ### Production 403 Forbidden (CSRF/CORS Blocking)
 
 **Symptom**:
+
 - All POST/PATCH/DELETE requests fail with 403 Forbidden in production
 - Browser console: `Failed to load resource: the server responded with a status of 403`
 - Server logs: `🚨 CSRF: Blocked request from unauthorized origin: https://...`
@@ -1432,6 +1438,7 @@ PORT=3010 npm run dev
 Production domain not in CSRF/CORS `allowedOrigins` whitelist.
 
 **Common Causes**:
+
 1. Custom domain (e.g., `projectflows.app`) not added to whitelist
 2. Wrong Render domain (`projectflows.render.com` instead of `projectflows.onrender.com`)
 3. Environment variable `NEXT_PUBLIC_APP_URL` not set or incorrect
@@ -1444,41 +1451,46 @@ Production domain not in CSRF/CORS `allowedOrigins` whitelist.
 // src/lib/csrf.ts (line ~112)
 // src/middleware.ts (line ~72)
 const allowedOrigins = [
-  process.env.NEXT_PUBLIC_APP_URL,     // From env var
-  "https://projectflows.app",          // ✅ Custom domain
+  process.env.NEXT_PUBLIC_APP_URL, // From env var
+  "https://projectflows.app", // ✅ Custom domain
   "https://projectflows.onrender.com", // ✅ Render default (note: onrender, not render)
   // ... dev origins
 ];
 ```
 
 **2. Set environment variable in Render:**
+
 - Go to Render Dashboard → Environment tab
 - Add: `NEXT_PUBLIC_APP_URL=https://your-production-domain.com`
 - Click "Save Changes"
 - Redeploy
 
 **3. Verify fix:**
+
 ```bash
 # After deploy, test create/edit/delete operations
 # Should succeed without 403 errors
 ```
 
 **Quick Fix** (if blocked and need immediate resolution):
+
 ```typescript
 // TEMPORARY - src/lib/csrf.ts line ~224
 // Only for emergency - remove after adding proper domain
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   return { success: true }; // ⚠️ Disables CSRF protection
 }
 ```
 
 **Files to check**:
+
 - `src/lib/csrf.ts` - CSRF origin validation
 - `src/middleware.ts` - CORS origin validation
 - `.env` - Environment variables
 - Render Dashboard → Environment - Production env vars
 
 **Prevention**:
+
 - Always test CRUD operations after deploying security changes
 - Document all production domains in both files
 - Set `NEXT_PUBLIC_APP_URL` for flexibility
@@ -1486,6 +1498,7 @@ if (process.env.NODE_ENV === 'production') {
 ### Windows Build Error (EPERM: scandir Application Data)
 
 **Symptom**:
+
 - Build fails with `Error: EPERM: operation not permitted, scandir 'C:\Users\...\Application Data'`
 - Occurs during `npm run build` on Windows
 - Webpack trying to scan system directories
@@ -1505,6 +1518,7 @@ npm run build
 ```
 
 **Why Turbopack works**:
+
 - Turbopack uses a different file system scanner
 - Doesn't scan system directories like `Application Data`
 - Build completes in ~6 seconds (faster than Webpack)
@@ -1513,28 +1527,31 @@ npm run build
 **Alternative Solutions** (if Turbopack not suitable):
 
 **Option 1: Webpack watchOptions** (didn't work in this case):
+
 ```javascript
 // next.config.js
 webpack: (config) => {
   config.watchOptions = {
     ignored: [
-      '**/node_modules/**',
-      '**/.git/**',
-      '**/.next/**',
-      '**/Application Data/**',
+      "**/node_modules/**",
+      "**/.git/**",
+      "**/.next/**",
+      "**/Application Data/**",
     ],
   };
   return config;
-}
+};
 ```
 
 **Option 2: Check Windows Permissions**:
+
 ```bash
 # Run as Administrator
 # Or check folder permissions on "Application Data"
 ```
 
 **Option 3: Use WSL2 or Linux**:
+
 ```bash
 # Build on WSL2 instead of Windows
 wsl
@@ -1542,9 +1559,11 @@ npm run build
 ```
 
 **Files Modified**:
+
 - `package.json` - Updated build script to use `--turbo` flag
 
 **Verification**:
+
 ```bash
 # Clean build
 rm -rf .next
@@ -1583,6 +1602,7 @@ npm run build
 **Phase 1: Write Code Correctly First (Rules 1-3)**
 
 #### Rule 1: Never Accumulate Type Errors
+
 ```bash
 # Fix type errors AS YOU WRITE CODE
 # Run type-check every 30 minutes during development
@@ -1593,11 +1613,13 @@ npm run type-check
 ```
 
 **Why this matters:**
+
 - Catching errors early = easier to fix (context is fresh)
 - Accumulated errors = hard to debug (lost context)
 - Dev mode hides errors that WILL fail in production build
 
 #### Rule 2: useSearchParams() MUST Be Wrapped in Suspense
+
 ```typescript
 // ❌ WRONG - Build fails with prerender error
 'use client';
@@ -1625,11 +1647,13 @@ export default function Page() {
 ```
 
 **Why this matters:**
+
 - Next.js 15 tries to pre-render pages at build time
 - `useSearchParams()` needs runtime URL data (not available at build)
 - Without Suspense: Build fails with prerender error
 
 #### Rule 3: Route Params MUST Use Promise Pattern (Next.js 15)
+
 ```typescript
 // ❌ WRONG - Works in dev, FAILS in production build
 async function handler(req: Request, { params }: { params: { id: string } }) {
@@ -1637,12 +1661,16 @@ async function handler(req: Request, { params }: { params: { id: string } }) {
 }
 
 // ✅ CORRECT - Next.js 15 requires Promise
-async function handler(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;  // Must await!
+async function handler(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params; // Must await!
 }
 ```
 
 **Why this matters:**
+
 - Next.js 15 changed params to Promise-based
 - Dev mode works with old pattern (compatibility layer)
 - Production build FAILS with type error
@@ -1652,6 +1680,7 @@ async function handler(req: Request, { params }: { params: Promise<{ id: string 
 **Phase 2: Before FINAL Commit/Push (Rules 4-6)**
 
 #### Rule 4: ALWAYS Check Git Status Before Pushing
+
 ```bash
 # Check for untracked files BEFORE every push
 git status
@@ -1664,11 +1693,13 @@ git status
 ```
 
 **Why this matters:**
+
 - Files not in Git = don't exist in deployment
 - Local dev works because files exist locally
 - Render clones from Git - missing files = build failure
 
 #### Rule 5: ALWAYS Type-Check Before FINAL Committing
+
 ```bash
 # Run BEFORE FINAL git commit
 npm run type-check
@@ -1679,11 +1710,13 @@ npm run type-check
 ```
 
 **Why this matters:**
+
 - Catches type errors locally in 2-3 minutes
 - vs. 5-10 minutes per error on Render
 - 156 errors × 5 min = 780 minutes saved!
 
 #### Rule 6: ALWAYS Test Build Locally Before FINAL Pushing
+
 ```bash
 # Run BEFORE FINAL git push
 npm run build
@@ -1693,6 +1726,7 @@ npm run build
 ```
 
 **Why this matters:**
+
 - Dev mode hides errors that production build catches
 - Local build test = 3-5 minutes
 - Render build failure = wasted deployment time
@@ -1770,47 +1804,40 @@ npm run build
 ### Key Things to Remember
 
 **Phase 1: Write Code Correctly First**
+
 1. ⭐ **Never accumulate type errors** - Fix as you code, run `npm run type-check` every 30 min
 2. ⭐ **useSearchParams() needs Suspense** - Wrap in `<Suspense>` boundary (NOT direct use)
 3. ⭐ **Route params are Promises in Next.js 15** - Must use `Promise<{ id }>` and `await params`
 
-**Phase 2: Before FINAL Commit/Push**
-4. ⭐ **Git tracking** - Always `git status` before push to check untracked files
-5. ⭐ **Type-check before FINAL commit** - Run `npm run type-check` (2-3 min locally)
-6. ⭐ **Build test before FINAL push** - Run `npm run build` (catches 80% of errors)
+**Phase 2: Before FINAL Commit/Push** 4. ⭐ **Git tracking** - Always `git status` before push to check untracked files 5. ⭐ **Type-check before FINAL commit** - Run `npm run type-check` (2-3 min locally) 6. ⭐ **Build test before FINAL push** - Run `npm run build` (catches 80% of errors)
 
-**Project-Specific Patterns**
-7. **Production-ready** - Deployed on Render (2025-10-27)
-8. **Port 3010** - Dev server runs here (not 3000)
-9. **BYPASS_AUTH=true** - Use in `.env` for local testing only
-10. **Always run `npm run prisma:generate`** after schema changes
-11. **Optimistic updates everywhere** - See `OPTIMISTIC_UPDATE_PATTERN.md`
-12. **Thai terminology matters** - Use correct terms (หน่วยงาน not แผนก)
-13. **Soft deletes only** - Never use `.delete()`, use `update({ data: { deletedAt: new Date() } })`
-14. **Multi-assignee system** - Use `assigneeUserIds` array, not singular `assigneeUserId`
-15. **Use `prisma.history`** NOT `prisma.activityLog`
+**Project-Specific Patterns** 7. **Production-ready** - Deployed on Render (2025-10-27) 8. **Port 3010** - Dev server runs here (not 3000) 9. **BYPASS_AUTH=true** - Use in `.env` for local testing only 10. **Always run `npm run prisma:generate`** after schema changes 11. **Optimistic updates everywhere** - See `OPTIMISTIC_UPDATE_PATTERN.md` 12. **Thai terminology matters** - Use correct terms (หน่วยงาน not แผนก) 13. **Soft deletes only** - Never use `.delete()`, use `update({ data: { deletedAt: new Date() } })` 14. **Multi-assignee system** - Use `assigneeUserIds` array, not singular `assigneeUserId` 15. **Use `prisma.history`** NOT `prisma.activityLog`
 
 ---
 
 ### Most Important Files
 
 **Backend**:
+
 - `src/lib/auth.ts` - Session management
 - `src/lib/permissions.ts` - RBAC system (621 lines)
 - `src/lib/api-middleware.ts` - withAuth() wrapper
 
 **Frontend**:
+
 - `src/hooks/use-*.ts` - React Query hooks (13+ files)
 - `src/stores/use-*-store.ts` - Zustand stores
 - `OPTIMISTIC_UPDATE_PATTERN.md` - UI update pattern ⭐ **MUST READ**
 
 **Documentation**:
+
 - `CLAUDE.md` (this file) - Primary reference
 - [Next.js 15 Migration Lessons](#nextjs-15-migration-lessons) - Deployment best practices ⭐ **MUST READ**
 - `PERMISSION_GUIDELINE.md` - Security & permissions
 - `migration_plan/` - Migration context (complete, but useful reference)
 
 **Configuration**:
+
 - `prisma/schema.prisma` - Database schema (21 tables)
 - `tsconfig.json` - TypeScript config (strict mode enabled)
 - `.env` - Environment variables
@@ -1873,6 +1900,7 @@ This project was migrated from Google Apps Script (GAS) to Next.js 15 + PostgreS
 - Organizational hierarchy structure (กลุ่มภารกิจ → กลุ่มงาน → หน่วยงาน)
 
 **Why these conventions matter:**
+
 - Don't try to "fix" field names to be consistent - database schema uses legacy names
 - Don't change priority numbering - business logic depends on 1-4 scale
 - Always use Thai terms in UI (หน่วยงาน not แผนก)
@@ -1922,11 +1950,13 @@ The `old_project/` folder and `migration_plan/` folder are archived for referenc
 **⚠️ DO NOT USE for implementation patterns!**
 
 Contains original GAS codebase (`.gs` files) for historical reference only. Useful for:
+
 - Understanding original business requirements
 - Verifying calculation formulas
 - Checking Thai text translations
 
 **DO NOT use for:**
+
 - Code patterns (use Next.js 15 patterns in CLAUDE.md instead)
 - API structure (completely redesigned)
 - Database queries (now using Prisma)
@@ -2182,6 +2212,7 @@ const { data, isLoading } = useReports({
 ### v2.33.0 (2025-10-29) - Mobile Layout Additional Features + Turbopack Build Fix
 
 **Major changes:**
+
 - ✅ Implemented 6 mobile navigation enhancements
 - ✅ Fixed critical Windows build error with Turbopack
 - ✅ Created Calendar page with synced task list
@@ -2193,6 +2224,7 @@ const { data, isLoading } = useReports({
 - ✅ Production build successful (62 pages)
 
 **Features Implemented:**
+
 1. **Calendar Page** - Dedicated page with DashboardCalendarWidget at top and task list below, month state synced
 2. **Swipe Navigation** - SwipeablePages component with framer-motion for horizontal swipes between งานของฉัน ⟷ เช็คลิสต์ ⟷ ปฏิทิน ⟷ แจ้งเตือน (50px threshold, velocity detection, desktop unaffected)
 3. **Navigation Reorganization** - Calendar moved to bottom nav position 4, Activities moved to top nav with X button for router.back()
@@ -2201,12 +2233,14 @@ const { data, isLoading } = useReports({
 6. **Mobile-Friendly Modals** - "สร้างโปรเจกต์" and "สร้างงาน" buttons full-width on mobile (w-full md:w-auto)
 
 **Build Fix:**
+
 - **Windows EPERM Error** - Resolved "operation not permitted, scandir Application Data" by switching to Turbopack
 - Updated `package.json` build script: `"build": "npx prisma generate && next build --turbo"`
 - Turbopack build succeeds in ~6 seconds vs webpack failure
 - Added troubleshooting guide for Windows build errors
 
 **Files:**
+
 - Created: 5 files (activities/page.tsx, calendar/page.tsx, checklist/page.tsx, projects/[projectId]/mobile/page.tsx, swipeable-pages.tsx)
 - Modified: 8 files (package.json, dashboard-calendar-widget.tsx, bottom-navigation.tsx, mobile-top-bar.tsx, mobile-menu.tsx, create-project-modal.tsx, create-task-modal.tsx, my-tasks/notifications pages)
 - Updated: 1 doc (CLAUDE.md - added Windows Build Error troubleshooting)
@@ -2216,6 +2250,7 @@ const { data, isLoading } = useReports({
 ### v2.32.0 (2025-10-28) - Mobile Layout Phase 3 Complete
 
 **Major changes:**
+
 - ✅ Completed Phase 3 of mobile layout implementation (3/8 phases, 37.5% complete)
 - ✅ Enhanced mobile-top-bar.tsx with dynamic titles and context actions (~100+ lines)
 - ✅ Dynamic page titles for 10+ routes (Dashboard, My Tasks, Notifications, Users, Reports, Settings, Profile, Department Tasks, Project views)
@@ -2227,6 +2262,7 @@ const { data, isLoading } = useReports({
 - ✅ Updated Current Priority to Phase 4 (Task Panel Mobile)
 
 **Features Implemented:**
+
 - Dynamic titles for all main routes
 - Context-aware action buttons with touch-friendly tap targets
 - Smooth animations: backdrop blur, slide-in, active:scale-95, fade transitions
@@ -2236,6 +2272,7 @@ const { data, isLoading } = useReports({
 **Commit**: 8628624
 
 **Files Modified:**
+
 - Modified: 1 file (mobile-top-bar.tsx)
 - Updated: 2 docs (MOBILE_LAYOUT_DESIGN.md, CLAUDE.md)
 
@@ -2244,6 +2281,7 @@ const { data, isLoading } = useReports({
 ### v2.31.0 (2025-10-28) - Mobile Layout Phase 2 Complete
 
 **Major changes:**
+
 - ✅ Completed Phase 2 of mobile layout implementation (2/8 phases, 25% complete)
 - ✅ Created 3 new pages/components (~700 lines total):
   - `/my-tasks` page (201 lines) - Personal task management with 2 tabs
@@ -2256,6 +2294,7 @@ const { data, isLoading } = useReports({
 - ✅ Updated Current Priority to Phase 3 (Mobile Top Bar Enhancement)
 
 **Features Implemented:**
+
 - My Tasks Page: Shows "งานที่ได้รับ" (Assigned) and "งานที่สร้าง" (Created) in separate tabs
 - Notifications Page: "ทั้งหมด" (All) and "ยังไม่ได้อ่าน" (Unread) tabs with badge counts
 - Hamburger Menu: User profile, workspace selector, nav links, dark mode toggle, logout
@@ -2265,6 +2304,7 @@ const { data, isLoading } = useReports({
 **Commit**: e7070ab
 
 **Files Modified:**
+
 - Created: 4 files (my-tasks/page.tsx, notifications/page.tsx, mobile-menu.tsx, separator.tsx)
 - Modified: 4 files (bottom-navigation.tsx, mobile-top-bar.tsx, package.json, package-lock.json)
 - Updated: 2 docs (MOBILE_LAYOUT_DESIGN.md, CLAUDE.md)
@@ -2274,6 +2314,7 @@ const { data, isLoading } = useReports({
 ### v2.30.0 (2025-10-28) - Mobile Layout Phase 1 Complete
 
 **Major changes:**
+
 - ✅ Implemented responsive layout infrastructure with Hybrid Approach
 - ✅ Created 5 new components (587 lines):
   - use-media-query.ts hook (163 lines)
@@ -2293,6 +2334,7 @@ const { data, isLoading } = useReports({
 ### v2.29.0 (2025-10-28) - Production 403 Forbidden Fix
 
 **Major changes:**
+
 - ✅ Fixed critical production bug where all POST/PATCH/DELETE requests were blocked with 403 Forbidden
 - ✅ Root cause: CSRF/CORS protection configs had incorrect production domains
 - ✅ Updated `allowedOrigins` in csrf.ts and middleware.ts to include:
@@ -2302,6 +2344,7 @@ const { data, isLoading } = useReports({
 - ✅ Added troubleshooting guide for production 403 errors
 
 **Commits:**
+
 - 8961bbf: Initial fix - added projectflows.app domain
 - 3959bb7: Typo correction - render.com → onrender.com
 
@@ -2309,6 +2352,7 @@ const { data, isLoading } = useReports({
 Unblocked all state-changing operations in production (create/edit/delete tasks, projects, users). CSRF/CORS protection remains fully active with correct domain whitelist.
 
 **Files Modified:**
+
 - src/lib/csrf.ts (updated allowedOrigins)
 - src/middleware.ts (updated allowedOrigins)
 - CLAUDE.md (added troubleshooting entry, updated version)
@@ -2319,6 +2363,7 @@ After implementing security features like CSRF/CORS protection, always verify pr
 ### v2.28.0 (2025-10-28) - Department Tasks View Assignee Selector Sync Fix
 
 **Major changes:**
+
 - ✅ Fixed critical cache invalidation bug in Department Tasks View
 - ✅ Task Panel assignee changes now sync to all views (List, Board, Calendar, Department Tasks, Dashboard)
 - ✅ Added `departmentTasksKeys.all` invalidation to `useUpdateTask` in use-tasks.ts
@@ -2327,6 +2372,7 @@ After implementing security features like CSRF/CORS protection, always verify pr
 
 **Lesson Learned:**
 When mutations don't sync between views, check which query cache each view uses:
+
 - List/Board/Calendar Views → `projectKeys.board`
 - Department Tasks View → `departmentTasksKeys.list`
 - Dashboard Widgets → `dashboardKeys.all`
@@ -2335,12 +2381,14 @@ When mutations don't sync between views, check which query cache each view uses:
 Mutation hooks must invalidate ALL relevant caches, not just the one used by the current view.
 
 **Files Modified:**
+
 - src/hooks/use-tasks.ts (added departmentTasksKeys.all invalidation)
 - src/hooks/use-department-tasks.ts (added taskKeys/projectKeys/dashboardKeys invalidation)
 
 ### v2.27.0 (2025-10-28) - Dashboard Checklist Sync + Profile Settings UX
 
 **Major changes:**
+
 - ✅ Fixed Dashboard Checklist Widget not syncing with Task Panel checklist mutations
 - ✅ Fixed Profile Settings page autocomplete issues and name splitting logic
 - ✅ All dashboard widgets now update instantly when checklist items change
@@ -2348,6 +2396,7 @@ Mutation hooks must invalidate ALL relevant caches, not just the one used by the
 ### v2.26.0 (2025-10-28) - Assignee Selector Bug Fixes + Refresh Fix + Checklist Widget
 
 **Major changes:**
+
 - ✅ Fixed Task Panel assignee selector showing incorrect values after save
 - ✅ Fixed inline editor assignee selector not updating optimistically
 - ✅ Fixed refresh button making dashboard content disappear
@@ -2356,6 +2405,7 @@ Mutation hooks must invalidate ALL relevant caches, not just the one used by the
 ### v2.25.0 (2025-10-27) - Critical Development Rules Reorganization
 
 **Major changes:**
+
 - ✅ Reorganized 6 Critical Development Rules into 2 phases for clarity
 - ✅ **Phase 1: Write Code Correctly First** (Rules 1-3)
   - Rule 1: Never Accumulate Type Errors (moved from Rule 6)
@@ -2370,6 +2420,7 @@ Mutation hooks must invalidate ALL relevant caches, not just the one used by the
 - ✅ Updated "Key Things to Remember" with phase groupings
 
 **Rationale:**
+
 - Phase 1 focuses on prevention during development (write correct code from the start)
 - Phase 2 focuses on validation before deployment (catch errors before pushing)
 - "FINAL" keyword emphasizes these are the last checkpoints before commit/push
@@ -2378,6 +2429,7 @@ Mutation hooks must invalidate ALL relevant caches, not just the one used by the
 ### v2.24.0 (2025-10-27) - Quick Start & Critical Development Rules Update
 
 **Major changes:**
+
 - ✅ Completely rewrote "Quick Start for New Claude Instances" section
 - ✅ Added new "Critical Development Rules (Next.js 15)" with 6 mandatory rules
 - ✅ Updated project status to Production-Ready (deployed on Render)
@@ -2387,6 +2439,7 @@ Mutation hooks must invalidate ALL relevant caches, not just the one used by the
 - ✅ Updated all references to emphasize type-check and build testing before deployment
 
 **Key additions:**
+
 - 6 Critical Development Rules to prevent deployment failures
 - Mandatory type-check and build testing before commit/push
 - Promise-based route params pattern examples
@@ -2399,6 +2452,7 @@ Establish Next.js 15 Migration Lessons as the foundational coding standard for a
 ### v2.23.0 (2025-10-27) - TypeScript Error Prevention & Deployment Success
 
 **Major changes:**
+
 - ✅ Successfully deployed to production on Render
 - ✅ Fixed 156 TypeScript errors (100% reduction)
 - ✅ Added comprehensive TypeScript Error Prevention strategies
@@ -2408,6 +2462,7 @@ Establish Next.js 15 Migration Lessons as the foundational coding standard for a
 ### v2.22.0 (2025-10-27) - Next.js 15 Migration Complete
 
 **Major changes:**
+
 - ✅ Completed Next.js 15 migration lessons documentation
 - ✅ Fixed middleware types for Next.js 15 compatibility
 - ✅ Updated 16 API routes to Promise-based params

@@ -15,6 +15,7 @@ import {
   handleApiError,
 } from '@/lib/api-response';
 import { checkPermission } from '@/lib/permissions';
+import { buildFiscalYearFilter } from '@/lib/fiscal-year';
 
 const createTaskSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255),
@@ -44,6 +45,12 @@ async function getHandler(
   const assigneeUserId = searchParams.get('assigneeUserId') || undefined;
   const isClosed = searchParams.get('isClosed');
   const parentTaskId = searchParams.get('parentTaskId') || undefined;
+  const fiscalYearsParam = searchParams.get('fiscalYears');
+
+  // Parse fiscal years: "2567,2568" → [2567, 2568]
+  const fiscalYears = fiscalYearsParam
+    ? fiscalYearsParam.split(',').map(Number).filter(n => !isNaN(n))
+    : [];
 
   // Check permission
   const hasAccess = await checkPermission(
@@ -60,6 +67,7 @@ async function getHandler(
   const where: any = {
     projectId,
     deletedAt: null,
+    ...buildFiscalYearFilter(fiscalYears),
   };
 
   if (statusId) where.statusId = statusId;
