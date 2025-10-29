@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, FolderKanban } from "lucide-react";
 import { useUIStore } from "@/stores/use-ui-store";
 import { useToggleChecklistItem } from "@/hooks/use-dashboard";
 import type { MyChecklistGroup } from "@/types/dashboard";
@@ -157,9 +157,12 @@ function TaskChecklistGroup({ group }: { group: MyChecklistGroup }) {
           {/* Left: Task name and project */}
           <div className="flex-1 min-w-0">
             <h4 className="font-medium text-sm truncate">{group.taskName}</h4>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">
-              {group.projectName}
-            </p>
+            <div className="flex items-center gap-1 mt-0.5">
+              <FolderKanban className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              <p className="text-xs text-muted-foreground truncate">
+                {group.projectName}
+              </p>
+            </div>
           </div>
           {/* Right: Progress bar (same line, same length as header) */}
           <div className="flex items-center gap-3 flex-shrink-0">

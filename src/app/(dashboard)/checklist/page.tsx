@@ -19,7 +19,7 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ListChecks, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Loader2, ListChecks, ChevronRight, CheckCircle2, FolderKanban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SwipeablePages } from '@/components/layout/swipeable-pages';
 
@@ -86,9 +86,12 @@ export default function ChecklistPage() {
                       <h3 className="font-medium text-sm line-clamp-2 mb-1">
                         {group.taskName}
                       </h3>
-                      <p className="text-xs text-muted-foreground">
-                        {group.projectName}
-                      </p>
+                      <div className="flex items-center gap-1">
+                        <FolderKanban className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                        <p className="text-xs text-muted-foreground truncate">
+                          {group.projectName}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {isComplete && (
