@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, Cookie, FileText, Settings } from "lucide-react";
 import { CookieSettingsModal } from "./cookie-settings-modal";
 
@@ -59,8 +58,8 @@ export function PrivacyNoticeModal({
             </div>
           </DialogHeader>
 
-          <Tabs defaultValue="privacy" className="flex-1 flex flex-col min-h-0">
-            <div className="px-4 sm:px-6 pt-3 sm:pt-4 flex-shrink-0">
+          <Tabs defaultValue="privacy" className="flex-1">
+            <div className="px-4 sm:px-6 pt-3 sm:pt-4">
               <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
                 <TabsTrigger value="privacy" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                   <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
@@ -73,7 +72,7 @@ export function PrivacyNoticeModal({
               </TabsList>
             </div>
 
-            <ScrollArea className="flex-1 min-h-0 px-4 sm:px-6 py-3 sm:py-4">
+            <div className="overflow-y-auto max-h-[50vh] sm:max-h-[55vh] px-4 sm:px-6 py-3 sm:py-4">
               <TabsContent value="privacy" className="mt-0 space-y-4 text-sm">
                 <section>
                   <h3 className="font-semibold text-base mb-2">1. ข้อมูลที่เราเก็บรวบรวม</h3>
@@ -256,7 +255,7 @@ export function PrivacyNoticeModal({
                   </p>
                 </section>
               </TabsContent>
-            </ScrollArea>
+            </div>
           </Tabs>
 
           <div className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-muted/30 flex flex-col sm:flex-row gap-2 flex-shrink-0">
