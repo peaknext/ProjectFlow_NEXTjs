@@ -171,9 +171,13 @@ export function TaskPanel() {
       {/* Panel */}
       <div
         className={cn(
-          'fixed top-0 right-0 h-full w-full max-w-3xl',
+          'fixed top-0 right-0 h-full w-full',
+          // Desktop: slide panel with max-width
+          'md:max-w-3xl md:rounded-l-xl',
+          // Mobile: full-screen (no rounded corners, no max-width)
+          'max-md:max-w-none max-md:rounded-none',
           'bg-background/90 backdrop-blur-sm',
-          'rounded-l-xl shadow-2xl z-[101]',
+          'shadow-2xl z-[101]',
           'flex flex-col',
           'transform transition-transform duration-300 ease-in-out',
           isVisible ? 'translate-x-0' : 'translate-x-full'

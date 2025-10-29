@@ -44,19 +44,44 @@ export function UsersTable({
 
   if (isLoading) {
     return (
-      <div className="bg-card rounded-lg border border-border flex-1 overflow-hidden">
-        <div className="p-6 space-y-4">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4">
-              <div className="h-10 w-10 bg-muted animate-pulse rounded-full" />
-              <div className="flex-1">
-                <div className="h-4 w-48 bg-muted animate-pulse rounded-md mb-2" />
-                <div className="h-3 w-64 bg-muted animate-pulse rounded-md" />
+      <div className="flex-1 overflow-hidden">
+        {/* Desktop Loading - Table Skeleton */}
+        <div className="max-md:hidden bg-card rounded-lg border border-border">
+          <div className="p-6 space-y-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="h-10 w-10 bg-muted animate-pulse rounded-full" />
+                <div className="flex-1">
+                  <div className="h-4 w-48 bg-muted animate-pulse rounded-md mb-2" />
+                  <div className="h-3 w-64 bg-muted animate-pulse rounded-md" />
+                </div>
+                <div className="h-6 w-24 bg-muted animate-pulse rounded-full" />
+                <div className="h-8 w-24 bg-muted animate-pulse rounded-md" />
+                <div className="flex gap-2">
+                  <div className="h-8 w-8 bg-muted animate-pulse rounded-md" />
+                </div>
               </div>
-              <div className="h-6 w-24 bg-muted animate-pulse rounded-full" />
-              <div className="h-8 w-24 bg-muted animate-pulse rounded-md" />
-              <div className="flex gap-2">
-                <div className="h-8 w-8 bg-muted animate-pulse rounded-md" />
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Loading - Card Skeleton */}
+        <div className="md:hidden space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="bg-card rounded-lg border border-border p-4">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="h-12 w-12 bg-muted animate-pulse rounded-full flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="h-4 w-32 bg-muted animate-pulse rounded-md mb-2" />
+                  <div className="h-3 w-24 bg-muted animate-pulse rounded-md mb-2" />
+                  <div className="h-6 w-20 bg-muted animate-pulse rounded-md" />
+                </div>
+                <div className="h-8 w-8 bg-muted animate-pulse rounded-md flex-shrink-0" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-muted animate-pulse rounded-md" />
+                <div className="h-4 w-3/4 bg-muted animate-pulse rounded-md" />
+                <div className="h-4 w-1/2 bg-muted animate-pulse rounded-md" />
               </div>
             </div>
           ))}
@@ -82,75 +107,85 @@ export function UsersTable({
   }
 
   return (
-    <div className="bg-card rounded-lg border border-border h-full flex flex-col overflow-hidden">
-      {/* Fixed Header */}
-      <div className="border-b border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[30%]">
-                <Button
-                  variant="ghost"
-                  onClick={() => onSort("name")}
-                  className="h-auto p-0 hover:bg-transparent"
-                >
-                  <span className="font-semibold">ชื่อ</span>
-                  <SortIcon column="name" />
-                </Button>
-              </TableHead>
-              <TableHead className="w-[25%]">
-                <Button
-                  variant="ghost"
-                  onClick={() => onSort("email")}
-                  className="h-auto p-0 hover:bg-transparent"
-                >
-                  <span className="font-semibold">อีเมล</span>
-                  <SortIcon column="email" />
-                </Button>
-              </TableHead>
-              <TableHead className="w-[20%]">
-                <Button
-                  variant="ghost"
-                  onClick={() => onSort("department")}
-                  className="h-auto p-0 hover:bg-transparent"
-                >
-                  <span className="font-semibold">หน่วยงาน</span>
-                  <SortIcon column="department" />
-                </Button>
-              </TableHead>
-              <TableHead className="w-[12%]">
-                <Button
-                  variant="ghost"
-                  onClick={() => onSort("role")}
-                  className="h-auto p-0 hover:bg-transparent"
-                >
-                  <span className="font-semibold">บทบาท</span>
-                  <SortIcon column="role" />
-                </Button>
-              </TableHead>
-              <TableHead className="w-[8%]">
-                <span className="font-semibold">สถานะ</span>
-              </TableHead>
-              {/* Actions - Only show for ADMIN */}
-              {showActions && (
-                <TableHead className="w-[5%] text-right">
-                  <span className="font-semibold">Actions</span>
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Desktop - Table View */}
+      <div className="max-md:hidden bg-card rounded-lg border border-border h-full flex flex-col overflow-hidden">
+        {/* Fixed Header */}
+        <div className="border-b border-border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[30%]">
+                  <Button
+                    variant="ghost"
+                    onClick={() => onSort("name")}
+                    className="h-auto p-0 hover:bg-transparent"
+                  >
+                    <span className="font-semibold">ชื่อ</span>
+                    <SortIcon column="name" />
+                  </Button>
                 </TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
-        </Table>
+                <TableHead className="w-[25%]">
+                  <Button
+                    variant="ghost"
+                    onClick={() => onSort("email")}
+                    className="h-auto p-0 hover:bg-transparent"
+                  >
+                    <span className="font-semibold">อีเมล</span>
+                    <SortIcon column="email" />
+                  </Button>
+                </TableHead>
+                <TableHead className="w-[20%]">
+                  <Button
+                    variant="ghost"
+                    onClick={() => onSort("department")}
+                    className="h-auto p-0 hover:bg-transparent"
+                  >
+                    <span className="font-semibold">หน่วยงาน</span>
+                    <SortIcon column="department" />
+                  </Button>
+                </TableHead>
+                <TableHead className="w-[12%]">
+                  <Button
+                    variant="ghost"
+                    onClick={() => onSort("role")}
+                    className="h-auto p-0 hover:bg-transparent"
+                  >
+                    <span className="font-semibold">บทบาท</span>
+                    <SortIcon column="role" />
+                  </Button>
+                </TableHead>
+                <TableHead className="w-[8%]">
+                  <span className="font-semibold">สถานะ</span>
+                </TableHead>
+                {/* Actions - Only show for ADMIN */}
+                {showActions && (
+                  <TableHead className="w-[5%] text-right">
+                    <span className="font-semibold">Actions</span>
+                  </TableHead>
+                )}
+              </TableRow>
+            </TableHeader>
+          </Table>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="overflow-auto flex-1">
+          <Table>
+            <TableBody>
+              {users.map((user) => (
+                <UserRow key={user.id} user={user} viewMode="table" />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      {/* Scrollable Body */}
-      <div className="overflow-auto flex-1">
-        <Table>
-          <TableBody>
-            {users.map((user) => (
-              <UserRow key={user.id} user={user} />
-            ))}
-          </TableBody>
-        </Table>
+      {/* Mobile - Card View */}
+      <div className="md:hidden flex-1 overflow-auto space-y-3">
+        {users.map((user) => (
+          <UserRow key={user.id} user={user} viewMode="card" />
+        ))}
       </div>
     </div>
   );

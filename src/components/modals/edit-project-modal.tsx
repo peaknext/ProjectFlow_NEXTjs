@@ -21,7 +21,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Save, Loader2, Palette, Eye } from "lucide-react";
+import { X, Save, Loader2, Palette, Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { useIsMobile } from "@/hooks/use-media-query";
 import {
   Popover,
   PopoverContent,
@@ -100,6 +101,7 @@ export function EditProjectModal() {
   const closeEditProjectModal = useUIStore(
     (state) => state.closeEditProjectModal
   );
+  const isMobile = useIsMobile();
 
   // Animation state (same as CreateProjectModal)
   const [isVisible, setIsVisible] = useState(false);
@@ -256,23 +258,47 @@ export function EditProjectModal() {
         )}
       >
         {/* Header */}
-        <header className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 rounded-t-xl">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <header className={cn(
+          "flex items-center justify-between p-3 md:p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900",
+          // Desktop: rounded top-left corner
+          "md:rounded-tl-xl",
+          // Mobile: no rounded corners (full-screen)
+          "max-md:rounded-none"
+        )}>
+          <div className="flex items-center gap-2">
+            {/* Mobile: Back button */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+                title="กลับ"
+                className="rounded-full"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
+            <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100">
               แก้ไขโปรเจกต์
             </h2>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="ปิด"
-          >
-            <X className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-          </button>
+
+          {/* Desktop: Close Button (X) */}
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              title="ปิด"
+              className="rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
         </header>
 
         {/* Body (Scrollable) */}
-        <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           {isLoading && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -298,10 +324,10 @@ export function EditProjectModal() {
           )}
 
           {project && (
-            <form onSubmit={handleFormSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleFormSubmit(onSubmit)} className="space-y-4 md:space-y-6">
               {/* Read-Only: Project Information (Blue info box) */}
-              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/50 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 md:p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 text-xs md:text-sm">
                   <div>
                     <span className="text-muted-foreground">ชื่อโปรเจกต์:</span>
                     <span className="ml-2 font-medium">{project.name}</span>
@@ -329,10 +355,10 @@ export function EditProjectModal() {
 
               {/* Editable: Description */}
               <div>
-                <Label htmlFor="description" className="text-sm font-medium">
+                <Label htmlFor="description" className="text-xs md:text-sm font-medium">
                   คำอธิบาย
                   {!canEdit && (
-                    <span className="ml-2 text-xs text-amber-600 dark:text-amber-500">
+                    <span className="ml-2 text-[10px] md:text-xs text-amber-600 dark:text-amber-500">
                       (ดูอย่างเดียว)
                     </span>
                   )}
@@ -344,7 +370,7 @@ export function EditProjectModal() {
                   {...register("description")}
                   disabled={!canEdit}
                   className={cn(
-                    "mt-1 border-slate-300 dark:border-slate-700",
+                    "mt-1.5 border-slate-300 dark:border-slate-700",
                     canEdit
                       ? "bg-white dark:bg-slate-800"
                       : "bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed text-muted-foreground"
@@ -389,25 +415,25 @@ export function EditProjectModal() {
               </div>
 
               {/* Editable: Phases Section */}
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-6 space-y-4">
-                <h3 className="text-lg font-semibold">
+              <div className="border-t border-slate-200 dark:border-slate-700 pt-4 md:pt-6 space-y-3 md:space-y-4">
+                <h3 className="text-base md:text-lg font-semibold">
                   ห้วงเวลาดำเนินงาน
-                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                  <span className="text-xs md:text-sm font-normal text-muted-foreground ml-2 block md:inline mt-1 md:mt-0">
                     แก้ไขวันที่เริ่มต้นและสิ้นสุดของแต่ละ Phase
                   </span>
                 </h3>
 
                 {/* Phases Container */}
                 {project.phases && project.phases.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3 md:space-y-4">
                     {project.phases.map((phase, index) => (
                       <div
                         key={phase.id}
-                        className="flex items-end gap-4 p-4 rounded-lg bg-black/5 dark:bg-white/5"
+                        className="flex flex-col md:flex-row md:items-end gap-3 md:gap-4 p-3 md:p-4 rounded-lg bg-black/5 dark:bg-white/5"
                       >
                         {/* Read-only Phase Name */}
                         <div className="flex-1">
-                          <Label className="block text-sm font-medium mb-2">
+                          <Label className="block text-xs md:text-sm font-medium mb-1.5">
                             ชื่อ
                           </Label>
                           <Input
@@ -420,7 +446,7 @@ export function EditProjectModal() {
 
                         {/* Editable: Start Date */}
                         <div className="flex-1">
-                          <Label className="block text-sm font-medium mb-2">
+                          <Label className="block text-xs md:text-sm font-medium mb-1.5">
                             วันที่เริ่มต้น
                           </Label>
                           <Controller
@@ -445,7 +471,7 @@ export function EditProjectModal() {
 
                         {/* Editable: End Date */}
                         <div className="flex-1">
-                          <Label className="block text-sm font-medium mb-2">
+                          <Label className="block text-xs md:text-sm font-medium mb-1.5">
                             วันที่สิ้นสุด
                           </Label>
                           <Controller
@@ -472,16 +498,16 @@ export function EditProjectModal() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p className="text-sm">โปรเจกต์นี้ยังไม่มีข้อมูล Phase</p>
+                    <p className="text-xs md:text-sm">โปรเจกต์นี้ยังไม่มีข้อมูล Phase</p>
                   </div>
                 )}
               </div>
 
               {/* Editable: Statuses Section */}
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-6 space-y-4">
-                <h3 className="text-lg font-semibold">
+              <div className="border-t border-slate-200 dark:border-slate-700 pt-4 md:pt-6 space-y-3 md:space-y-4">
+                <h3 className="text-base md:text-lg font-semibold">
                   สถานะงาน
-                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                  <span className="text-xs md:text-sm font-normal text-muted-foreground ml-2 block md:inline mt-1 md:mt-0">
                     แก้ไขสีของแต่ละสถานะ
                   </span>
                 </h3>
@@ -492,11 +518,11 @@ export function EditProjectModal() {
                     {project.statuses.map((status, index) => (
                       <div
                         key={status.id}
-                        className="flex items-center gap-4 p-4 rounded-lg bg-black/5 dark:bg-white/5"
+                        className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-3 md:p-4 rounded-lg bg-black/5 dark:bg-white/5"
                       >
                         {/* Read-only Status Name */}
                         <div className="flex-1">
-                          <Label className="block text-sm font-medium mb-2">
+                          <Label className="block text-xs md:text-sm font-medium mb-1.5">
                             ชื่อสถานะ
                           </Label>
                           <Input
@@ -509,7 +535,7 @@ export function EditProjectModal() {
 
                         {/* Editable: Color */}
                         <div className="flex-shrink-0">
-                          <Label className="block text-sm font-medium mb-2">
+                          <Label className="block text-xs md:text-sm font-medium mb-1.5">
                             สี
                           </Label>
                           <Controller
@@ -522,7 +548,7 @@ export function EditProjectModal() {
                                     type="button"
                                     disabled={!canEdit}
                                     className={cn(
-                                      "flex items-center gap-2 px-3 py-2 border rounded-lg h-[46px]",
+                                      "flex items-center gap-2 px-3 py-2 border rounded-lg h-10",
                                       canEdit
                                         ? "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
                                         : "bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 cursor-not-allowed"
@@ -562,7 +588,7 @@ export function EditProjectModal() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p className="text-sm">โปรเจกต์นี้ยังไม่มีข้อมูล Status</p>
+                    <p className="text-xs md:text-sm">โปรเจกต์นี้ยังไม่มีข้อมูล Status</p>
                   </div>
                 )}
               </div>
@@ -571,9 +597,15 @@ export function EditProjectModal() {
         </div>
 
         {/* Footer */}
-        <footer className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0 rounded-b-xl">
+        <footer className={cn(
+          "flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-0 p-3 md:p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0",
+          // Desktop: rounded bottom corners
+          "md:rounded-b-xl",
+          // Mobile: no rounded corners
+          "max-md:rounded-none"
+        )}>
           {!canEdit && (
-            <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
+            <div className="flex items-center gap-2 text-xs md:text-sm text-amber-600 dark:text-amber-500">
               <Eye className="h-4 w-4" />
               <span>คุณกำลังดูข้อมูลแบบอ่านอย่างเดียว</span>
             </div>
@@ -582,12 +614,12 @@ export function EditProjectModal() {
             <>
               {/* Show unsaved changes indicator */}
               {isDirty && (
-                <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
+                <div className="flex items-center gap-2 text-xs md:text-sm text-amber-600 dark:text-amber-500">
                   <span className="w-2 h-2 rounded-full bg-amber-600 dark:bg-amber-500 animate-pulse"></span>
                   <span>มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</span>
                 </div>
               )}
-              {!isDirty && <div></div>}
+              {!isDirty && <div className="hidden md:block"></div>}
 
               {/* Save button - disabled when no changes */}
               <Button
@@ -596,16 +628,16 @@ export function EditProjectModal() {
                 disabled={
                   !isDirty || editProjectMutation.isPending || isLoading
                 }
-                className="flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg shadow-md h-[46px] min-w-[150px]"
+                className="flex items-center justify-center px-6 py-2.5 text-sm md:text-base font-semibold rounded-lg shadow-md h-10 md:h-[46px] w-full md:w-auto md:min-w-[150px]"
               >
                 {editProjectMutation.isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <Loader2 className="mr-2 h-4 md:h-5 w-4 md:w-5 animate-spin" />
                     <span>กำลังบันทึก...</span>
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-5 w-5" />
+                    <Save className="mr-2 h-4 md:h-5 w-4 md:w-5" />
                     <span>บันทึก</span>
                   </>
                 )}

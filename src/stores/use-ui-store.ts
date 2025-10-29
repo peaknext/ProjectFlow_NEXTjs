@@ -58,6 +58,10 @@ interface UIState {
   // Pinned tasks (per user)
   pinnedTaskIds: string[];
 
+  // Mobile UI states
+  isReportFilterOpen: boolean;
+  isUsersFilterOpen: boolean;
+
   // Getters (convenience)
   createTaskModal: ModalState['createTask'];
 
@@ -97,6 +101,10 @@ interface UIState {
   setPinnedTasks: (taskIds: string[]) => void;
   togglePinTask: (taskId: string) => void;
 
+  // Actions - Mobile UI
+  toggleReportFilter: () => void;
+  toggleUsersFilter: () => void;
+
   // Actions - Reset
   reset: () => void;
 }
@@ -121,6 +129,8 @@ export const useUIStore = create<UIState>()(
       updatingTask: new Set(),
       modals: initialModalState,
       pinnedTaskIds: [],
+      isReportFilterOpen: false,
+      isUsersFilterOpen: false,
 
       // Getters
       get createTaskModal() {
@@ -295,6 +305,17 @@ export const useUIStore = create<UIState>()(
           return { pinnedTaskIds: newPinned };
         }),
 
+      // Mobile UI actions
+      toggleReportFilter: () =>
+        set((state) => ({
+          isReportFilterOpen: !state.isReportFilterOpen,
+        })),
+
+      toggleUsersFilter: () =>
+        set((state) => ({
+          isUsersFilterOpen: !state.isUsersFilterOpen,
+        })),
+
       // Reset
       reset: () =>
         set({
@@ -304,6 +325,8 @@ export const useUIStore = create<UIState>()(
           updatingTask: new Set(),
           modals: initialModalState,
           pinnedTaskIds: [],
+          isReportFilterOpen: false,
+          isUsersFilterOpen: false,
         }),
     }),
     {

@@ -245,8 +245,8 @@ export function UsersView() {
 
   return (
     <div className="h-full flex flex-col p-0">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+      {/* Header - Desktop Only */}
+      <div className="max-md:hidden flex items-center justify-between mb-6 flex-shrink-0">
         <div>
           <h1 className="text-3xl font-bold">จัดการบุคลากร</h1>
           <p className="text-muted-foreground mt-1">

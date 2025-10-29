@@ -90,7 +90,7 @@ export function StatusSlider({
       .join(", ");
 
     // Neutral color for unfilled portion (dark mode aware)
-    const neutralColor = "#e5e7eb"; // Will be overridden by CSS for dark mode
+    const neutralColor = "#e5e7eb";
 
     // If slider is not at the end, add neutral color for remaining portion
     if (sliderValue < totalSteps) {
@@ -134,7 +134,7 @@ export function StatusSlider({
   const totalSteps = sortedStatuses.length - 1;
 
   return (
-    <div className={cn("w-full space-y-2", className)}>
+    <div className={cn("w-full space-y-1", className)}>
       {/* Current Status Feedback */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -149,7 +149,7 @@ export function StatusSlider({
       </div>
 
       {/* Slider Container */}
-      <div className="status-slider-container px-10 pt-10 pb-20">
+      <div className="status-slider-container px-6 pt-6 pb-12">
         {/* Range Input */}
         <input
           type="range"

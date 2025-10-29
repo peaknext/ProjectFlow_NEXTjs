@@ -39,7 +39,14 @@ export function TaskPanelTabs({ defaultTab = 'details', onTabChange }: TaskPanel
   };
 
   return (
-    <div className="border-b border-slate-200 dark:border-slate-800">
+    <div
+      className={cn(
+        'border-b border-slate-200 dark:border-slate-800',
+        // Mobile: sticky tabs at top when scrolling
+        'max-md:sticky max-md:top-0 max-md:z-10',
+        'max-md:bg-white max-md:dark:bg-slate-900'
+      )}
+    >
       <nav className="flex px-4 -mb-px overflow-x-auto">
         <button
           onClick={() => handleTabClick('details')}

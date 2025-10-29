@@ -9,8 +9,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { DateInput } from "@/components/ui/date-picker-popover";
+import { Filter } from "lucide-react";
 import { useWorkspace } from "@/hooks/use-workspace";
+import { useUIStore } from "@/stores/use-ui-store";
 import { formatDateForAPI, getFiscalYearStartDate } from "@/hooks/use-reports";
 import type { ReportFilters } from "@/hooks/use-reports";
 
@@ -23,6 +26,9 @@ export function ReportToolbar({
   filters,
   onFiltersChange,
 }: ReportToolbarProps) {
+  // State for mobile filter toggle (from global UI store)
+  const isFilterOpen = useUIStore((state) => state.isReportFilterOpen);
+
   // Fetch workspace data (filtered by user's scope)
   const { data: workspace } = useWorkspace();
 
@@ -111,16 +117,17 @@ export function ReportToolbar({
   };
 
   return (
-    <div className="bg-card border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-6 py-4 flex-shrink-0">
-      {/* Left side: Title and Description */}
-      <div className="min-w-0">
-        {/* Title */}
-        <h1 className="text-2xl font-bold">รายงาน</h1>
-        <p className="text-sm text-muted-foreground mt-1">ภาพรวมและสถิติ</p>
-      </div>
+    <>
+      {/* Desktop - Always Visible */}
+      <div className="max-md:hidden bg-card border-b flex flex-col gap-4 px-6 py-4 flex-shrink-0">
+        {/* Header: Title and Description */}
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold">รายงาน</h1>
+          <p className="text-sm text-muted-foreground mt-1">ภาพรวมและสถิติ</p>
+        </div>
 
-      {/* Right side: Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
+        {/* Filters Section */}
+        <div className="flex items-center flex-wrap gap-3">
         {/* Start Date */}
         <div className="flex flex-col gap-1">
           <Label htmlFor="start-date" className="text-xs text-muted-foreground">
@@ -130,7 +137,7 @@ export function ReportToolbar({
             value={startDate}
             onChange={handleStartDateChange}
             placeholder="เลือกวันที่เริ่มต้น"
-            className="w-[200px] h-10"
+            className="w-full md:w-[200px] h-10"
           />
         </div>
 
@@ -143,7 +150,7 @@ export function ReportToolbar({
             value={endDate}
             onChange={handleEndDateChange}
             placeholder="เลือกวันที่สิ้นสุด"
-            className="w-[200px] h-10"
+            className="w-full md:w-[200px] h-10"
           />
         </div>
 
@@ -159,7 +166,7 @@ export function ReportToolbar({
             value={filters.missionGroupId || "all"}
             onValueChange={handleMissionGroupChange}
           >
-            <SelectTrigger id="mission-group" className="w-[200px] h-10">
+            <SelectTrigger id="mission-group" className="w-full md:w-[200px] h-10">
               <SelectValue placeholder="ทั้งหมด" />
             </SelectTrigger>
             <SelectContent>
@@ -183,7 +190,7 @@ export function ReportToolbar({
             onValueChange={handleDivisionChange}
             disabled={!filters.missionGroupId}
           >
-            <SelectTrigger id="division" className="w-[200px] h-10">
+            <SelectTrigger id="division" className="w-full md:w-[200px] h-10">
               <SelectValue placeholder="ทั้งหมด" />
             </SelectTrigger>
             <SelectContent>
@@ -220,7 +227,123 @@ export function ReportToolbar({
             </SelectContent>
           </Select>
         </div>
+        </div>
       </div>
-    </div>
+
+      {/* Mobile - Toggle with Animation */}
+      <div
+        className={`
+          md:hidden bg-card border-b flex flex-col px-4 flex-shrink-0
+          transition-all duration-300 ease-in-out
+          ${isFilterOpen
+            ? "gap-4 py-3 max-h-[1000px] opacity-100"
+            : "gap-0 py-0 max-h-0 opacity-0 overflow-hidden"
+          }
+        `}
+      >
+        {/* Filters Section - Mobile */}
+        <div className="grid grid-cols-1 gap-3">
+          {/* Start Date */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="start-date-mobile" className="text-xs text-muted-foreground">
+              วันที่เริ่มต้น
+            </Label>
+            <DateInput
+              value={startDate}
+              onChange={handleStartDateChange}
+              placeholder="เลือกวันที่เริ่มต้น"
+              className="w-full h-10"
+            />
+          </div>
+
+          {/* End Date */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="end-date-mobile" className="text-xs text-muted-foreground">
+              วันที่สิ้นสุด
+            </Label>
+            <DateInput
+              value={endDate}
+              onChange={handleEndDateChange}
+              placeholder="เลือกวันที่สิ้นสุด"
+              className="w-full h-10"
+            />
+          </div>
+
+          {/* Mission Group */}
+          <div className="flex flex-col gap-1">
+            <Label
+              htmlFor="mission-group-mobile"
+              className="text-xs text-muted-foreground"
+            >
+              กลุ่มภารกิจ
+            </Label>
+            <Select
+              value={filters.missionGroupId || "all"}
+              onValueChange={handleMissionGroupChange}
+            >
+              <SelectTrigger id="mission-group-mobile" className="w-full h-10">
+                <SelectValue placeholder="ทั้งหมด" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                {missionGroups.map((mg) => (
+                  <SelectItem key={mg.id} value={mg.id}>
+                    {mg.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Division */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="division-mobile" className="text-xs text-muted-foreground">
+              กลุ่มงาน
+            </Label>
+            <Select
+              value={filters.divisionId || "all"}
+              onValueChange={handleDivisionChange}
+              disabled={!filters.missionGroupId}
+            >
+              <SelectTrigger id="division-mobile" className="w-full h-10">
+                <SelectValue placeholder="ทั้งหมด" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                {filteredDivisions.map((div) => (
+                  <SelectItem key={div.id} value={div.id}>
+                    {div.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Department */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="department-mobile" className="text-xs text-muted-foreground">
+              หน่วยงาน
+            </Label>
+            <Select
+              value={filters.departmentId || "all"}
+              onValueChange={handleDepartmentChange}
+              disabled={!filters.divisionId}
+            >
+              <SelectTrigger id="department-mobile" className="w-full h-10">
+                <SelectValue placeholder="ทั้งหมด" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                {filteredDepartments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

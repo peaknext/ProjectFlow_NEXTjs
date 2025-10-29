@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CreateTaskButton } from "@/components/common/create-task-button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { DashboardStatsCards } from "@/components/dashboard/dashboard-stats-cards";
 import { OverdueTasksAlert } from "@/components/dashboard/overdue-tasks-alert";
 import { PinnedTasksWidget } from "@/components/dashboard/pinned-tasks-widget";
@@ -13,10 +14,13 @@ import { DashboardCalendarWidget } from "@/components/dashboard/dashboard-calend
 import { RecentActivitiesWidget } from "@/components/dashboard/recent-activities-widget";
 import { MyChecklistWidget } from "@/components/dashboard/my-checklist-widget";
 import { useDashboard, useRefreshDashboard } from "@/hooks/use-dashboard";
+import { useIsMobile } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import type { DashboardTask, MyTasksData } from "@/types/dashboard";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const isMobile = useIsMobile();
   // Pagination state for each widget
   const [myCreatedTasksOffset, setMyCreatedTasksOffset] = useState(0);
   const [assignedToMeTasksOffset, setAssignedToMeTasksOffset] = useState(0);
@@ -35,6 +39,8 @@ export default function DashboardPage() {
     assignedToMeTasksOffset,
   });
   const refresh = useRefreshDashboard();
+
+  // ✅ IMPORTANT: ALL useEffect hooks MUST be called before any early return!
 
   // Update accumulated tasks when data changes
   useEffect(() => {
@@ -72,6 +78,23 @@ export default function DashboardPage() {
       setIsLoadingMoreAssigned(false);
     }
   }, [data?.assignedToMeTasks?.tasks, assignedToMeTasksOffset]);
+
+  // Redirect to /my-tasks if mobile
+  useEffect(() => {
+    if (isMobile) {
+      router.replace('/my-tasks');
+    }
+  }, [isMobile, router]);
+
+  // ✅ Early return AFTER all hooks
+  // Show loading while redirecting
+  if (isMobile) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   // Handle refresh
   const handleRefresh = async () => {

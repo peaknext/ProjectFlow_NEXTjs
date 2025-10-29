@@ -1,11 +1,12 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useTogglePinTask } from '@/hooks/use-tasks';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-media-query';
 
 interface Task {
   id: string;
@@ -34,6 +35,7 @@ interface TaskPanelHeaderProps {
 export function TaskPanelHeader({ task, isLoading }: TaskPanelHeaderProps) {
   const closeTaskPanel = useUIStore((state) => state.closeTaskPanel);
   const { mutate: togglePin } = useTogglePinTask();
+  const isMobile = useIsMobile();
 
   const handlePinToggle = () => {
     if (!task) return;
@@ -41,8 +43,26 @@ export function TaskPanelHeader({ task, isLoading }: TaskPanelHeaderProps) {
   };
 
   return (
-    <header className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 rounded-tl-xl">
+    <header className={cn(
+      "flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900",
+      // Desktop: rounded top-left corner
+      "md:rounded-tl-xl",
+      // Mobile: no rounded corners (full-screen)
+      "max-md:rounded-none"
+    )}>
       <div className="flex items-center gap-2">
+        {/* Mobile: Back button */}
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={closeTaskPanel}
+            title="กลับ"
+            className="rounded-full"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        )}
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           รายละเอียดงาน
         </h2>
@@ -71,16 +91,18 @@ export function TaskPanelHeader({ task, isLoading }: TaskPanelHeaderProps) {
           </Button>
         )}
 
-        {/* Close Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={closeTaskPanel}
-          title="ปิด"
-          className="rounded-full"
-        >
-          <X className="h-5 w-5" />
-        </Button>
+        {/* Desktop: Close Button (X) */}
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={closeTaskPanel}
+            title="ปิด"
+            className="rounded-full"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </div>
     </header>
   );

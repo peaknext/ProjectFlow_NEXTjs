@@ -78,8 +78,9 @@ export function UsersPagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="border-t border-border bg-card px-6 py-4 mt-4 rounded-b-lg">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div className="border-t border-border bg-card px-3 py-3 md:px-6 md:py-4 mt-4 md:rounded-b-lg">
+      {/* Desktop Layout */}
+      <div className="max-md:hidden flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Left: Pagination info */}
         <div className="text-sm text-muted-foreground whitespace-nowrap">
           แสดง {startItem}-{endItem} จาก {total} รายการ
@@ -155,6 +156,53 @@ export function UsersPagination({
             </SelectContent>
           </Select>
           <span className="text-sm text-muted-foreground">รายการ</span>
+        </div>
+      </div>
+
+      {/* Mobile Layout - Compact */}
+      <div className="md:hidden flex items-center justify-between gap-3">
+        {/* Left: Prev Button + Page Info */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => onPageChange(page - 1)}
+            disabled={!hasPrev}
+            className="h-10 w-10 flex-shrink-0"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <div className="text-sm text-muted-foreground whitespace-nowrap">
+            หน้า {page}/{totalPages}
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => onPageChange(page + 1)}
+            disabled={!hasNext}
+            className="h-10 w-10 flex-shrink-0"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Right: Limit Selector */}
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <span className="text-xs text-muted-foreground">แสดง</span>
+          <Select
+            value={limit.toString()}
+            onValueChange={(value) => onLimitChange(parseInt(value, 10))}
+          >
+            <SelectTrigger className="w-[60px] h-9 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

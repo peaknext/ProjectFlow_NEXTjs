@@ -20,6 +20,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Edit, Trash2, Shield, Loader2 } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Shield, Loader2, Mail, Building2 } from "lucide-react";
 import { useUpdateUserStatus, useDeleteUser } from "@/hooks/use-users";
 import { useUIStore } from "@/stores/use-ui-store";
 import { useAuth } from "@/hooks/use-auth";
@@ -45,9 +46,10 @@ import { toast } from "sonner";
 
 interface UserRowProps {
   user: User;
+  viewMode?: "table" | "card";
 }
 
-export function UserRow({ user }: UserRowProps) {
+export function UserRow({ user, viewMode = "table" }: UserRowProps) {
   const { user: currentUser } = useAuth();
   const openEditUserModal = useUIStore((state) => state.openEditUserModal);
   const updateStatus = useUpdateUserStatus();
@@ -137,6 +139,169 @@ export function UserRow({ user }: UserRowProps) {
     }
   };
 
+  // Card Layout (Mobile)
+  if (viewMode === "card") {
+    return (
+      <>
+        <Card className="p-4">
+          {/* Header: Avatar + Name + Status + Actions */}
+          <div className="flex items-start gap-3 mb-3">
+            {/* Avatar */}
+            <Avatar className="h-12 w-12 flex-shrink-0">
+              <AvatarImage
+                src={user.profileImageUrl || undefined}
+                alt={user.fullName}
+              />
+              <AvatarFallback className="text-sm font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+
+            {/* Name + Job Title + Email */}
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-base">{user.fullName}</div>
+              {user.jobTitle && (
+                <div className="text-xs text-muted-foreground">
+                  {user.jobTitle.jobTitleTh}
+                  {user.jobLevel && ` ${user.jobLevel}`}
+                </div>
+              )}
+              {/* Email - Moved from body */}
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                {user.isVerified && (
+                  <Shield className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0" />
+                )}
+              </div>
+            </div>
+
+            {/* Actions - Top Right */}
+            {showActions && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">เปิดเมนู</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {canEdit ? (
+                    <DropdownMenuItem onClick={() => openEditUserModal(user)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      แก้ไข
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem disabled className="opacity-50">
+                      <Edit className="h-4 w-4 mr-2" />
+                      แก้ไข
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        (ไม่มีสิทธิ์)
+                      </span>
+                    </DropdownMenuItem>
+                  )}
+                  {canDelete ? (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleDeleteClick}
+                        className="text-red-600 dark:text-red-400 focus:text-red-600 focus:dark:text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        ลบ
+                      </DropdownMenuItem>
+                    </>
+                  ) : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+
+          {/* Body: Department, Role */}
+          <div className="space-y-2 text-sm">
+            {/* Department */}
+            <div className="flex items-start gap-2 text-muted-foreground">
+              <Building2 className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              {user.department ? (
+                <div className="flex-1">
+                  <div>{user.department.name}</div>
+                  {user.department.division && (
+                    <div className="text-xs opacity-70">
+                      {user.department.division.name}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span>-</span>
+              )}
+            </div>
+
+            {/* Role Badge */}
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs font-medium text-foreground">
+                บทบาท:
+              </span>
+              <span className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary">
+                {ROLE_LABELS[user.role] || user.role}
+              </span>
+            </div>
+
+            {/* Status Switch - Bottom Right */}
+            <div className="flex items-center justify-end gap-2 pt-3 mt-1 border-t border-border">
+              <span className="text-xs text-muted-foreground">
+                {user.userStatus === "ACTIVE" ? "ใช้งานอยู่" : "ระงับ"}
+              </span>
+              <Switch
+                checked={user.userStatus === "ACTIVE"}
+                onCheckedChange={handleStatusToggle}
+                disabled={updateStatus.isPending}
+                aria-label={`สถานะ ${user.userStatus === "ACTIVE" ? "ใช้งานอยู่" : "ระงับ"}`}
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>ยืนยันการลบผู้ใช้</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <p>
+                  คุณแน่ใจหรือไม่ที่จะลบผู้ใช้{" "}
+                  <strong className="text-foreground">{user.fullName}</strong>?
+                </p>
+                <p className="text-sm font-medium text-destructive">
+                  ⚠️ การกระทำนี้ไม่สามารถย้อนกลับได้
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteUser.isPending}>
+                ยกเลิก
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                disabled={deleteUser.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteUser.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    กำลังลบ...
+                  </>
+                ) : (
+                  "ลบผู้ใช้"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
+  }
+
+  // Table Layout (Desktop) - default
   return (
     <>
       <TableRow>

@@ -420,23 +420,23 @@ export function ProfileSettings() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-6 space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">ตั้งค่าโปรไฟล์</h1>
-        <p className="text-muted-foreground mt-2">
+    <div className="container mx-auto max-w-4xl px-4 md:px-6 pt-2 md:pt-3 pb-4 md:pb-6 space-y-4 md:space-y-6">
+      <div className="mb-4 md:mb-8 hidden">
+        <h1 className="text-2xl md:text-3xl font-bold">ตั้งค่าโปรไฟล์</h1>
+        <p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">
           จัดการข้อมูลส่วนตัวและการตั้งค่าบัญชีของคุณ
         </p>
       </div>
 
       {/* Section 1: Personal Information */}
       <Card className="overflow-hidden">
-        <div className="bg-muted/50 border-b px-6 py-3">
-          <h2 className="text-xl font-semibold">ข้อมูลส่วนตัว</h2>
+        <div className="bg-muted/50 border-b px-4 md:px-6 py-2.5 md:py-3">
+          <h2 className="text-base md:text-lg font-semibold">ข้อมูลส่วนตัว</h2>
         </div>
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+        <div className="p-4 md:p-6 space-y-3 md:space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <div>
-              <Label htmlFor="titlePrefix" className="text-base">
+              <Label htmlFor="titlePrefix" className="text-xs md:text-sm">
                 คำนำหน้าชื่อ
               </Label>
               <Popover open={titlePrefixOpen} onOpenChange={setTitlePrefixOpen}>
@@ -445,7 +445,7 @@ export function ProfileSettings() {
                     variant="outline"
                     role="combobox"
                     aria-expanded={titlePrefixOpen}
-                    className="w-full justify-between mt-1.5 h-10 text-base bg-muted/30"
+                    className="w-full justify-between mt-1.5 h-10 bg-muted/30"
                   >
                     <span
                       className={cn(!titlePrefix && "text-muted-foreground")}
@@ -502,40 +502,40 @@ export function ProfileSettings() {
               </Popover>
             </div>
             <div>
-              <Label htmlFor="firstName" className="text-base">
+              <Label htmlFor="firstName" className="text-xs md:text-sm">
                 ชื่อ *
               </Label>
               <Input
                 id="firstName"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="mt-1.5 h-10 text-base bg-muted/30"
+                className="mt-1.5 h-10 bg-muted/30"
                 placeholder="ชื่อ"
               />
             </div>
             <div>
-              <Label htmlFor="lastName" className="text-base">
+              <Label htmlFor="lastName" className="text-xs md:text-sm">
                 นามสกุล *
               </Label>
               <Input
                 id="lastName"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="mt-1.5 h-10 text-base bg-muted/30"
+                className="mt-1.5 h-10 bg-muted/30"
                 placeholder="นามสกุล"
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="email" className="text-base">
+            <Label htmlFor="email" className="text-xs md:text-sm">
               อีเมล
             </Label>
             <Input
               id="email"
               value={user.email}
               disabled
-              className="mt-1.5 h-10 text-base bg-muted/50 cursor-not-allowed"
+              className="mt-1.5 h-10 bg-muted/50 cursor-not-allowed"
             />
           </div>
         </div>
@@ -543,19 +543,19 @@ export function ProfileSettings() {
 
       {/* Section 2: Change Password */}
       <Card className="border-l-4 border-l-blue-500 dark:border-l-blue-600 ring-1 ring-blue-100 dark:ring-blue-900/30">
-        <div className="bg-blue-50/50 dark:bg-blue-950/20 border-b border-blue-200/50 dark:border-blue-800/30 px-6 py-3">
+        <div className="bg-blue-50/50 dark:bg-blue-950/20 border-b border-blue-200/50 dark:border-blue-800/30 px-4 md:px-6 py-2.5 md:py-3">
           <div className="flex items-center gap-2">
-            <KeyRound className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-100">
+            <KeyRound className="h-4 md:h-5 w-4 md:w-5 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-base md:text-lg font-semibold text-blue-900 dark:text-blue-100">
               เปลี่ยนรหัสผ่าน
             </h2>
           </div>
         </div>
 
         {/* Form Fields - Centered */}
-        <div className="p-6 space-y-4 max-w-2xl mx-auto mb-6">
+        <div className="p-4 md:p-6 space-y-3 md:space-y-4 max-w-2xl mx-auto mb-4 md:mb-6">
           <div>
-            <Label htmlFor="currentPassword" className="text-base">
+            <Label htmlFor="currentPassword" className="text-xs md:text-sm">
               รหัสผ่านปัจจุบัน *
             </Label>
             <Input
@@ -563,14 +563,14 @@ export function ProfileSettings() {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="mt-1.5 h-10 text-base bg-muted/30"
+              className="mt-1.5 h-10 bg-muted/30"
               placeholder="กรอกรหัสผ่านปัจจุบัน"
               autoComplete="current-password"
             />
           </div>
 
           <div className="relative">
-            <Label htmlFor="newPassword" className="text-base">
+            <Label htmlFor="newPassword" className="text-xs md:text-sm">
               รหัสผ่านใหม่ *
             </Label>
             <Input
@@ -582,16 +582,17 @@ export function ProfileSettings() {
               onBlur={() =>
                 setTimeout(() => setShowPasswordPopover(false), 200)
               }
-              className="mt-1.5 h-10 text-base bg-muted/30"
+              className="mt-1.5 h-10 bg-muted/30"
               placeholder="ตั้งรหัสผ่านใหม่"
               autoComplete="new-password"
             />
 
             {/* Password Requirements Popover */}
             {showPasswordPopover && (
-              <div className="absolute left-full top-0 ml-4 w-72 z-50 animate-in fade-in-0 zoom-in-95">
+              <div className="absolute left-0 md:left-full top-full md:top-0 mt-2 md:mt-0 md:ml-4 w-full md:w-72 z-50 animate-in fade-in-0 zoom-in-95">
                 <div className="bg-card rounded-lg shadow-xl border p-4 relative">
-                  <div className="absolute top-1/2 -left-2 w-4 h-4 bg-card transform -translate-y-1/2 rotate-45 border-l border-b"></div>
+                  {/* Arrow - hide on mobile, show on desktop */}
+                  <div className="hidden md:block absolute top-1/2 -left-2 w-4 h-4 bg-card transform -translate-y-1/2 rotate-45 border-l border-b"></div>
 
                   <p className="text-sm font-semibold mb-2">
                     รหัสผ่านควรประกอบด้วย:
@@ -673,7 +674,7 @@ export function ProfileSettings() {
           </div>
 
           <div>
-            <Label htmlFor="confirmPassword" className="text-base">
+            <Label htmlFor="confirmPassword" className="text-xs md:text-sm">
               ยืนยันรหัสผ่านใหม่ *
             </Label>
             <div className="relative">
@@ -682,7 +683,7 @@ export function ProfileSettings() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1.5 h-10 text-base bg-muted/30 pr-10"
+                className="mt-1.5 h-10 bg-muted/30 pr-10"
                 placeholder="กรอกรหัสผ่านอีกครั้ง"
                 autoComplete="new-password"
               />
@@ -711,12 +712,12 @@ export function ProfileSettings() {
         </div>
 
         {/* Button - Bottom Right */}
-        <div className="flex justify-end px-6 pb-6">
+        <div className="flex justify-end px-4 md:px-6 pb-4 md:pb-6">
           <Button
             onClick={handleChangePassword}
             disabled={isChangingPassword || !passwordsMatch || strength < 4}
             size="lg"
-            className="px-8"
+            className="w-full md:w-auto px-8"
           >
             {isChangingPassword && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -728,37 +729,37 @@ export function ProfileSettings() {
 
       {/* Section 3: Work Information */}
       <Card className="overflow-hidden">
-        <div className="bg-muted/50 border-b px-6 py-3">
-          <h2 className="text-xl font-semibold">ข้อมูลงาน</h2>
+        <div className="bg-muted/50 border-b px-4 md:px-6 py-2.5 md:py-3">
+          <h2 className="text-base md:text-lg font-semibold">ข้อมูลงาน</h2>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-4 md:p-6 space-y-3 md:space-y-4">
           <div>
-            <Label htmlFor="department" className="text-base">
+            <Label htmlFor="department" className="text-xs md:text-sm">
               หน่วยงาน
             </Label>
             <Input
               id="department"
               value={user.department?.name || "ไม่ระบุ"}
               disabled
-              className="mt-1.5 h-10 text-base bg-muted/50 cursor-not-allowed"
+              className="mt-1.5 h-10 bg-muted/50 cursor-not-allowed"
             />
           </div>
 
           <div>
-            <Label htmlFor="role" className="text-base">
+            <Label htmlFor="role" className="text-xs md:text-sm">
               บทบาท
             </Label>
             <Input
               id="role"
               value={user.role}
               disabled
-              className="mt-1.5 h-10 text-base bg-muted/50 cursor-not-allowed"
+              className="mt-1.5 h-10 bg-muted/50 cursor-not-allowed"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <Label htmlFor="jobTitle" className="text-base">
+              <Label htmlFor="jobTitle" className="text-xs md:text-sm">
                 ตำแหน่ง
               </Label>
               <Popover open={jobTitleOpen} onOpenChange={setJobTitleOpen}>
@@ -768,7 +769,7 @@ export function ProfileSettings() {
                     role="combobox"
                     aria-expanded={jobTitleOpen}
                     disabled={isLoadingJobTitles}
-                    className="w-full justify-between mt-1.5 h-10 text-base bg-muted/30"
+                    className="w-full justify-between mt-1.5 h-10 bg-muted/30"
                   >
                     <span
                       className={cn(
@@ -833,7 +834,7 @@ export function ProfileSettings() {
               </Popover>
             </div>
             <div>
-              <Label htmlFor="jobLevel" className="text-base">
+              <Label htmlFor="jobLevel" className="text-xs md:text-sm">
                 ระดับ
               </Label>
               <Select
@@ -842,7 +843,7 @@ export function ProfileSettings() {
                   setJobLevel(value === "NONE" ? "" : value)
                 }
               >
-                <SelectTrigger className="mt-1.5 h-10 text-base bg-muted/30">
+                <SelectTrigger className="mt-1.5 h-10 bg-muted/30">
                   <SelectValue placeholder="-- ไม่ระบุ --" />
                 </SelectTrigger>
                 <SelectContent>
@@ -864,28 +865,28 @@ export function ProfileSettings() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <Label htmlFor="workLocation" className="text-base">
+              <Label htmlFor="workLocation" className="text-xs md:text-sm">
                 สถานที่ปฏิบัติงาน
               </Label>
               <Input
                 id="workLocation"
                 value={workLocation}
                 onChange={(e) => setWorkLocation(e.target.value)}
-                className="mt-1.5 h-10 text-base bg-muted/30"
+                className="mt-1.5 h-10 bg-muted/30"
                 placeholder="เช่น อาคาร A ชั้น 2"
               />
             </div>
             <div>
-              <Label htmlFor="internalPhone" className="text-base">
+              <Label htmlFor="internalPhone" className="text-xs md:text-sm">
                 เบอร์โทรภายใน
               </Label>
               <Input
                 id="internalPhone"
                 value={internalPhone}
                 onChange={(e) => setInternalPhone(e.target.value)}
-                className="mt-1.5 h-10 text-base bg-muted/30"
+                className="mt-1.5 h-10 bg-muted/30"
                 placeholder="เช่น 1234"
               />
             </div>
@@ -895,19 +896,19 @@ export function ProfileSettings() {
 
       {/* Section 4: Profile Image */}
       <Card className="overflow-hidden">
-        <div className="bg-muted/50 border-b px-6 py-3">
-          <h2 className="text-xl font-semibold">รูปโปรไฟล์</h2>
+        <div className="bg-muted/50 border-b px-4 md:px-6 py-2.5 md:py-3">
+          <h2 className="text-base md:text-lg font-semibold">รูปโปรไฟล์</h2>
         </div>
-        <div className="p-6 space-y-4">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-24 w-24 flex-shrink-0">
+        <div className="p-4 md:p-6 space-y-3 md:space-y-4">
+          <div className="flex flex-col md:flex-row items-start gap-4">
+            <Avatar className="h-20 w-20 md:h-24 md:w-24 flex-shrink-0">
               <AvatarImage src={profileImageUrl || undefined} />
               <AvatarFallback className="text-2xl">
                 {user.fullName?.charAt(0) || "U"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-2">
-              <Label htmlFor="profileImageUrl" className="text-base">
+              <Label htmlFor="profileImageUrl" className="text-xs md:text-sm">
                 URL รูปโปรไฟล์
               </Label>
               <div className="flex gap-2">
@@ -915,7 +916,7 @@ export function ProfileSettings() {
                   id="profileImageUrl"
                   value={profileImageUrl}
                   onChange={(e) => setProfileImageUrl(e.target.value)}
-                  className="h-10 text-base bg-muted/30"
+                  className="h-10 bg-muted/30"
                   placeholder="https://example.com/image.jpg"
                 />
                 <Button
@@ -936,8 +937,8 @@ export function ProfileSettings() {
           </div>
 
           <div>
-            <Label className="text-base mb-3 block">เลือกอวตารสำเร็จรูป</Label>
-            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-3">
+            <Label className="text-base mb-2 md:mb-3 block">เลือกอวตารสำเร็จรูป</Label>
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 md:gap-3">
               {PRESET_AVATARS.map((url, index) => (
                 <button
                   key={index}
@@ -961,12 +962,12 @@ export function ProfileSettings() {
       </Card>
 
       {/* Save Profile Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-end px-2 md:px-0">
         <Button
           onClick={handleUpdateProfile}
           disabled={!isDirty || isUpdating}
           size="lg"
-          className="px-8"
+          className="w-full md:w-auto px-8"
         >
           {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           บันทึกข้อมูลโปรไฟล์
