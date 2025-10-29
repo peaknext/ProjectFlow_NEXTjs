@@ -72,9 +72,9 @@ export default function CalendarPage() {
 
   return (
     <SwipeablePages>
-      <div className="flex flex-col h-full bg-background">
+      <div className="flex flex-col min-h-full bg-background">
         {/* Calendar Widget */}
-        <div className="flex-shrink-0 p-4">
+        <div className="p-4">
           <DashboardCalendarWidget
             calendarTasks={dashboardData?.calendarTasks || []}
             isLoading={isLoading}
@@ -84,7 +84,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Task List */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="px-4 pb-4">
           <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur-sm py-2 border-b z-10">
@@ -293,9 +293,9 @@ function TaskCard({ task, onClick }: TaskCardProps) {
  */
 function CalendarPageSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col min-h-full bg-background">
       {/* Calendar Skeleton */}
-      <div className="flex-shrink-0 p-4">
+      <div className="p-4">
         <Card className="p-4">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -313,7 +313,7 @@ function CalendarPageSkeleton() {
       </div>
 
       {/* Task List Skeleton */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="px-4 pb-4">
         <div className="space-y-4">
           <Skeleton className="h-8 w-40" />
           {[...Array(5)].map((_, i) => (

@@ -268,6 +268,7 @@ async function handler(req: AuthenticatedRequest) {
         where: {
           creatorUserId: userId,
           deletedAt: null,
+          ...fiscalYearFilter,
         },
         include: {
           assignees: {
@@ -299,6 +300,7 @@ async function handler(req: AuthenticatedRequest) {
         where: {
           creatorUserId: userId,
           deletedAt: null,
+          ...fiscalYearFilter,
         },
       }),
 
@@ -310,6 +312,7 @@ async function handler(req: AuthenticatedRequest) {
           },
           creatorUserId: { not: userId }, // Exclude tasks user created
           deletedAt: null,
+          ...fiscalYearFilter,
         },
         include: {
           assignees: {
@@ -344,6 +347,7 @@ async function handler(req: AuthenticatedRequest) {
           },
           creatorUserId: { not: userId }, // Exclude tasks user created
           deletedAt: null,
+          ...fiscalYearFilter,
         },
       }),
 
@@ -432,6 +436,7 @@ async function handler(req: AuthenticatedRequest) {
               },
             ],
             deletedAt: null,
+            ...fiscalYearFilter,
           },
         },
         include: {

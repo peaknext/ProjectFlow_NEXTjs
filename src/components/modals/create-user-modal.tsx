@@ -18,6 +18,7 @@ import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { X, Loader2, ChevronDown, Check, ChevronsUpDown } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +45,7 @@ import {
 import { useUIStore } from '@/stores/use-ui-store';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useCreateUser } from '@/hooks/use-users';
+import { useSwipeToClose } from '@/hooks/use-swipe-to-close';
 import { getCommonTitlePrefixes } from '@/lib/user-utils';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -181,6 +183,13 @@ export function CreateUserModal() {
     closeCreateUserModal();
   };
 
+  // Swipe-to-close gesture for mobile
+  const swipeHandlers = useSwipeToClose({
+    onClose: closeCreateUserModal,
+    threshold: 100,
+    velocityThreshold: 500,
+  });
+
   // Handle form submission
   const onSubmit = async (data: UserFormData) => {
     // Validate required fields
@@ -263,8 +272,9 @@ export function CreateUserModal() {
         onClick={handleClose}
       />
 
-      {/* Side Panel */}
-      <div
+      {/* Side Panel with Swipe-to-Close */}
+      <motion.div
+        {...swipeHandlers}
         className={cn(
           'fixed top-0 right-0 h-full w-full max-w-2xl',
           'bg-background/90 backdrop-blur-sm',
@@ -659,14 +669,14 @@ export function CreateUserModal() {
             <Button
               type="submit"
               disabled={createUserMutation.isPending}
-              className="flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg shadow-md h-[46px] min-w-[150px]"
+              className="flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg shadow-md h-[46px] w-full md:w-auto md:min-w-[150px]"
             >
               {createUserMutation.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
               <span>{createUserMutation.isPending ? 'กำลังสร้าง...' : 'สร้างผู้ใช้'}</span>
             </Button>
           </footer>
         </form>
-      </div>
+      </motion.div>
     </>
   );
 }

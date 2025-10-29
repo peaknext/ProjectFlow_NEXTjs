@@ -17,6 +17,7 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { X, Plus, Trash2, Loader2, Palette, ChevronDown, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import { useWorkspace } from "@/hooks/use-workspace";
 import { useHospMissions, useActionPlans } from "@/hooks/use-organization";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateProject } from "@/hooks/use-projects";
+import { useSwipeToClose } from "@/hooks/use-swipe-to-close";
 import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -157,6 +159,13 @@ export function CreateProjectModal() {
     (state) => state.closeCreateProjectModal
   );
   const isMobile = useIsMobile();
+
+  // Swipe-to-close gesture for mobile
+  const swipeHandlers = useSwipeToClose({
+    onClose: closeCreateProjectModal,
+    threshold: 100,
+    velocityThreshold: 500,
+  });
 
   // Animation state (same as TaskPanel)
   const [isVisible, setIsVisible] = useState(false);
@@ -427,8 +436,9 @@ export function CreateProjectModal() {
         onClick={handleClose}
       />
 
-      {/* Side Panel */}
-      <div
+      {/* Side Panel with Swipe-to-Close */}
+      <motion.div
+        {...swipeHandlers}
         className={cn(
           "fixed top-0 right-0 h-full w-full max-w-3xl",
           "bg-background/90 backdrop-blur-sm",
@@ -915,7 +925,7 @@ export function CreateProjectModal() {
             </Button>
           </footer>
         </form>
-      </div>
+      </motion.div>
     </>
   );
 }

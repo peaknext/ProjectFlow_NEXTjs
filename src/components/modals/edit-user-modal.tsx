@@ -17,6 +17,7 @@ import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { X, Loader2, ChevronDown, Check, ChevronsUpDown, Save } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,6 +55,7 @@ import {
 import { useUIStore } from '@/stores/use-ui-store';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useUpdateUser } from '@/hooks/use-users';
+import { useSwipeToClose } from '@/hooks/use-swipe-to-close';
 import { getCommonTitlePrefixes } from '@/lib/user-utils';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -218,6 +220,13 @@ export function EditUserModal() {
     setShowUnsavedWarning(false);
   };
 
+  // Swipe-to-close gesture for mobile
+  const swipeHandlers = useSwipeToClose({
+    onClose: handleClose,
+    threshold: 100,
+    velocityThreshold: 500,
+  });
+
   // Handle form submission
   const onSubmit = async (data: UserFormData) => {
     if (!editUserModal.data) return;
@@ -296,8 +305,9 @@ export function EditUserModal() {
         onClick={handleClose}
       />
 
-      {/* Side Panel */}
-      <div
+      {/* Side Panel with Swipe-to-Close */}
+      <motion.div
+        {...swipeHandlers}
         className={cn(
           'fixed top-0 right-0 h-full w-full max-w-2xl',
           'bg-background/90 backdrop-blur-sm',
@@ -748,7 +758,7 @@ export function EditUserModal() {
             </Button>
           </footer>
         </form>
-      </div>
+      </motion.div>
 
       {/* Unsaved Changes Warning Dialog */}
       <AlertDialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>

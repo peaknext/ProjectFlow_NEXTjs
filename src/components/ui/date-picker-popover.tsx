@@ -1,13 +1,89 @@
 'use client';
 
-import { useState } from 'react';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { format, addMonths, subMonths } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
+import { motion, PanInfo } from 'framer-motion';
 import { cn } from '@/lib/utils';
+
+/**
+ * SwipeableCalendar - Calendar with swipe gesture support
+ * Wraps shadcn/ui Calendar with left/right swipe to change months
+ */
+interface SwipeableCalendarProps {
+  selected?: Date;
+  onSelect?: (date: Date | undefined) => void;
+  onMonthChange?: (month: Date) => void;
+  [key: string]: any; // Allow any other props to pass through to Calendar
+}
+
+function SwipeableCalendar({ selected, onMonthChange, ...calendarProps }: SwipeableCalendarProps) {
+  const [displayMonth, setDisplayMonth] = useState(selected || new Date());
+
+  // Sync with selected date changes
+  useEffect(() => {
+    if (selected) {
+      setDisplayMonth(selected);
+    }
+  }, [selected]);
+
+  // Handle swipe gesture
+  const handlePanEnd = (_event: any, info: PanInfo) => {
+    const { offset, velocity } = info;
+    const swipeThreshold = 80;
+    const velocityThreshold = 500;
+    const verticalThreshold = 50;
+
+    // Ignore if too much vertical movement
+    if (Math.abs(offset.y) > verticalThreshold) {
+      return;
+    }
+
+    // Check if swipe is significant
+    const isSignificantSwipe =
+      Math.abs(offset.x) > swipeThreshold ||
+      Math.abs(velocity.x) > velocityThreshold;
+
+    if (!isSignificantSwipe) {
+      return;
+    }
+
+    // Swipe left → Next month
+    if (offset.x < 0) {
+      const nextMonth = addMonths(displayMonth, 1);
+      setDisplayMonth(nextMonth);
+      onMonthChange?.(nextMonth);
+    }
+
+    // Swipe right → Previous month
+    if (offset.x > 0) {
+      const prevMonth = subMonths(displayMonth, 1);
+      setDisplayMonth(prevMonth);
+      onMonthChange?.(prevMonth);
+    }
+  };
+
+  return (
+    <motion.div
+      className="cursor-grab active:cursor-grabbing"
+      onPanEnd={handlePanEnd}
+      drag={false}
+    >
+      <Calendar
+        {...calendarProps}
+        month={displayMonth}
+        onMonthChange={(month) => {
+          setDisplayMonth(month);
+          onMonthChange?.(month);
+        }}
+      />
+    </motion.div>
+  );
+}
 
 /**
  * Format date in Thai Buddhist Era format
@@ -134,7 +210,7 @@ export function DatePickerPopover({
 
       <PopoverContent className="w-auto p-0 bg-white dark:bg-popover" align="start">
         <div className="p-3 space-y-3">
-          <Calendar
+          <SwipeableCalendar
             mode="single"
             selected={selectedDate}
             onSelect={handleSelect}
@@ -269,7 +345,7 @@ export function DateInput({
 
       <PopoverContent className="w-auto p-0 bg-white dark:bg-popover" align="start">
         <div className="p-3 space-y-3">
-          <Calendar
+          <SwipeableCalendar
             mode="single"
             selected={selectedDate}
             onSelect={handleSelect}

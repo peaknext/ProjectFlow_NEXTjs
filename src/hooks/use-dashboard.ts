@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSyncMutation } from "@/lib/use-sync-mutation";
 import { api } from "@/lib/api-client";
+import { useFiscalYearStore } from "@/stores/use-fiscal-year-store";
 import { DashboardData, UseDashboardOptions, Activity } from "@/types/dashboard";
 
 /**
@@ -8,8 +9,8 @@ import { DashboardData, UseDashboardOptions, Activity } from "@/types/dashboard"
  */
 export const dashboardKeys = {
   all: ["dashboard"] as const,
-  detail: (options?: UseDashboardOptions) =>
-    [...dashboardKeys.all, options] as const,
+  detail: (options?: UseDashboardOptions, fiscalYears?: number[]) =>
+    fiscalYears ? [...dashboardKeys.all, options, { fiscalYears }] as const : [...dashboardKeys.all, options] as const,
   activities: () => [...dashboardKeys.all, "activities"] as const,
 };
 
@@ -18,12 +19,19 @@ export const dashboardKeys = {
  *
  * @param options - Query options (separate pagination for each widget)
  * @returns Dashboard data including stats, tasks, activities, etc.
+ * Now includes fiscal year filtering
  */
 export function useDashboard(options?: UseDashboardOptions) {
+  const selectedYears = useFiscalYearStore((state) => state.selectedYears);
+
   return useQuery({
-    queryKey: dashboardKeys.detail(options),
+    queryKey: dashboardKeys.detail(options, selectedYears),
     queryFn: async () => {
       const params = new URLSearchParams();
+
+      // Fiscal year filtering
+      const yearsParam = selectedYears.join(',');
+      params.append("fiscalYears", yearsParam);
 
       // Separate pagination for each widget
       if (options?.myCreatedTasksLimit) {

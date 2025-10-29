@@ -273,6 +273,8 @@ export function UsersView() {
           onClearFilters={handleClearFilters}
           totalCount={allUsers.length}
           filteredCount={sortedUsers.length}
+          canCreateUser={canCreateUser}
+          onCreateUser={handleCreateUser}
         />
       </div>
 

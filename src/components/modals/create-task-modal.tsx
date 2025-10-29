@@ -8,6 +8,7 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import {
   CornerDownRight,
   Loader2,
@@ -30,6 +31,7 @@ import { useUIStore } from "@/stores/use-ui-store";
 import { useCreateTask } from "@/hooks/use-tasks";
 import { useProjects } from "@/hooks/use-projects";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { useSwipeToClose } from "@/hooks/use-swipe-to-close";
 import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -80,6 +82,13 @@ export function CreateTaskModal() {
   );
   const createTask = useCreateTask();
   const isMobile = useIsMobile();
+
+  // Swipe-to-close gesture for mobile
+  const swipeHandlers = useSwipeToClose({
+    onClose: closeCreateTaskModal,
+    threshold: 100,
+    velocityThreshold: 500,
+  });
 
   // Fetch all accessible projects (with permission check)
   const { data: projectsData, isLoading: isLoadingProjects } = useProjects({
@@ -432,8 +441,9 @@ export function CreateTaskModal() {
         onClick={closeCreateTaskModal}
       />
 
-      {/* Slide Panel */}
-      <div
+      {/* Slide Panel with Swipe-to-Close */}
+      <motion.div
+        {...swipeHandlers}
         className={cn(
           "fixed top-0 right-0 h-full w-full",
           // Desktop: slide panel with max-width and rounded corners
@@ -780,7 +790,7 @@ export function CreateTaskModal() {
             สร้างงาน
           </Button>
         </footer>
-      </div>
+      </motion.div>
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useSyncMutation } from "@/lib/use-sync-mutation";
+import { useFiscalYearStore } from "@/stores/use-fiscal-year-store";
 import { taskKeys } from "@/hooks/use-tasks";
 import { projectKeys } from "@/hooks/use-projects";
 import { dashboardKeys } from "@/hooks/use-dashboard";
@@ -118,8 +119,8 @@ export interface DepartmentTasksResponse {
 export const departmentTasksKeys = {
   all: ["departmentTasks"] as const,
   lists: () => [...departmentTasksKeys.all, "list"] as const,
-  list: (departmentId: string, filters?: DepartmentTasksFilters) =>
-    [...departmentTasksKeys.lists(), departmentId, filters] as const,
+  list: (departmentId: string, filters?: DepartmentTasksFilters, fiscalYears?: number[]) =>
+    fiscalYears ? [...departmentTasksKeys.lists(), departmentId, filters, { fiscalYears }] as const : [...departmentTasksKeys.lists(), departmentId, filters] as const,
 };
 
 // ============================================
@@ -128,9 +129,15 @@ export const departmentTasksKeys = {
 
 async function fetchDepartmentTasks(
   departmentId: string,
-  filters?: DepartmentTasksFilters
+  filters?: DepartmentTasksFilters,
+  fiscalYears?: number[]
 ): Promise<DepartmentTasksResponse> {
   const params = new URLSearchParams();
+
+  // Fiscal year filtering
+  if (fiscalYears && fiscalYears.length > 0) {
+    params.append("fiscalYears", fiscalYears.join(","));
+  }
 
   if (filters?.view) params.append("view", filters.view);
   if (filters?.status && filters.status.length > 0) {
@@ -168,9 +175,11 @@ export function useDepartmentTasks(
     "queryKey" | "queryFn"
   >
 ) {
+  const selectedYears = useFiscalYearStore((state) => state.selectedYears);
+
   return useQuery<DepartmentTasksResponse, Error>({
-    queryKey: departmentTasksKeys.list(departmentId, filters),
-    queryFn: () => fetchDepartmentTasks(departmentId, filters),
+    queryKey: departmentTasksKeys.list(departmentId, filters, selectedYears),
+    queryFn: () => fetchDepartmentTasks(departmentId, filters, selectedYears),
     staleTime: 0, // Always refetch to see changes immediately
     gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
     refetchOnMount: true,

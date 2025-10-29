@@ -6,6 +6,7 @@ import { Search, User, Moon, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notifications";
+import { FiscalYearFilter } from "@/components/filters/fiscal-year-filter";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -60,8 +61,13 @@ export function Navbar() {
           </div>
         </div> */}
 
-        {/* Right Side - Notifications, Profile */}
+        {/* Right Side - Fiscal Year Filter, Notifications, Profile */}
         <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Fiscal Year Filter - Desktop only */}
+          <div className="hidden md:flex">
+            <FiscalYearFilter />
+          </div>
+
           {/* Notifications */}
           <NotificationBell />
 

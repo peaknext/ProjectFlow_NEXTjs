@@ -4,6 +4,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
+import { useFiscalYearStore } from "@/stores/use-fiscal-year-store";
 
 // Types
 export interface ReportTask {
@@ -66,8 +67,9 @@ export interface ReportDataResponse {
 }
 
 export interface ReportFilters {
-  startDate?: string; // ISO date string
-  endDate?: string; // ISO date string
+  startDate?: string; // ISO date string (ignored if fiscalYears provided)
+  endDate?: string; // ISO date string (ignored if fiscalYears provided)
+  fiscalYears?: number[]; // Fiscal years to filter (takes precedence over startDate/endDate)
   missionGroupId?: string;
   divisionId?: string;
   departmentId?: string;
@@ -82,15 +84,31 @@ export const reportKeys = {
 
 /**
  * Fetch report data with filters
+ * Now includes fiscal year filtering (takes precedence over startDate/endDate)
  */
 export function useReportData(filters: ReportFilters) {
+  const selectedYears = useFiscalYearStore((state) => state.selectedYears);
+
+  // Merge fiscal years from store with filters
+  const mergedFilters = {
+    ...filters,
+    fiscalYears: filters.fiscalYears || selectedYears,
+  };
+
   return useQuery({
-    queryKey: reportKeys.tasks(filters),
+    queryKey: reportKeys.tasks(mergedFilters),
     queryFn: async () => {
       const params = new URLSearchParams();
 
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
+      // Fiscal years take precedence (API handles this)
+      if (mergedFilters.fiscalYears && mergedFilters.fiscalYears.length > 0) {
+        params.append("fiscalYears", mergedFilters.fiscalYears.join(","));
+      } else {
+        // Fallback to date range if no fiscal years
+        if (filters.startDate) params.append("startDate", filters.startDate);
+        if (filters.endDate) params.append("endDate", filters.endDate);
+      }
+
       if (filters.missionGroupId)
         params.append("missionGroupId", filters.missionGroupId);
       if (filters.divisionId) params.append("divisionId", filters.divisionId);

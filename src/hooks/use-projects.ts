@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { useSyncMutation } from '@/lib/use-sync-mutation';
 import { projectsListKeys } from './use-projects-list';
+import { useFiscalYearStore } from '@/stores/use-fiscal-year-store';
 import type { Project } from '@/stores/use-app-store';
 import type { Task } from '@/hooks/use-tasks';
 
@@ -115,7 +116,8 @@ export const projectKeys = {
   list: (filters: Record<string, any>) => [...projectKeys.lists(), filters] as const,
   details: () => [...projectKeys.all, 'detail'] as const,
   detail: (id: string) => [...projectKeys.details(), id] as const,
-  board: (id: string) => [...projectKeys.detail(id), 'board'] as const,
+  board: (id: string, filters?: Record<string, any>) =>
+    filters ? [...projectKeys.detail(id), 'board', filters] as const : [...projectKeys.detail(id), 'board'] as const,
   editDetails: (id: string) => [...projectKeys.all, 'edit-details', id] as const,
 };
 
@@ -148,11 +150,19 @@ export function useProjects(params?: {
 
 /**
  * Fetch single project with board data (statuses + tasks)
+ * Now includes fiscal year filtering
  */
 export function useProject(projectId: string | null) {
+  const selectedYears = useFiscalYearStore((state) => state.selectedYears);
+
   return useQuery({
-    queryKey: projectKeys.board(projectId!),
-    queryFn: () => api.get<ProjectBoardResponse>(`/api/projects/${projectId}/board`),
+    queryKey: projectKeys.board(projectId!, { fiscalYears: selectedYears }),
+    queryFn: () => {
+      const yearsParam = selectedYears.join(',');
+      return api.get<ProjectBoardResponse>(
+        `/api/projects/${projectId}/board?fiscalYears=${yearsParam}`
+      );
+    },
     enabled: !!projectId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });

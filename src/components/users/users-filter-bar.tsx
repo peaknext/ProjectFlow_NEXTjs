@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +33,8 @@ interface UsersFilterBarProps {
   onClearFilters: () => void;
   totalCount: number;
   filteredCount: number;
+  canCreateUser?: boolean;
+  onCreateUser?: () => void;
 }
 
 export function UsersFilterBar({
@@ -41,6 +43,8 @@ export function UsersFilterBar({
   onClearFilters,
   totalCount,
   filteredCount,
+  canCreateUser = false,
+  onCreateUser,
 }: UsersFilterBarProps) {
   // State for filter toggle (from global UI store)
   const isFilterOpen = useUIStore((state) => state.isUsersFilterOpen);
@@ -573,6 +577,20 @@ export function UsersFilterBar({
               />
             </div>
           </div>
+
+          {/* Create User Button - Mobile */}
+          {canCreateUser && onCreateUser && (
+            <div className="pt-2">
+              <Button
+                onClick={onCreateUser}
+                className="w-full h-11"
+                size="lg"
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                สร้างผู้ใช้
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Filter Info - Mobile */}

@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useTask } from '@/hooks/use-tasks';
 import { useProject } from '@/hooks/use-projects';
+import { useSwipeToClose } from '@/hooks/use-swipe-to-close';
 import { cn } from '@/lib/utils';
 import { TaskPanelHeader } from './task-panel-header';
 import { TaskPanelFooter } from './task-panel-footer';
@@ -147,6 +149,13 @@ export function TaskPanel() {
     };
   }, [shouldRender]);
 
+  // Swipe-to-close gesture for mobile
+  const swipeHandlers = useSwipeToClose({
+    onClose: closeTaskPanel,
+    threshold: 100,
+    velocityThreshold: 500,
+  });
+
   // Scroll to top when task changes
   useEffect(() => {
     if (scrollContainerRef.current && taskId) {
@@ -168,8 +177,9 @@ export function TaskPanel() {
         onClick={closeTaskPanel}
       />
 
-      {/* Panel */}
-      <div
+      {/* Panel with Swipe-to-Close */}
+      <motion.div
+        {...swipeHandlers}
         className={cn(
           'fixed top-0 right-0 h-full w-full',
           // Desktop: slide panel with max-width
@@ -213,7 +223,7 @@ export function TaskPanel() {
           statuses={statuses as any}
           currentStatusId={formState.currentStatusId}
         />
-      </div>
+      </motion.div>
     </>
   );
 }

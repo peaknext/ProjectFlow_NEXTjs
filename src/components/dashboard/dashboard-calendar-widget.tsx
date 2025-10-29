@@ -27,6 +27,7 @@ import {
   startOfDay,
 } from "date-fns";
 import { th } from "date-fns/locale";
+import { motion, PanInfo } from "framer-motion";
 import type { DashboardTask } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
 
@@ -153,6 +154,38 @@ export function DashboardCalendarWidget({
     return { hasOverdue, hasDueSoon, hasUpcoming, taskCount: tasks.length };
   };
 
+  // Handle swipe gesture for changing months
+  const handlePanEnd = (_event: any, info: PanInfo) => {
+    const { offset, velocity } = info;
+    const swipeThreshold = 80; // Larger than SwipeablePages (50px)
+    const velocityThreshold = 500;
+    const verticalThreshold = 50; // Ensure it's a horizontal swipe
+
+    // Ignore if too much vertical movement (probably scrolling)
+    if (Math.abs(offset.y) > verticalThreshold) {
+      return;
+    }
+
+    // Determine if swipe is significant enough
+    const isSignificantSwipe =
+      Math.abs(offset.x) > swipeThreshold ||
+      Math.abs(velocity.x) > velocityThreshold;
+
+    if (!isSignificantSwipe) {
+      return;
+    }
+
+    // Swipe left → Next month
+    if (offset.x < 0) {
+      goToNextMonth();
+    }
+
+    // Swipe right → Previous month
+    if (offset.x > 0) {
+      goToPreviousMonth();
+    }
+  };
+
   // Format month/year header
   const monthName = thaiMonths[currentMonth.getMonth()];
   const buddhistYear = currentMonth.getFullYear() + 543;
@@ -196,8 +229,12 @@ export function DashboardCalendarWidget({
       </CardHeader>
 
       <CardContent className="p-4">
-        {/* Calendar Grid */}
-        <div className="space-y-2">
+        {/* Calendar Grid with Swipe Detection */}
+        <motion.div
+          className="space-y-2 cursor-grab active:cursor-grabbing"
+          onPanEnd={handlePanEnd}
+          drag={false}
+        >
           {/* Day headers */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {thaiDayAbbreviations.map((day, i) => (
@@ -294,10 +331,9 @@ export function DashboardCalendarWidget({
               );
             })}
           </div>
-        </div>
 
-        {/* Legend */}
-        <div className="flex items-center justify-end gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
+          {/* Legend */}
+          <div className="flex items-center justify-end gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <div className="h-2 w-2 rounded-full bg-red-500" />
             <span>เกินกำหนด</span>
@@ -311,6 +347,7 @@ export function DashboardCalendarWidget({
             <span>งานถัดไป</span>
           </div>
         </div>
+        </motion.div>
       </CardContent>
     </Card>
   );

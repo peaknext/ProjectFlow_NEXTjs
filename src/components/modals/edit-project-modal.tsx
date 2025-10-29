@@ -22,6 +22,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { X, Save, Loader2, Palette, Eye, ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUIStore } from "@/stores/use-ui-store";
 import { useProjectEditDetails, useEditProject } from "@/hooks/use-projects";
 import { useSession } from "@/hooks/use-session";
+import { useSwipeToClose } from "@/hooks/use-swipe-to-close";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -199,6 +201,13 @@ export function EditProjectModal() {
     setShowUnsavedWarning(false);
   };
 
+  // Swipe-to-close gesture for mobile
+  const swipeHandlers = useSwipeToClose({
+    onClose: handleClose,
+    threshold: 100,
+    velocityThreshold: 500,
+  });
+
   // Handle form submission
   const onSubmit = async (data: EditProjectFormData) => {
     if (!projectId) return;
@@ -246,8 +255,9 @@ export function EditProjectModal() {
         onClick={handleClose}
       />
 
-      {/* Side Panel */}
-      <div
+      {/* Side Panel with Swipe-to-Close */}
+      <motion.div
+        {...swipeHandlers}
         className={cn(
           "fixed top-0 right-0 h-full w-full max-w-3xl",
           "bg-background/90 backdrop-blur-sm",
@@ -645,7 +655,7 @@ export function EditProjectModal() {
             </>
           )}
         </footer>
-      </div>
+      </motion.div>
 
       {/* Unsaved Changes Warning Dialog */}
       <AlertDialog

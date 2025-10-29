@@ -42,12 +42,24 @@ import {
   Moon,
   Sun,
   Plus,
+  Calendar,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useProjects } from '@/hooks/use-projects';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  useFiscalYearStore,
+  useFiscalYearBadgeText,
+  useIsDefaultFiscalYear,
+} from '@/stores/use-fiscal-year-store';
+import {
+  getCurrentFiscalYear,
+  getAvailableFiscalYears,
+} from '@/lib/fiscal-year';
 
 interface MobileMenuProps {
   open: boolean;
@@ -61,11 +73,34 @@ export function MobileMenu({ open, onOpenChange }: MobileMenuProps) {
   const router = useRouter();
 
   const [workspaceExpanded, setWorkspaceExpanded] = useState(true);
+  const [fiscalYearExpanded, setFiscalYearExpanded] = useState(true);
 
   const { data: projectsData } = useProjects();
   const projects = projectsData?.projects || [];
 
   const openCreateProjectModal = useUIStore((state) => state.openCreateProjectModal);
+
+  // Fiscal Year Filter
+  const selectedYears = useFiscalYearStore((state) => state.selectedYears);
+  const setSelectedYears = useFiscalYearStore((state) => state.setSelectedYears);
+  const resetToCurrentYear = useFiscalYearStore((state) => state.resetToCurrentYear);
+  const selectAllYears = useFiscalYearStore((state) => state.selectAllYears);
+
+  const badgeText = useFiscalYearBadgeText();
+  const isDefault = useIsDefaultFiscalYear();
+  const currentYear = getCurrentFiscalYear();
+  const availableYears = getAvailableFiscalYears();
+
+  const isYearSelected = (year: number) => selectedYears.includes(year);
+
+  const toggleYear = (year: number) => {
+    if (isYearSelected(year)) {
+      if (selectedYears.length === 1) return; // Prevent empty
+      setSelectedYears(selectedYears.filter((y) => y !== year));
+    } else {
+      setSelectedYears([...selectedYears, year]);
+    }
+  };
 
   const handleClose = () => {
     onOpenChange(false);
@@ -93,11 +128,12 @@ export function MobileMenu({ open, onOpenChange }: MobileMenuProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
-        <SheetHeader className="p-6 pb-4">
-          <SheetTitle className="text-left">เมนู</SheetTitle>
+        {/* Hidden title for screen reader accessibility */}
+        <SheetHeader className="sr-only">
+          <SheetTitle>เมนู</SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100vh-80px)] px-6">
+        <ScrollArea className="h-full px-6 pt-6">
           {/* User Profile Section - Clickable */}
           {user && (
             <div className="mb-6">
@@ -198,6 +234,112 @@ export function MobileMenu({ open, onOpenChange }: MobileMenuProps) {
                       <Plus className="h-3.5 w-3.5 mr-2" />
                       สร้างโปรเจกต์ใหม่
                     </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <Separator className="my-4" />
+
+          {/* Fiscal Year Filter Section */}
+          <div className="mb-4">
+            <button
+              onClick={() => setFiscalYearExpanded(!fiscalYearExpanded)}
+              className="flex items-center justify-between w-full p-2 rounded-md hover:bg-accent transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span className="text-sm font-medium">ปีงบประมาณ</span>
+                {!isDefault && (
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {badgeText}
+                  </Badge>
+                )}
+              </div>
+              <motion.div
+                animate={{ rotate: fiscalYearExpanded ? 0 : -90 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <ChevronDown className="h-4 w-4" />
+              </motion.div>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {fiscalYearExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 ml-6 space-y-2">
+                    {/* Current Selection Display */}
+                    <div className="p-2 rounded-md bg-accent/50 mb-3">
+                      <div className="text-xs text-muted-foreground mb-1">กำลังดู:</div>
+                      <div className="text-sm font-medium">
+                        {badgeText === "ทุกปี" ? "ทุกปี" : `ปีงบ ${badgeText}`}
+                      </div>
+                    </div>
+
+                    {/* Year List with Checkboxes */}
+                    {availableYears.map((year) => {
+                      const isSelected = isYearSelected(year);
+                      const isCurrent = year === currentYear;
+                      const isOnlySelected = isSelected && selectedYears.length === 1;
+
+                      return (
+                        <div
+                          key={year}
+                          className={cn(
+                            "flex items-center gap-2 p-2 rounded-md transition-colors",
+                            isSelected && "bg-accent",
+                            !isOnlySelected && "hover:bg-accent cursor-pointer",
+                            isOnlySelected && "opacity-60 cursor-not-allowed"
+                          )}
+                          onClick={() => !isOnlySelected && toggleYear(year)}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => !isOnlySelected && toggleYear(year)}
+                            disabled={isOnlySelected}
+                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                          <span className="text-sm flex-1">
+                            {year}
+                            {isCurrent && (
+                              <span className="ml-1.5 text-xs text-muted-foreground">
+                                (ปัจจุบัน)
+                              </span>
+                            )}
+                          </span>
+                          {isSelected && (
+                            <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Quick Actions */}
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-8 text-xs"
+                        onClick={selectAllYears}
+                      >
+                        ทุกปี
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-8 text-xs"
+                        onClick={resetToCurrentYear}
+                      >
+                        ปีปัจจุบัน
+                      </Button>
+                    </div>
                   </div>
                 </motion.div>
               )}
