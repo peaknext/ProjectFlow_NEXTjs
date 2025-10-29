@@ -157,7 +157,11 @@ async function getHandler(req: AuthenticatedRequest) {
       },
       _count: {
         select: {
-          tasks: true,
+          tasks: {
+            where: {
+              deletedAt: null,
+            },
+          },
           statuses: true,
           phases: true,
         },
@@ -165,6 +169,9 @@ async function getHandler(req: AuthenticatedRequest) {
       // Include full details if requested (for project management page)
       ...(includeDetails && {
         tasks: {
+          where: {
+            deletedAt: null,
+          },
           select: {
             id: true,
             isClosed: true,
