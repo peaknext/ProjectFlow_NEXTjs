@@ -42,7 +42,7 @@ export function PrivacyNoticeModal({
   return (
     <>
       <Dialog open={open} onOpenChange={canClose ? onClose : undefined}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[95vh] sm:max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[95vh] sm:max-h-[90vh] p-0 gap-0 flex flex-col">
           <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
@@ -59,7 +59,7 @@ export function PrivacyNoticeModal({
             </div>
           </DialogHeader>
 
-          <Tabs defaultValue="privacy" className="flex-1 overflow-hidden flex flex-col">
+          <Tabs defaultValue="privacy" className="flex-1 flex flex-col min-h-0">
             <div className="px-4 sm:px-6 pt-3 sm:pt-4 flex-shrink-0">
               <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
                 <TabsTrigger value="privacy" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
@@ -73,7 +73,7 @@ export function PrivacyNoticeModal({
               </TabsList>
             </div>
 
-            <ScrollArea className="h-[300px] sm:h-[400px] px-4 sm:px-6 py-3 sm:py-4 flex-1">
+            <ScrollArea className="flex-1 min-h-0 px-4 sm:px-6 py-3 sm:py-4">
               <TabsContent value="privacy" className="mt-0 space-y-4 text-sm">
                 <section>
                   <h3 className="font-semibold text-base mb-2">1. ข้อมูลที่เราเก็บรวบรวม</h3>
