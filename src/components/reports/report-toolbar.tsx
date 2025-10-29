@@ -119,15 +119,15 @@ export function ReportToolbar({
   return (
     <>
       {/* Desktop - Always Visible */}
-      <div className="max-md:hidden bg-card border-b flex flex-col gap-4 px-6 py-4 flex-shrink-0">
-        {/* Header: Title and Description */}
+      <div className="max-md:hidden bg-card border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-6 py-4 flex-shrink-0">
+        {/* Left side: Title and Description */}
         <div className="min-w-0">
           <h1 className="text-2xl font-bold">รายงาน</h1>
           <p className="text-sm text-muted-foreground mt-1">ภาพรวมและสถิติ</p>
         </div>
 
-        {/* Filters Section */}
-        <div className="flex items-center flex-wrap gap-3">
+        {/* Right side: Filters */}
+        <div className="flex items-center gap-3 flex-wrap">
         {/* Start Date */}
         <div className="flex flex-col gap-1">
           <Label htmlFor="start-date" className="text-xs text-muted-foreground">
