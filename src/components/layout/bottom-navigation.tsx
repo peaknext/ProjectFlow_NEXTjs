@@ -1,7 +1,7 @@
 /**
  * BottomNavigation Component
  *
- * Mobile bottom navigation with 5 tabs (Facebook-style)
+ * Mobile bottom navigation with 5 tabs (Task-centric design)
  * Features:
  * - Fixed at bottom of screen
  * - Active state with primary color
@@ -9,44 +9,42 @@
  * - Touch-friendly tap targets (48x48px minimum)
  *
  * Tabs:
- * 1. 🏠 หน้าหลัก → /dashboard
- * 2. 📋 งานของฉัน → /my-tasks
+ * 1. 📋 งานของฉัน → /my-tasks
+ * 2. ✅ เช็คลิสต์ → /checklist
  * 3. ➕ สร้าง → Opens CreateTaskModal
- * 4. 🔔 แจ้งเตือน → /notifications
- * 5. ☰ เมนู → Opens MobileMenu drawer
+ * 4. 📅 ปฏิทิน → /calendar
+ * 5. 🔔 แจ้งเตือน → /notifications
  */
 
 'use client';
 
-import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Home,
   CheckSquare,
+  ListChecks,
   PlusCircle,
   Bell,
-  Menu,
+  Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useNotifications } from '@/hooks/use-notifications';
 import { Badge } from '@/components/ui/badge';
-import { MobileMenu } from '@/components/layout/mobile-menu';
 
 const tabs = [
-  {
-    id: 'home',
-    label: 'หน้าหลัก',
-    icon: Home,
-    href: '/dashboard',
-    type: 'link' as const,
-  },
   {
     id: 'my-tasks',
     label: 'งานของฉัน',
     icon: CheckSquare,
     href: '/my-tasks',
+    type: 'link' as const,
+  },
+  {
+    id: 'checklist',
+    label: 'เช็คลิสต์',
+    icon: ListChecks,
+    href: '/checklist',
     type: 'link' as const,
   },
   {
@@ -58,6 +56,13 @@ const tabs = [
     action: 'create',
   },
   {
+    id: 'calendar',
+    label: 'ปฏิทิน',
+    icon: Calendar,
+    href: '/calendar',
+    type: 'link' as const,
+  },
+  {
     id: 'notifications',
     label: 'แจ้งเตือน',
     icon: Bell,
@@ -65,26 +70,11 @@ const tabs = [
     type: 'link' as const,
     showBadge: true,
   },
-  {
-    id: 'menu',
-    label: 'เมนู',
-    icon: Menu,
-    href: null,
-    type: 'action' as const,
-    action: 'menu',
-  },
 ];
 
 export function BottomNavigation() {
   const pathname = usePathname();
   const openCreateTaskModal = useUIStore((state) => state.openCreateTaskModal);
-
-  // Mobile menu state
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const openMobileMenu = () => {
-    setMobileMenuOpen(true);
-  };
 
   // Get unread notifications count for badge
   const { data: notificationsData } = useNotifications();
@@ -92,11 +82,9 @@ export function BottomNavigation() {
 
   const handleTabClick = (tab: typeof tabs[number]) => {
     if (tab.type === 'action') {
-      // Handle action tabs (Create, Menu)
+      // Handle action tabs (Create only)
       if (tab.action === 'create') {
         openCreateTaskModal({});
-      } else if (tab.action === 'menu') {
-        openMobileMenu();
       }
     }
     // Link tabs handled by Next.js Link component
@@ -192,9 +180,6 @@ export function BottomNavigation() {
           );
         })}
       </div>
-
-      {/* Mobile Menu Drawer */}
-      <MobileMenu open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} />
     </nav>
   );
 }

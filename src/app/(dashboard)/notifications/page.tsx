@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { NotificationItem } from '@/components/notifications/notification-item';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { SwipeablePages } from '@/components/layout/swipeable-pages';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCheck, Bell, BellOff } from 'lucide-react';
 
@@ -85,9 +86,10 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="h-full">
-      {/* Page Header - Hidden on mobile (shown in mobile-top-bar) */}
-      <div className="hidden md:flex md:items-center md:justify-between mb-6">
+    <SwipeablePages>
+      <div className="h-full">
+        {/* Page Header - Hidden on mobile (shown in mobile-top-bar) */}
+        <div className="hidden md:flex md:items-center md:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">การแจ้งเตือน</h1>
           <p className="text-muted-foreground">การแจ้งเตือนทั้งหมดของคุณ</p>
@@ -188,11 +190,12 @@ export default function NotificationsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Pull to Refresh Hint - Mobile Only */}
-      <div className="md:hidden text-center mt-8 mb-4 text-xs text-muted-foreground">
-        <p>ดึงลงเพื่อรีเฟรช</p>
-        <p className="text-[10px]">(Phase 10 - Coming Soon)</p>
+        {/* Pull to Refresh Hint - Mobile Only */}
+        <div className="md:hidden text-center mt-8 mb-4 text-xs text-muted-foreground">
+          <p>ดึงลงเพื่อรีเฟรช</p>
+          <p className="text-[10px]">(Phase 10 - Coming Soon)</p>
+        </div>
       </div>
-    </div>
+    </SwipeablePages>
   );
 }

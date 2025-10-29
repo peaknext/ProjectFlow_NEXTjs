@@ -18,11 +18,13 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, Menu, Search, MoreVertical, Filter, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, Menu, Search, MoreVertical, Filter, LayoutGrid, Activity, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import Link from 'next/link';
 import { MobileMenu } from '@/components/layout/mobile-menu';
+import { useUIStore } from '@/stores/use-ui-store';
 
 export function MobileTopBar() {
   const pathname = usePathname();
@@ -31,13 +33,19 @@ export function MobileTopBar() {
   // State management
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const toggleReportFilter = useUIStore((state) => state.toggleReportFilter);
+  const toggleUsersFilter = useUIStore((state) => state.toggleUsersFilter);
+  const openEditProjectModal = useUIStore((state) => state.openEditProjectModal);
 
   // Determine page title based on route
   const getPageTitle = (): string => {
     // Main pages
     if (pathname === '/dashboard') return 'ProjectFlows';
     if (pathname === '/my-tasks') return 'งานของฉัน';
+    if (pathname === '/checklist') return 'เช็คลิสต์';
+    if (pathname === '/calendar') return 'ปฏิทิน';
     if (pathname === '/notifications') return 'แจ้งเตือน';
+    if (pathname === '/activities') return 'กิจกรรม';
 
     // Management pages
     if (pathname === '/users') return 'บุคลากร';
@@ -66,7 +74,10 @@ export function MobileTopBar() {
     const mainPages = [
       '/dashboard',
       '/my-tasks',
+      '/checklist',
+      '/calendar',
       '/notifications',
+      '/activities',
       '/users',
       '/reports',
       '/department/tasks',
@@ -108,46 +119,14 @@ export function MobileTopBar() {
       );
     }
 
-    // My Tasks - Filter
-    if (pathname === '/my-tasks') {
+    // Reports - Filter
+    if (pathname === '/reports') {
       actions.push(
         <Button
           key="filter"
           variant="ghost"
           size="icon"
-          onClick={() => console.log('Filter my tasks')}
-          aria-label="Filter"
-          className={buttonClassName}
-        >
-          <Filter className="h-5 w-5" />
-        </Button>
-      );
-    }
-
-    // Project views - View switcher (Board/List/Calendar)
-    if (pathname?.includes('/projects/')) {
-      actions.push(
-        <Button
-          key="view-switcher"
-          variant="ghost"
-          size="icon"
-          onClick={() => console.log('Switch view')}
-          aria-label="Switch view"
-          className={buttonClassName}
-        >
-          <LayoutGrid className="h-5 w-5" />
-        </Button>
-      );
-    }
-
-    // Department Tasks - Filter
-    if (pathname === '/department/tasks') {
-      actions.push(
-        <Button
-          key="filter"
-          variant="ghost"
-          size="icon"
-          onClick={() => console.log('Filter department tasks')}
+          onClick={toggleReportFilter}
           aria-label="Filter"
           className={buttonClassName}
         >
@@ -163,7 +142,7 @@ export function MobileTopBar() {
           key="filter"
           variant="ghost"
           size="icon"
-          onClick={() => console.log('Filter users')}
+          onClick={toggleUsersFilter}
           aria-label="Filter"
           className={buttonClassName}
         >
@@ -171,6 +150,105 @@ export function MobileTopBar() {
         </Button>
       );
     }
+
+    // NOTE: Filter buttons removed from other main pages - will be added inside page content later
+    // TODO: Add filter functionality inside each page (My Tasks, Department Tasks)
+
+    // Activities button - Show on main pages
+    const mainPages = [
+      '/dashboard',
+      '/my-tasks',
+      '/checklist',
+      '/calendar',
+      '/notifications',
+      '/department/tasks',
+    ];
+    if (mainPages.includes(pathname) && pathname !== '/activities') {
+      actions.push(
+        <Link key="activities" href="/activities">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Activities"
+            className={buttonClassName}
+          >
+            <Activity className="h-5 w-5" />
+          </Button>
+        </Link>
+      );
+    }
+
+    // Activities page - Close/Back button
+    if (pathname === '/activities') {
+      actions.push(
+        <Button
+          key="close-activities"
+          variant="ghost"
+          size="icon"
+          onClick={handleBackClick}
+          aria-label="Close"
+          className={buttonClassName}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      );
+    }
+
+    // Project views - Edit project button
+    if (pathname?.includes('/projects/')) {
+      // Extract projectId from pathname (e.g., /projects/proj001/mobile)
+      const projectIdMatch = pathname.match(/\/projects\/([^/]+)/);
+      const projectId = projectIdMatch ? projectIdMatch[1] : null;
+
+      actions.push(
+        <Button
+          key="edit-project"
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            if (projectId) {
+              openEditProjectModal(projectId);
+            }
+          }}
+          aria-label="Edit project"
+          className={buttonClassName}
+        >
+          <LayoutGrid className="h-5 w-5" />
+        </Button>
+      );
+    }
+
+    // Department Tasks - Filter (REMOVED - will add inside page)
+    // if (pathname === '/department/tasks') {
+    //   actions.push(
+    //     <Button
+    //       key="filter"
+    //       variant="ghost"
+    //       size="icon"
+    //       onClick={() => console.log('Filter department tasks')}
+    //       aria-label="Filter"
+    //       className={buttonClassName}
+    //     >
+    //       <Filter className="h-5 w-5" />
+    //     </Button>
+    //   );
+    // }
+
+    // Users - Filter (REMOVED - will add inside page)
+    // if (pathname === '/users') {
+    //   actions.push(
+    //     <Button
+    //       key="filter"
+    //       variant="ghost"
+    //       size="icon"
+    //       onClick={() => console.log('Filter users')}
+    //       aria-label="Filter"
+    //       className={buttonClassName}
+    //     >
+    //       <Filter className="h-5 w-5" />
+    //     </Button>
+    //   );
+    // }
 
     return actions;
   };

@@ -17,7 +17,7 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Plus, Trash2, Loader2, Palette, ChevronDown } from "lucide-react";
+import { X, Plus, Trash2, Loader2, Palette, ChevronDown, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,7 @@ import { useCreateProject } from "@/hooks/use-projects";
 import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-media-query";
 import {
   Popover,
   PopoverContent,
@@ -155,6 +156,7 @@ export function CreateProjectModal() {
   const closeCreateProjectModal = useUIStore(
     (state) => state.closeCreateProjectModal
   );
+  const isMobile = useIsMobile();
 
   // Animation state (same as TaskPanel)
   const [isVisible, setIsVisible] = useState(false);
@@ -437,18 +439,43 @@ export function CreateProjectModal() {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 rounded-t-xl">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            สร้างโปรเจกต์ใหม่
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClose}
-            className="rounded-full p-2 h-auto w-auto hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <X className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-          </Button>
+        <div className={cn(
+          "flex items-center justify-between p-3 md:p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900",
+          // Desktop: rounded top-left corner
+          "md:rounded-tl-xl",
+          // Mobile: no rounded corners (full-screen)
+          "max-md:rounded-none"
+        )}>
+          <div className="flex items-center gap-2">
+            {/* Mobile: Back button */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+                title="กลับ"
+                className="rounded-full"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
+            <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100">
+              สร้างโปรเจกต์ใหม่
+            </h2>
+          </div>
+
+          {/* Desktop: Close Button (X) */}
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              title="ปิด"
+              className="rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
         </div>
 
         {/* Body (Scrollable) - Match GAS layout */}
@@ -456,23 +483,23 @@ export function CreateProjectModal() {
           onSubmit={handleFormSubmit(onSubmit)}
           className="flex flex-col flex-1 min-h-0"
         >
-          <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6">
             {/* Project Name */}
             <div>
-              <Label htmlFor="name" className="text-sm font-medium">
+              <Label htmlFor="name" className="text-xs md:text-sm font-medium">
                 ชื่อโปรเจกต์ <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
                 placeholder="ชื่อโปรเจกต์ของคุณ..."
                 {...register("name")}
-                className="mt-1 text-lg font-semibold h-[46px] bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                className="mt-1 font-semibold h-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
               />
             </div>
 
             {/* Department Selector */}
             <div>
-              <Label htmlFor="department" className="text-sm font-medium">
+              <Label htmlFor="department" className="text-xs md:text-sm font-medium">
                 หน่วยงาน <span className="text-red-500">*</span>
               </Label>
               <Popover
@@ -490,7 +517,7 @@ export function CreateProjectModal() {
                     variant="outline"
                     disabled={user?.role === "HEAD"}
                     className={cn(
-                      "w-full justify-between mt-1 h-[46px] text-base bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700",
+                      "w-full justify-between mt-1 h-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700",
                       user?.role === "HEAD" && "cursor-not-allowed opacity-60"
                     )}
                   >
@@ -558,7 +585,7 @@ export function CreateProjectModal() {
 
             {/* Description */}
             <div>
-              <Label htmlFor="description" className="text-sm font-medium">
+              <Label htmlFor="description" className="text-xs md:text-sm font-medium">
                 รายละเอียด
               </Label>
               <Textarea
@@ -571,10 +598,10 @@ export function CreateProjectModal() {
             </div>
 
             {/* Hospital Mission & Action Plan (2 columns grid) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Hospital Mission Selector */}
               <div>
-                <Label className="text-sm font-medium">
+                <Label className="text-xs md:text-sm font-medium">
                   ยุทธศาสตร์โรงพยาบาล
                 </Label>
                 <Popover
@@ -585,7 +612,7 @@ export function CreateProjectModal() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full justify-between mt-1 h-[46px] text-base bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                      className="w-full justify-between mt-1 h-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                     >
                       <span
                         className={cn(
@@ -633,7 +660,7 @@ export function CreateProjectModal() {
 
               {/* Action Plan Selector */}
               <div>
-                <Label className="text-sm font-medium">แผนปฏิบัติการ</Label>
+                <Label className="text-xs md:text-sm font-medium">แผนปฏิบัติการ</Label>
                 <Popover
                   open={actionPlanPopoverOpen}
                   onOpenChange={setActionPlanPopoverOpen}
@@ -642,7 +669,7 @@ export function CreateProjectModal() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full justify-between mt-1 h-[46px] text-base bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                      className="w-full justify-between mt-1 h-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                     >
                       <span
                         className={cn(
@@ -692,22 +719,22 @@ export function CreateProjectModal() {
             </div>
 
             {/* Phases Section (match GAS with header + description) */}
-            <div className="border-t border-border pt-6 space-y-4">
-              <h3 className="text-lg font-semibold">
+            <div className="border-t border-border pt-4 md:pt-6 space-y-3 md:space-y-4">
+              <h3 className="text-base md:text-lg font-semibold">
                 ห้วงเวลาดำเนินงาน
-                <span className="text-sm font-normal text-muted-foreground ml-2">
+                <span className="text-xs md:text-sm font-normal text-muted-foreground ml-2 block md:inline mt-1 md:mt-0">
                   ห้วงระยะเวลาดำเนินงานในแต่ละช่วงของโปรเจกต์
                 </span>
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {phaseFields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="flex items-end gap-4 p-4 rounded-lg bg-black/5 dark:bg-white/5"
+                    className="flex flex-col md:flex-row md:items-end gap-3 md:gap-4 p-3 md:p-4 rounded-lg bg-black/5 dark:bg-white/5"
                   >
                     <div className="flex-1">
-                      <Label className="block text-sm font-medium mb-2">
+                      <Label className="block text-xs md:text-sm font-medium mb-1.5">
                         ชื่อ
                       </Label>
                       <Input
@@ -717,7 +744,7 @@ export function CreateProjectModal() {
                       />
                     </div>
                     <div className="flex-1">
-                      <Label className="block text-sm font-medium mb-2">
+                      <Label className="block text-xs md:text-sm font-medium mb-1.5">
                         วันที่เริ่มต้น
                       </Label>
                       <Controller
@@ -734,7 +761,7 @@ export function CreateProjectModal() {
                       />
                     </div>
                     <div className="flex-1">
-                      <Label className="block text-sm font-medium mb-2">
+                      <Label className="block text-xs md:text-sm font-medium mb-1.5">
                         วันที่สิ้นสุด
                       </Label>
                       <Controller
@@ -755,7 +782,7 @@ export function CreateProjectModal() {
                       size="icon"
                       variant="ghost"
                       onClick={() => removePhase(index)}
-                      className="h-10 w-10 p-2 text-muted-foreground hover:text-destructive flex-shrink-0 self-end pb-2"
+                      className="h-10 w-10 p-2 text-muted-foreground hover:text-destructive flex-shrink-0 md:self-end md:pb-2"
                       title="ลบ Phase"
                     >
                       <Trash2 className="h-5 w-5" />
@@ -776,10 +803,10 @@ export function CreateProjectModal() {
             </div>
 
             {/* Statuses Section (match GAS with long description) */}
-            <div className="border-t border-border pt-6 space-y-4">
-              <h3 className="text-lg font-semibold">
+            <div className="border-t border-border pt-4 md:pt-6 space-y-3 md:space-y-4">
+              <h3 className="text-base md:text-lg font-semibold">
                 สถานะงานในโปรเจกต์ <span className="text-red-500">*</span>
-                <span className="text-sm font-normal text-muted-foreground ml-2">
+                <span className="text-xs md:text-sm font-normal text-muted-foreground ml-2 block md:inline mt-1 md:mt-0">
                   สร้างตัวเลือกสำหรับสถานะของงานแต่ละงานภายใต้โปรเจกต์
                   ลำดับแรกจะมีค่าเป็นสถานะรอดำเนินการ
                   ลำดับถัดมาจะมีค่าเป็นสถานะอยู่ระหว่างดำเนินการ
@@ -787,14 +814,14 @@ export function CreateProjectModal() {
                 </span>
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {statusFields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="flex items-end gap-4 p-4 rounded-lg bg-black/5 dark:bg-white/5"
+                    className="flex flex-col md:flex-row md:items-end gap-3 md:gap-4 p-3 md:p-4 rounded-lg bg-black/5 dark:bg-white/5"
                   >
                     <div className="flex-1">
-                      <Label className="block text-sm font-medium mb-2">
+                      <Label className="block text-xs md:text-sm font-medium mb-1.5">
                         ชื่อสถานะ
                       </Label>
                       <Input
@@ -804,7 +831,7 @@ export function CreateProjectModal() {
                       />
                     </div>
                     <div className="flex-shrink-0">
-                      <Label className="block text-sm font-medium mb-2">
+                      <Label className="block text-xs md:text-sm font-medium mb-1.5">
                         สี
                       </Label>
                       <Controller
@@ -875,10 +902,10 @@ export function CreateProjectModal() {
             <Button
               type="submit"
               disabled={createProjectMutation.isPending}
-              className="flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg shadow-md h-[46px] min-w-[150px]"
+              className="flex items-center justify-center px-6 py-2.5 text-sm md:text-base font-semibold rounded-lg shadow-md h-10 md:h-[46px] w-full md:w-auto md:min-w-[150px]"
             >
               {createProjectMutation.isPending && (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-4 md:h-5 w-4 md:w-5 animate-spin" />
               )}
               <span>
                 {createProjectMutation.isPending

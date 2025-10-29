@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.31.0 (2025-10-28)
-**Last Major Update**: Mobile Layout Phase 2 - Bottom Navigation Features (My Tasks, Notifications, Hamburger Menu)
+**Version**: 2.33.0 (2025-10-29)
+**Last Major Update**: Mobile Layout Additional Features (Calendar Page, Swipe Navigation, Navigation Reorganization, Turbopack Build Fix)
 
 ---
 
@@ -73,13 +73,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🎯 Current Priority
 
-**What to work on next**: Mobile Layout Phase 3 - Mobile Top Bar Enhancement (Dynamic page titles, context-specific actions, improved back button logic)
+**What to work on next**: Mobile Layout Phase 4 - Task Panel Mobile (Full-screen task panel on mobile devices)
 
 **Current Status**:
 - **Mobile Layout Phase 1**: ✅ Complete (Responsive infrastructure at 768px breakpoint)
 - **Mobile Layout Phase 2**: ✅ Complete (5-tab bottom nav, My Tasks page, Notifications page, Hamburger menu)
-- **Mobile Layout Phase 3**: ⏳ Pending (Top bar enhancements)
-- **Mobile Layout Progress**: 2 / 8 phases complete (25%)
+- **Mobile Layout Phase 3**: ✅ Complete (Dynamic titles, context actions, animations)
+- **Mobile Layout Phase 4**: ⏳ Pending (Task Panel full-screen on mobile)
+- **Mobile Layout Progress**: 3 / 8 phases complete (37.5%)
 - **Version 1.5**: Near completion (47/48 components)
 
 **Dashboard Implementation Status**: ✅ **COMPLETE WITH UI/UX REFINEMENT** (7/7 widgets)
@@ -159,6 +160,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Mobile Layout Additional Features + Turbopack Build Fix (2025-10-29 Session 9)** - Implemented 6 mobile enhancements and fixed critical Windows build issue. **Features**: (1) Calendar Page - Created dedicated calendar page with controlled DashboardCalendarWidget at top and synced task list below that updates when changing months. (2) Swipe Navigation - Implemented SwipeablePages component using framer-motion for horizontal swipe gestures between 4 main pages (งานของฉัน ⟷ เช็คลิสต์ ⟷ ปฏิทิน ⟷ แจ้งเตือน) with 50px threshold and velocity detection, desktop mode unaffected. (3) Navigation Reorganization - Moved Calendar from top nav to bottom nav position 4, moved Activities from bottom nav to top nav with conditional X button that shows router.back() on Activities page. (4) Workspace Menu Animation - Added framer-motion collapse/expand animations (ChevronDown rotation, height/opacity transition, duration 0.2s ease-out) with default expanded state. (5) Mobile-Friendly Modals - Made "สร้างโปรเจกต์" and "สร้างงาน" buttons full-width on mobile (w-full md:w-auto, responsive heights/text). (6) Controlled Calendar Component - Converted DashboardCalendarWidget to controlled component pattern with currentMonth and onMonthChange props for parent state management. **Build Fix**: Resolved Windows EPERM error ("operation not permitted, scandir Application Data") by switching from webpack to Turbopack (`npm run build` now uses `--turbo` flag). Turbopack build completes successfully in ~6 seconds vs webpack failure. **Testing**: Type-check passed (0 errors), production build successful (62 pages generated). **Files**: Created 5 new files (activities/page.tsx, calendar/page.tsx, checklist/page.tsx, projects/[projectId]/mobile/page.tsx, swipeable-pages.tsx), modified 8 files (package.json, calendar widget, bottom/top nav, mobile menu, 2 modal buttons, my-tasks/notifications pages). **Impact**: All mobile navigation features now fully functional, build system no longer blocked by Windows permission issues. Next: Mobile Layout Phase 4 (Task Panel full-screen mobile). 📱✅
+- ✅ **Mobile Layout Phase 3 - Mobile Top Bar Enhancement (2025-10-28 Session 8)** - Enhanced mobile top bar with dynamic titles, context-specific actions, and smooth animations. **Dynamic Page Titles**: Added titles for 10+ routes including main pages (Dashboard, My Tasks, Notifications), management pages (Users, Reports, Settings, Profile), department (Department Tasks), and project views (Board/List/Calendar View). **Context-Specific Actions**: Implemented action buttons per page context - Dashboard (Search), My Tasks (Filter), Projects (View switcher), Department Tasks (Filter), Users (Filter) - all with touch-friendly 36x36px tap targets. **Improved Back Button Logic**: Expanded main pages list to 6 pages where hamburger menu shows instead of back button, back button displays on secondary pages. **Animations & Transitions**: Added backdrop blur effect (bg-card/95 backdrop-blur-md), slide-in animation on mount (animate-in slide-in-from-top-4 fade-in duration-300), button press animations (active:scale-95 duration-150), smooth opacity transitions for page title, and logo fade-in on dashboard. **Type Fixes**: Added React import for React.ReactElement type, fixed JSX namespace error. **Testing**: Type-check passed (0 errors). **Status**: Phase 3 Complete (3/8 phases, 37.5% of mobile implementation). Files modified: 1 file (mobile-top-bar.tsx), ~100+ lines. Commit: `8628624`. **Note**: Global search modal functionality deferred to future phase (state and button ready). Next: Phase 4 (Task Panel full-screen mobile). 📱✅
 - ✅ **Mobile Layout Phase 2 - Bottom Nav Features (2025-10-28 Session 7)** - Completed all bottom navigation features enabling 5-tab navigation system with full functionality. Created 3 new pages/components: (1) `/my-tasks` page (201 lines) - Personal task management with 2 tabs ("งานที่ได้รับ" Assigned to Me + "งานที่สร้าง" Created by Me), displaying touch-friendly task cards with project name, priority badges, due dates, and assignee avatars that open Task Panel on click. (2) `/notifications` page (199 lines) - Dedicated notifications center with 2 tabs ("ทั้งหมด" All + "ยังไม่ได้อ่าน" Unread), badge counts, mark all as read button, and click-to-open Task Panel functionality. (3) `mobile-menu.tsx` (280 lines) - Full-featured hamburger drawer with user profile section (avatar, role, department), collapsible workspace/project selector (first 10 projects), navigation links (Reports, Users, Settings) with permission-based visibility, dark mode toggle switch, and logout button. **Integration**: Mobile menu integrated in both bottom nav Menu tab and mobile top bar hamburger icon. **Type Fixes**: Fixed 4 type errors (myTasks property → myCreatedTasks/assignedToMeTasks, removed disabled properties, added Separator component, fixed useProjects params). **Testing**: Type-check passed (0 errors). **Status**: Phase 2 Complete (2/8 phases, 25% of mobile implementation). Files created: 4 files, modified: 4 files, total: ~700 lines. Commit: `e7070ab`. Next: Phase 3 (Mobile Top Bar enhancements). See `MOBILE_LAYOUT_DESIGN.md` for updated roadmap. 📱✅
 - ✅ **Mobile Layout Phase 1 - Foundation (2025-10-28 Session 6)** - Implemented responsive layout infrastructure with Hybrid Approach that switches between desktop and mobile layouts at 768px breakpoint. Created 5 new components: (1) `use-media-query.ts` hook with utility functions (`useIsMobile`, `useIsDesktop`, etc.) for SSR-safe breakpoint detection, (2) `desktop-layout.tsx` - Refactored existing layout with Sidebar + Top Navbar, (3) `mobile-layout.tsx` - Mobile layout with Bottom Navigation + Mobile Top Bar, (4) `bottom-navigation.tsx` - Facebook-style 5-tab bottom nav (Home, My Tasks, Create, Notifications, Menu) with active states, notification badges, and 48x48px touch-friendly tap targets, (5) `mobile-top-bar.tsx` - Dynamic top bar with back button logic and page titles. Updated `(dashboard)/layout.tsx` to responsive wrapper using `useIsMobile()` hook for conditional rendering. **What Works**: Layout switching at 768px, Home tab navigation, Create button opens modal, notification badge, touch-friendly UI. **What's Disabled**: My Tasks & Notifications tabs (Phase 2), Hamburger menu (Phase 2). Files created: 5 files (587 lines). Type-check: 0 errors. Commit: `bd21b24`. Next: Phase 2 (create /my-tasks and /notifications pages, implement hamburger menu drawer). See `MOBILE_LAYOUT_DESIGN.md` for complete design documentation (620+ lines). 📱
 - ✅ **Privacy Consent System + Mobile Design Doc (2025-10-28 Session 5)** - Implemented comprehensive privacy notice and cookie consent system with 15-day expiration and auto-extension on login. Created 3 new components: (1) `use-privacy-consent.ts` hook with localStorage persistence and version tracking, (2) `privacy-notice-modal.tsx` with 2 tabs (Privacy Policy + Cookie Notice in Thai), (3) `cookie-settings-modal.tsx` with granular controls for 3 cookie categories (Necessary, Functional, Analytics). Integrated with login page - modal shows on first visit and cannot be dismissed until consent given. Added consent extension logic to `use-auth.ts` login mutation that refreshes timestamp on successful login. Created `MOBILE_LAYOUT_DESIGN.md` (620+ lines) - Comprehensive mobile UI/UX design document with wireframes, implementation roadmap (11 phases, 18-26 hours), technical specs, and best practices inspired by Facebook and ClickUp patterns. Files created: 4 files (1,757 insertions). Commit: `06115d2`. All content in Thai with Tailwind CSS (text-sm) styling. 🔒
@@ -1480,6 +1483,79 @@ if (process.env.NODE_ENV === 'production') {
 - Document all production domains in both files
 - Set `NEXT_PUBLIC_APP_URL` for flexibility
 
+### Windows Build Error (EPERM: scandir Application Data)
+
+**Symptom**:
+- Build fails with `Error: EPERM: operation not permitted, scandir 'C:\Users\...\Application Data'`
+- Occurs during `npm run build` on Windows
+- Webpack trying to scan system directories
+- `glob error` appears in build output
+
+**Root Cause**:
+Webpack's file system scanner tries to scan Windows system folders that have restricted permissions, causing build to fail.
+
+**Solution - Use Turbopack**:
+
+```bash
+# Update package.json build script
+"build": "npx prisma generate && next build --turbo"
+
+# Build now uses Turbopack instead of Webpack
+npm run build
+```
+
+**Why Turbopack works**:
+- Turbopack uses a different file system scanner
+- Doesn't scan system directories like `Application Data`
+- Build completes in ~6 seconds (faster than Webpack)
+- All 62 pages generated successfully
+
+**Alternative Solutions** (if Turbopack not suitable):
+
+**Option 1: Webpack watchOptions** (didn't work in this case):
+```javascript
+// next.config.js
+webpack: (config) => {
+  config.watchOptions = {
+    ignored: [
+      '**/node_modules/**',
+      '**/.git/**',
+      '**/.next/**',
+      '**/Application Data/**',
+    ],
+  };
+  return config;
+}
+```
+
+**Option 2: Check Windows Permissions**:
+```bash
+# Run as Administrator
+# Or check folder permissions on "Application Data"
+```
+
+**Option 3: Use WSL2 or Linux**:
+```bash
+# Build on WSL2 instead of Windows
+wsl
+npm run build
+```
+
+**Files Modified**:
+- `package.json` - Updated build script to use `--turbo` flag
+
+**Verification**:
+```bash
+# Clean build
+rm -rf .next
+npm run build
+
+# Should complete successfully with Turbopack
+# Output: "✓ Compiled successfully in ~6s"
+```
+
+**Note**: Turbopack is experimental but stable enough for production builds in Next.js 15.5+
+
 ---
 
 ## Quick Start for New Claude Instances
@@ -2099,9 +2175,71 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.31.0** (2025-10-28)
+**End of CLAUDE.md v2.33.0** (2025-10-29)
 
 ## Changelog
+
+### v2.33.0 (2025-10-29) - Mobile Layout Additional Features + Turbopack Build Fix
+
+**Major changes:**
+- ✅ Implemented 6 mobile navigation enhancements
+- ✅ Fixed critical Windows build error with Turbopack
+- ✅ Created Calendar page with synced task list
+- ✅ Implemented swipe navigation between 4 main pages
+- ✅ Reorganized bottom/top navigation buttons
+- ✅ Added Workspace menu animations
+- ✅ Made modal buttons mobile-friendly
+- ✅ Type-check passed (0 errors)
+- ✅ Production build successful (62 pages)
+
+**Features Implemented:**
+1. **Calendar Page** - Dedicated page with DashboardCalendarWidget at top and task list below, month state synced
+2. **Swipe Navigation** - SwipeablePages component with framer-motion for horizontal swipes between งานของฉัน ⟷ เช็คลิสต์ ⟷ ปฏิทิน ⟷ แจ้งเตือน (50px threshold, velocity detection, desktop unaffected)
+3. **Navigation Reorganization** - Calendar moved to bottom nav position 4, Activities moved to top nav with X button for router.back()
+4. **Workspace Animation** - Collapse/expand with ChevronDown rotation, height/opacity transitions (0.2s ease-out), default expanded
+5. **Controlled Calendar Component** - DashboardCalendarWidget now controlled with currentMonth/onMonthChange props
+6. **Mobile-Friendly Modals** - "สร้างโปรเจกต์" and "สร้างงาน" buttons full-width on mobile (w-full md:w-auto)
+
+**Build Fix:**
+- **Windows EPERM Error** - Resolved "operation not permitted, scandir Application Data" by switching to Turbopack
+- Updated `package.json` build script: `"build": "npx prisma generate && next build --turbo"`
+- Turbopack build succeeds in ~6 seconds vs webpack failure
+- Added troubleshooting guide for Windows build errors
+
+**Files:**
+- Created: 5 files (activities/page.tsx, calendar/page.tsx, checklist/page.tsx, projects/[projectId]/mobile/page.tsx, swipeable-pages.tsx)
+- Modified: 8 files (package.json, dashboard-calendar-widget.tsx, bottom-navigation.tsx, mobile-top-bar.tsx, mobile-menu.tsx, create-project-modal.tsx, create-task-modal.tsx, my-tasks/notifications pages)
+- Updated: 1 doc (CLAUDE.md - added Windows Build Error troubleshooting)
+
+**Next:** Mobile Layout Phase 4 - Task Panel Mobile (full-screen on mobile devices)
+
+### v2.32.0 (2025-10-28) - Mobile Layout Phase 3 Complete
+
+**Major changes:**
+- ✅ Completed Phase 3 of mobile layout implementation (3/8 phases, 37.5% complete)
+- ✅ Enhanced mobile-top-bar.tsx with dynamic titles and context actions (~100+ lines)
+- ✅ Dynamic page titles for 10+ routes (Dashboard, My Tasks, Notifications, Users, Reports, Settings, Profile, Department Tasks, Project views)
+- ✅ Context-specific action buttons (Search, Filter, View switcher) per page
+- ✅ Improved back button logic (6 main pages with hamburger, secondary pages with back)
+- ✅ Added animations and transitions (backdrop blur, slide-in, button press, opacity)
+- ✅ Type-check passed (0 errors)
+- ✅ Updated MOBILE_LAYOUT_DESIGN.md (Phase 3 status, progress 37.5%)
+- ✅ Updated Current Priority to Phase 4 (Task Panel Mobile)
+
+**Features Implemented:**
+- Dynamic titles for all main routes
+- Context-aware action buttons with touch-friendly tap targets
+- Smooth animations: backdrop blur, slide-in, active:scale-95, fade transitions
+- Back button logic expansion for 6 main pages
+- Search button state management (modal in future phase)
+
+**Commit**: 8628624
+
+**Files Modified:**
+- Modified: 1 file (mobile-top-bar.tsx)
+- Updated: 2 docs (MOBILE_LAYOUT_DESIGN.md, CLAUDE.md)
+
+**Next:** Phase 4 - Task Panel Mobile (full-screen on mobile devices)
 
 ### v2.31.0 (2025-10-28) - Mobile Layout Phase 2 Complete
 

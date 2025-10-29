@@ -13,6 +13,7 @@ import {
   Loader2,
   Calendar as CalendarIcon,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import { ParentTaskPopover } from "@/components/ui/parent-task-popover";
 import { useUIStore } from "@/stores/use-ui-store";
 import { useCreateTask } from "@/hooks/use-tasks";
 import { useProjects } from "@/hooks/use-projects";
+import { useIsMobile } from "@/hooks/use-media-query";
 import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -77,6 +79,7 @@ export function CreateTaskModal() {
     (state) => state.closeCreateTaskModal
   );
   const createTask = useCreateTask();
+  const isMobile = useIsMobile();
 
   // Fetch all accessible projects (with permission check)
   const { data: projectsData, isLoading: isLoadingProjects } = useProjects({
@@ -432,26 +435,53 @@ export function CreateTaskModal() {
       {/* Slide Panel */}
       <div
         className={cn(
-          "fixed top-0 right-0 h-full w-full max-w-3xl",
-          "bg-background/90 backdrop-blur-sm",
-          "rounded-l-xl shadow-2xl z-[101]",
+          "fixed top-0 right-0 h-full w-full",
+          // Desktop: slide panel with max-width and rounded corners
+          "md:max-w-3xl md:rounded-l-xl",
+          // Mobile: full-screen (no rounded corners, no max-width)
+          "max-md:max-w-none max-md:rounded-none",
+          "bg-background/90 backdrop-blur-sm shadow-2xl z-[101]",
           "flex flex-col",
           "transform transition-transform duration-300 ease-in-out",
           isVisible ? "translate-x-0" : "translate-x-full"
         )}
       >
         {/* Header */}
-        <header className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl flex-shrink-0">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            สร้างงานใหม่
-          </h2>
-          <button
-            onClick={closeCreateTaskModal}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-            title="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        <header
+          className={cn(
+            "flex items-center justify-between p-4",
+            "bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700",
+            "md:rounded-tl-xl",
+            "max-md:rounded-none",
+            "flex-shrink-0"
+          )}
+        >
+          <div className="flex items-center gap-2">
+            {/* Mobile: Back button */}
+            {isMobile && (
+              <button
+                onClick={closeCreateTaskModal}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                title="Back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              สร้างงานใหม่
+            </h2>
+          </div>
+
+          {/* Desktop: Close Button (X) */}
+          {!isMobile && (
+            <button
+              onClick={closeCreateTaskModal}
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </header>
 
         {/* Content */}
@@ -468,6 +498,49 @@ export function CreateTaskModal() {
           )}
 
           <form onSubmit={handleFormSubmit(onSubmit)} className="space-y-8">
+            {/* Project Selector - Mobile Only (ก่อน Task Name) */}
+            <div className="md:hidden">
+              <Label className="block mb-1">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  โปรเจกต์ <span className="text-red-500">*</span>
+                </span>
+              </Label>
+              <Controller
+                name="projectId"
+                control={control}
+                rules={{ required: "กรุณาเลือกโปรเจกต์" }}
+                render={({ field }) => (
+                  <ProjectPopover
+                    projects={availableProjects}
+                    value={field.value}
+                    onChange={(projectId) => {
+                      field.onChange(projectId);
+                      const proj = availableProjects.find(
+                        (p) => p.id === projectId
+                      );
+                      setSelectedProject(proj || null);
+                    }}
+                    disabled={
+                      !!createTaskModal.projectId ||
+                      isLoadingProjectData ||
+                      isLoadingProjects
+                    }
+                    placeholder={
+                      isLoadingProjects
+                        ? "กำลังโหลดโปรเจกต์..."
+                        : "เลือกโปรเจกต์"
+                    }
+                    required
+                  />
+                )}
+              />
+              {errors.projectId && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.projectId.message}
+                </p>
+              )}
+            </div>
+
             {/* Task Name (required) */}
             <div>
               <Label htmlFor="task-name">
@@ -605,8 +678,8 @@ export function CreateTaskModal() {
                 />
               </div>
 
-              {/* Project Selector */}
-              <div>
+              {/* Project Selector - Desktop Only (ใน Grid) */}
+              <div className="max-md:hidden">
                 <Label className="block mb-1">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     โปรเจกต์ <span className="text-red-500">*</span>
@@ -687,15 +760,22 @@ export function CreateTaskModal() {
         </div>
 
         {/* Footer */}
-        <footer className="flex justify-end gap-3 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 rounded-bl-xl flex-shrink-0">
+        <footer
+          className={cn(
+            "flex justify-end gap-3 p-4",
+            "bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700",
+            "md:rounded-bl-xl",
+            "max-md:rounded-none",
+            "flex-shrink-0"
+          )}
+        >
           <Button
             onClick={handleFormSubmit(onSubmit)}
             disabled={createTask.isPending || isLoadingProjectData}
-            size="lg"
-            className="min-w-[200px] text-base"
+            className="flex items-center justify-center px-6 py-2.5 text-sm md:text-base font-semibold rounded-lg shadow-md h-10 md:h-[46px] w-full md:w-auto md:min-w-[150px]"
           >
             {createTask.isPending && (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <Loader2 className="mr-2 h-4 md:h-5 w-4 md:w-5 animate-spin" />
             )}
             สร้างงาน
           </Button>

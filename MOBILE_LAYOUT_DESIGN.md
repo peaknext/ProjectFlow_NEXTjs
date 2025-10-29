@@ -1,7 +1,8 @@
 # Mobile Layout Design - ProjectFlows
 
-**Version**: 1.0.0
-**Date**: 2025-10-28
+**Version**: 1.1.0
+**Date**: 2025-10-29
+**Last Update**: Additional Features (Calendar, Swipe, Navigation, Animations, Build Fix)
 **Approach**: Hybrid (Separate Layout, Shared Components)
 **Target**: < 768px (Mobile devices)
 **Inspiration**: Facebook, ClickUp mobile patterns
@@ -532,8 +533,9 @@ src/
 ## 🚀 Implementation Roadmap
 
 **Total Phases**: 8 (originally 11, merged Phases 4-6 into Phase 2)
-**Completed**: 2 / 8 phases (25%)
-**Estimated Time**: 14-22 hours (5-8 hours completed, 9-14 hours remaining)
+**Completed**: 5 / 8 phases (62.5%) + Additional features
+**Estimated Time**: 14-22 hours (10-14 hours completed, 4-8 hours remaining)
+**Additional Features**: 6 mobile enhancements completed (2025-10-29)
 
 ### Phase 1: Foundation (2-3 hours) ✅ **COMPLETE**
 
@@ -612,57 +614,205 @@ src/
 
 ---
 
-### Phase 3: Mobile Top Bar Enhancement (1 hour)
+### Phase 3: Mobile Top Bar Enhancement (1 hour) ✅ **COMPLETE**
 
-**Status**: ⏳ Pending
+**Status**: ✅ Complete (2025-10-28)
+**Commit**: `8628624`
 
 **Goal**: Enhanced top bar with context-specific features
 
 **Tasks**:
-1. ⏳ Add dynamic page titles for all routes
-2. ⏳ Implement context-specific action buttons
-3. ⏳ Add search functionality (preview)
-4. ⏳ Improve back button logic
-5. ⏳ Add animations
+1. ✅ Add dynamic page titles for all routes (10+ routes):
+   - Main pages: Dashboard, My Tasks, Notifications
+   - Management: Users, Reports, Settings, Profile
+   - Department: Department Tasks
+   - Projects: Board View, List View, Calendar View
+2. ✅ Implement context-specific action buttons:
+   - Dashboard: Search button
+   - My Tasks: Filter button
+   - Projects: View switcher button
+   - Department Tasks: Filter button
+   - Users: Filter button
+3. ✅ Add search functionality (state & button ready, modal in future phase)
+4. ✅ Improve back button logic (6 main pages with hamburger, others with back)
+5. ✅ Add animations:
+   - Backdrop blur effect
+   - Slide-in animation on mount
+   - Button press animations (active:scale-95)
+   - Smooth opacity transitions
+   - Logo fade-in
 
-**Deliverable**: Polished top bar with full features
+**Deliverable**: ✅ Polished top bar with full features
+
+**What Works**:
+- All route titles display correctly
+- Context-specific actions render per page
+- Smooth animations and transitions
+- Back button logic improved
+- Touch-friendly tap targets (36x36px)
 
 **Note**: Phases 4, 5, 6 have been merged into Phase 2 and completed.
 
 ---
 
-### Phase 4 (formerly 7): Task Panel Mobile (1-2 hours)
+### Phase 4 (formerly 7): Task Panel Mobile (1-2 hours) ✅ **COMPLETE**
 
-**Status**: ⏳ Pending
+**Status**: ✅ Complete (2025-10-28)
+**Commit**: (pending)
 
 **Goal**: Full-screen task panel on mobile
 
 **Tasks**:
-1. ⏳ Update `task-panel/index.tsx` with responsive classes
-2. ⏳ Add mobile header with back button
-3. ⏳ Make tabs sticky
-4. ⏳ Test on mobile viewport
-5. ⏳ Add swipe-to-close (optional)
+1. ✅ Update `task-panel/index.tsx` with responsive classes
+   - Desktop: `md:max-w-3xl md:rounded-l-xl` (600px slide from right)
+   - Mobile: `w-full max-md:max-w-none max-md:rounded-none` (full-screen)
+2. ✅ Update `task-panel-header.tsx` with mobile back button
+   - Mobile: ArrowLeft icon (← กลับ)
+   - Desktop: X icon (ปิด)
+   - Removed rounded corner on mobile: `md:rounded-tl-xl`
+3. ✅ Make tabs sticky on mobile
+   - Added `max-md:sticky max-md:top-0 max-md:z-10 max-md:bg-background`
+   - Desktop remains static
+4. ✅ Type-check passed (0 errors)
+5. ⏳ Test on mobile viewport (user to test)
+6. ⏳ Add swipe-to-close (optional - deferred to future)
 
-**Deliverable**: Full-screen task panel
+**Deliverable**: ✅ Full-screen task panel with mobile-optimized header and sticky tabs
+
+**What Works**:
+- Task Panel opens full-screen on mobile devices (< 768px)
+- Back button (←) appears on mobile instead of close X
+- Tabs stick to top when scrolling content on mobile
+- All content remains scrollable
+- Desktop layout unchanged (600px slide-in panel)
+
+**Files Modified**:
+- `src/components/task-panel/index.tsx` (responsive panel classes)
+- `src/components/task-panel/task-panel-header.tsx` (back button, conditional icon)
+- `src/components/task-panel/task-panel-tabs.tsx` (sticky tabs on mobile)
 
 ---
 
-### Phase 5 (formerly 8): Modals Mobile (2-3 hours)
+### Phase 5 (formerly 8): Modals Mobile (2-3 hours) ✅ **COMPLETE**
 
-**Status**: ⏳ Pending
+**Status**: ✅ Complete (2025-10-28)
+**Commit**: (pending)
 
 **Goal**: All modals full-screen on mobile
 
 **Tasks**:
-1. ⏳ Update `create-task-modal.tsx`
-2. ⏳ Update `create-project-modal.tsx`
-3. ⏳ Update `create-user-modal.tsx`
-4. ⏳ Update `edit-project-modal.tsx`
-5. ⏳ Update `edit-user-modal.tsx`
-6. ⏳ Add mobile headers to all modals
+1. ✅ Update `create-task-modal.tsx` - Full-screen on mobile, back button
+2. ✅ Update `create-project-modal.tsx` - Full-screen on mobile, back button
+3. ✅ Update `edit-project-modal.tsx` - Full-screen on mobile, back button
+4. ✅ Update `create-user-modal.tsx` - Full-screen on mobile, back button
+5. ✅ Update `edit-user-modal.tsx` - Full-screen on mobile, back button
+6. ✅ Type-check passed (0 errors)
+7. ⏳ Test on mobile viewport (user to test)
 
-**Deliverable**: All modals responsive
+**Deliverable**: ✅ All 5 modals responsive and mobile-optimized
+
+**What Works**:
+- All slide panel modals open full-screen on mobile (< 768px)
+- Back button (←) appears on mobile instead of close X button
+- Desktop layout unchanged (slide from right with max-width)
+- Smooth animations maintained
+- No rounded corners on mobile, rounded on desktop
+
+**Files Modified** (5 modals):
+- `src/components/modals/create-task-modal.tsx`
+- `src/components/modals/create-project-modal.tsx`
+- `src/components/modals/edit-project-modal.tsx`
+- `src/components/modals/create-user-modal.tsx`
+- `src/components/modals/edit-user-modal.tsx`
+
+**Pattern Applied**:
+1. Import `ArrowLeft` from lucide-react
+2. Import `useIsMobile` hook
+3. Add `isMobile` variable in component
+4. Update slide panel classes:
+   - Desktop: `md:max-w-3xl md:rounded-l-xl` (or max-w-2xl for user modals)
+   - Mobile: `w-full max-md:max-w-none max-md:rounded-none`
+5. Update header: `md:rounded-tl-xl` (desktop only)
+6. Update close button: Conditional `isMobile ? <ArrowLeft/> : <X/>`
+
+---
+
+### Additional Features (2025-10-29) ✅ **COMPLETE**
+
+**Status**: ✅ Complete (2025-10-29)
+**Commit**: (pending)
+
+**Goal**: Additional mobile navigation enhancements + build fix
+
+**Features Implemented**:
+1. ✅ **Calendar Page** (`src/app/(dashboard)/calendar/page.tsx` - 324 lines)
+   - Dedicated page with DashboardCalendarWidget at top
+   - Task list below that syncs with selected month
+   - Grouped by date with due date badge
+   - Touch-friendly task cards
+   - Click to open Task Panel
+
+2. ✅ **Swipe Navigation** (`src/components/layout/swipeable-pages.tsx` - 93 lines)
+   - Horizontal swipe gestures between 4 main pages
+   - Pages: งานของฉัน ⟷ เช็คลิสต์ ⟷ ปฏิทิน ⟷ แจ้งเตือน
+   - 50px threshold + velocity detection
+   - Desktop mode unaffected (no swipe)
+   - Smooth transitions with framer-motion
+   - Rubber band effect (dragElastic: 0.2)
+
+3. ✅ **Navigation Reorganization**
+   - Moved Calendar from top nav to bottom nav (position 4)
+   - Moved Activities from bottom nav to top nav
+   - Added X button on Activities page for router.back()
+   - Bottom nav: Home, My Tasks, Create, Calendar, Notifications (5 tabs)
+
+4. ✅ **Workspace Menu Animation** (`mobile-menu.tsx`)
+   - Smooth collapse/expand with framer-motion
+   - ChevronDown rotation animation (0 → -90 degrees)
+   - Height/opacity transition (duration: 0.2s, ease-out)
+   - Default expanded state on app open
+   - AnimatePresence for mount/unmount
+
+5. ✅ **Controlled Calendar Component** (`dashboard-calendar-widget.tsx`)
+   - Added currentMonth and onMonthChange props
+   - Allows parent to manage month state
+   - Maintains backward compatibility (uncontrolled mode)
+   - Syncs calendar and task list perfectly
+
+6. ✅ **Mobile-Friendly Modal Buttons**
+   - "สร้างโปรเจกต์" button full-width on mobile
+   - "สร้างงาน" button full-width on mobile
+   - Responsive classes: `w-full md:w-auto`
+   - Responsive heights: `h-10 md:h-[46px]`
+   - Responsive text: `text-sm md:text-base`
+
+**Build Fix**:
+- ✅ **Windows EPERM Error** - Resolved "operation not permitted, scandir Application Data"
+- Updated `package.json` build script to use Turbopack: `"build": "npx prisma generate && next build --turbo"`
+- Build succeeds in ~6 seconds vs webpack failure
+- All 62 pages generated successfully
+
+**Files Created** (5):
+- `src/app/(dashboard)/activities/page.tsx`
+- `src/app/(dashboard)/calendar/page.tsx`
+- `src/app/(dashboard)/checklist/page.tsx`
+- `src/app/(dashboard)/projects/[projectId]/mobile/page.tsx`
+- `src/components/layout/swipeable-pages.tsx`
+
+**Files Modified** (8):
+- `package.json` (build script with --turbo)
+- `src/components/dashboard/dashboard-calendar-widget.tsx` (controlled component)
+- `src/components/layout/bottom-navigation.tsx` (Calendar tab)
+- `src/components/layout/mobile-top-bar.tsx` (Activities button + X button)
+- `src/components/layout/mobile-menu.tsx` (animations)
+- `src/components/modals/create-project-modal.tsx` (mobile button)
+- `src/components/modals/create-task-modal.tsx` (mobile button)
+- `src/app/(dashboard)/my-tasks/page.tsx` + `notifications/page.tsx` (SwipeablePages wrapper)
+
+**Testing**:
+- ✅ Type-check passed (0 errors)
+- ✅ Production build successful (62 pages)
+- ⏳ User testing on mobile devices (pending)
 
 ---
 

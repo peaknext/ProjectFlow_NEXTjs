@@ -4,7 +4,7 @@
   "description": "ProjectFlows - Project Management System for Sakon Nakhon Hospital",
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && next build",
+    "build": "npx prisma generate && next build --turbo",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit --skipLibCheck",

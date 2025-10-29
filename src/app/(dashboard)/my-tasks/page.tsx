@@ -24,12 +24,13 @@ import { useUIStore } from '@/stores/use-ui-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileText, UserCheck, ChevronRight } from 'lucide-react';
+import { Loader2, FileText, UserCheck, ChevronRight, Pin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { SwipeablePages } from '@/components/layout/swipeable-pages';
 
 export default function MyTasksPage() {
   const [activeTab, setActiveTab] = useState<'created' | 'assigned'>('assigned');
@@ -59,9 +60,19 @@ export default function MyTasksPage() {
       );
     }
 
+    // Sort tasks: 1. Pinned first, 2. Then by priority (1 > 2 > 3 > 4)
+    const sortedTasks = [...tasks].sort((a, b) => {
+      // 1. Pinned tasks first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+
+      // 2. Then sort by priority (1 = highest, 4 = lowest)
+      return (a.priority || 3) - (b.priority || 3);
+    });
+
     return (
       <div className="space-y-2">
-        {tasks.map((task: any) => {
+        {sortedTasks.map((task: any) => {
           const isPinned = task.isPinned;
           const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !task.isClosed;
 
@@ -79,9 +90,14 @@ export default function MyTasksPage() {
                 {/* Task Content */}
                 <div className="flex-1 min-w-0">
                   {/* Task Name */}
-                  <h3 className="font-medium text-sm line-clamp-2 mb-1">
-                    {task.name}
-                  </h3>
+                  <div className="flex items-start gap-1.5 mb-1">
+                    {isPinned && (
+                      <Pin className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" />
+                    )}
+                    <h3 className="font-medium text-sm line-clamp-2 flex-1">
+                      {task.name}
+                    </h3>
+                  </div>
 
                   {/* Project Name */}
                   {task.project && (
@@ -155,46 +171,48 @@ export default function MyTasksPage() {
   };
 
   return (
-    <div className="h-full">
-      {/* Page Header - Hidden on mobile (shown in mobile-top-bar) */}
-      <div className="hidden md:block mb-6">
-        <h1 className="text-2xl font-bold">งานของฉัน</h1>
-        <p className="text-muted-foreground">งานที่สร้างและงานที่ได้รับมอบหมาย</p>
+    <SwipeablePages>
+      <div className="h-full">
+        {/* Page Header - Hidden on mobile (shown in mobile-top-bar) */}
+        <div className="hidden md:block mb-6">
+          <h1 className="text-2xl font-bold">งานของฉัน</h1>
+          <p className="text-muted-foreground">งานที่สร้างและงานที่ได้รับมอบหมาย</p>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'created' | 'assigned')}>
+          <TabsList className="w-full grid grid-cols-2 mb-4">
+            <TabsTrigger value="assigned" className="gap-2">
+              <UserCheck className="h-4 w-4" />
+              <span>งานที่ได้รับ</span>
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {assignedTasks.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="created" className="gap-2">
+              <FileText className="h-4 w-4" />
+              <span>งานที่สร้าง</span>
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {createdTasks.length}
+              </Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="assigned" className="mt-0">
+            {renderTaskList(assignedTasks, 'assigned')}
+          </TabsContent>
+
+          <TabsContent value="created" className="mt-0">
+            {renderTaskList(createdTasks, 'created')}
+          </TabsContent>
+        </Tabs>
+
+        {/* Pull to Refresh Hint - Mobile Only */}
+        <div className="md:hidden text-center mt-8 mb-4 text-xs text-muted-foreground">
+          <p>ดึงลงเพื่อรีเฟรช</p>
+          <p className="text-[10px]">(Phase 10 - Coming Soon)</p>
+        </div>
       </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'created' | 'assigned')}>
-        <TabsList className="w-full grid grid-cols-2 mb-4">
-          <TabsTrigger value="assigned" className="gap-2">
-            <UserCheck className="h-4 w-4" />
-            <span>งานที่ได้รับ</span>
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {assignedTasks.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="created" className="gap-2">
-            <FileText className="h-4 w-4" />
-            <span>งานที่สร้าง</span>
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {createdTasks.length}
-            </Badge>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="assigned" className="mt-0">
-          {renderTaskList(assignedTasks, 'assigned')}
-        </TabsContent>
-
-        <TabsContent value="created" className="mt-0">
-          {renderTaskList(createdTasks, 'created')}
-        </TabsContent>
-      </Tabs>
-
-      {/* Pull to Refresh Hint - Mobile Only */}
-      <div className="md:hidden text-center mt-8 mb-4 text-xs text-muted-foreground">
-        <p>ดึงลงเพื่อรีเฟรช</p>
-        <p className="text-[10px]">(Phase 10 - Coming Soon)</p>
-      </div>
-    </div>
+    </SwipeablePages>
   );
 }

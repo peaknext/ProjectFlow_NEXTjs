@@ -33,6 +33,8 @@ import { cn } from "@/lib/utils";
 interface DashboardCalendarProps {
   calendarTasks: DashboardTask[];
   isLoading: boolean;
+  currentMonth?: Date;
+  onMonthChange?: (date: Date) => void;
 }
 
 const thaiMonths = [
@@ -55,9 +57,16 @@ const thaiDayAbbreviations = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "�
 export function DashboardCalendarWidget({
   calendarTasks,
   isLoading,
+  currentMonth: controlledMonth,
+  onMonthChange,
 }: DashboardCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // Use internal state if not controlled
+  const [internalMonth, setInternalMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Determine if controlled or uncontrolled
+  const currentMonth = controlledMonth || internalMonth;
+  const setCurrentMonth = onMonthChange || setInternalMonth;
 
   // Group tasks by date
   const tasksByDate = useMemo(() => {

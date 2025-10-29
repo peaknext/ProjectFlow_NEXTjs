@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sheet,
   SheetContent,
@@ -33,7 +34,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
   ChevronDown,
-  ChevronRight,
   FolderKanban,
   BarChart3,
   Users,
@@ -60,7 +60,7 @@ export function MobileMenu({ open, onOpenChange }: MobileMenuProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(true);
 
   const { data: projectsData } = useProjects();
   const projects = projectsData?.projects || [];
@@ -72,7 +72,7 @@ export function MobileMenu({ open, onOpenChange }: MobileMenuProps) {
   };
 
   const handleProjectClick = (projectId: string) => {
-    router.push(`/projects/${projectId}/board`);
+    router.push(`/projects/${projectId}/mobile`);
     handleClose();
   };
 
@@ -98,33 +98,35 @@ export function MobileMenu({ open, onOpenChange }: MobileMenuProps) {
         </SheetHeader>
 
         <ScrollArea className="h-[calc(100vh-80px)] px-6">
-          {/* User Profile Section */}
+          {/* User Profile Section - Clickable */}
           {user && (
             <div className="mb-6">
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage
-                    src={
-                      user.profileImageUrl ||
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`
-                    }
-                    alt={user.fullName}
-                  />
-                  <AvatarFallback>{user.fullName?.charAt(0) || 'U'}</AvatarFallback>
-                </Avatar>
+              <Link href="/profile" onClick={handleClose}>
+                <button className="w-full flex items-start gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage
+                      src={
+                        user.profileImageUrl ||
+                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`
+                      }
+                      alt={user.fullName}
+                    />
+                    <AvatarFallback>{user.fullName?.charAt(0) || 'U'}</AvatarFallback>
+                  </Avatar>
 
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{user.fullName}</p>
-                  <Badge variant="outline" className="mt-1 text-xs">
-                    {user.role}
-                  </Badge>
-                  {user.department && (
-                    <p className="text-xs text-muted-foreground mt-1 truncate">
-                      {user.department.name}
-                    </p>
-                  )}
-                </div>
-              </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="font-semibold text-sm truncate">{user.fullName}</p>
+                    <Badge variant="outline" className="mt-1 text-xs">
+                      {user.role}
+                    </Badge>
+                    {user.department && (
+                      <p className="text-xs text-muted-foreground mt-1 truncate">
+                        {user.department.name}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              </Link>
             </div>
           )}
 
@@ -140,55 +142,66 @@ export function MobileMenu({ open, onOpenChange }: MobileMenuProps) {
                 <FolderKanban className="h-4 w-4" />
                 <span className="text-sm font-medium">WORKSPACE</span>
               </div>
-              {workspaceExpanded ? (
+              <motion.div
+                animate={{ rotate: workspaceExpanded ? 0 : -90 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
                 <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
+              </motion.div>
             </button>
 
-            {workspaceExpanded && (
-              <div className="mt-2 ml-6 space-y-1">
-                {projects.length > 0 ? (
-                  <>
-                    {projects.slice(0, 10).map((project: any) => (
-                      <button
-                        key={project.id}
-                        onClick={() => handleProjectClick(project.id)}
-                        className={cn(
-                          'w-full text-left p-2 rounded-md text-sm transition-colors',
-                          'hover:bg-accent',
-                          pathname?.includes(`/projects/${project.id}`) && 'bg-accent font-medium'
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <FolderKanban className="h-3.5 w-3.5 flex-shrink-0" />
-                          <span className="truncate">{project.name}</span>
-                        </div>
-                      </button>
-                    ))}
-
-                    {projects.length > 10 && (
-                      <p className="text-xs text-muted-foreground pl-2 pt-1">
-                        และอีก {projects.length - 10} โปรเจกต์...
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-xs text-muted-foreground pl-2">ไม่มีโปรเจกต์</p>
-                )}
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCreateProject}
-                  className="w-full justify-start mt-2"
+            <AnimatePresence initial={false}>
+              {workspaceExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="overflow-hidden"
                 >
-                  <Plus className="h-3.5 w-3.5 mr-2" />
-                  สร้างโปรเจกต์ใหม่
-                </Button>
-              </div>
-            )}
+                  <div className="mt-2 ml-6 space-y-1">
+                    {projects.length > 0 ? (
+                      <>
+                        {projects.slice(0, 10).map((project: any) => (
+                          <button
+                            key={project.id}
+                            onClick={() => handleProjectClick(project.id)}
+                            className={cn(
+                              'w-full text-left p-2 rounded-md text-sm transition-colors',
+                              'hover:bg-accent',
+                              pathname?.includes(`/projects/${project.id}`) && 'bg-accent font-medium'
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <FolderKanban className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="truncate">{project.name}</span>
+                            </div>
+                          </button>
+                        ))}
+
+                        {projects.length > 10 && (
+                          <p className="text-xs text-muted-foreground pl-2 pt-1">
+                            และอีก {projects.length - 10} โปรเจกต์...
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-foreground pl-2">ไม่มีโปรเจกต์</p>
+                    )}
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCreateProject}
+                      className="w-full justify-start mt-2"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-2" />
+                      สร้างโปรเจกต์ใหม่
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <Separator className="my-4" />
