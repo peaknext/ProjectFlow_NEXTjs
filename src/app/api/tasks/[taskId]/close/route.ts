@@ -162,6 +162,45 @@ async function handler(
       });
     }
 
+    // ✅ REALTIME PROGRESS UPDATE: Update project progress in database
+    // Close/abort task affects progress calculation
+    const { calculateProgress, updateProjectProgress } = await import('@/lib/calculate-progress');
+
+    // Fetch tasks and statuses for progress calculation
+    const project = await prisma.project.findUnique({
+      where: { id: existingTask.project.id },
+      include: {
+        tasks: {
+          where: {
+            deletedAt: null,
+            parentTaskId: null,
+          },
+          select: {
+            difficulty: true,
+            closeType: true,
+            status: {
+              select: {
+                order: true,
+              },
+            },
+          },
+        },
+        statuses: {
+          select: {
+            order: true,
+          },
+        },
+      },
+    });
+
+    if (project) {
+      const progressResult = calculateProgress(project.tasks, project.statuses);
+      // Update progress in background (fire-and-forget)
+      updateProjectProgress(existingTask.project.id, progressResult.progress).catch((error) => {
+        console.error('Failed to update project progress:', error);
+      });
+    }
+
     return successResponse({
       task: {
         ...closedTask,

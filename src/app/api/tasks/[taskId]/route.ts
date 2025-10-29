@@ -767,6 +767,48 @@ async function patchHandler(
     // Extract assignee user IDs from assignees relation (for consistency with GET endpoint)
     const assigneeUserIds = updatedTask.assignees.map(a => a.userId);
 
+    // ✅ REALTIME PROGRESS UPDATE: Update project progress in database
+    // Only update if status or difficulty changed (affects progress calculation)
+    if (updates.statusId !== undefined || updates.difficulty !== undefined) {
+      // Import and call progress update (async, don't wait for response)
+      const { calculateProgress, updateProjectProgress } = await import('@/lib/calculate-progress');
+
+      // Fetch tasks and statuses for progress calculation
+      const project = await prisma.project.findUnique({
+        where: { id: updatedTask.projectId },
+        include: {
+          tasks: {
+            where: {
+              deletedAt: null,
+              parentTaskId: null,
+            },
+            select: {
+              difficulty: true,
+              closeType: true,
+              status: {
+                select: {
+                  order: true,
+                },
+              },
+            },
+          },
+          statuses: {
+            select: {
+              order: true,
+            },
+          },
+        },
+      });
+
+      if (project) {
+        const progressResult = calculateProgress(project.tasks, project.statuses);
+        // Update progress in background (fire-and-forget)
+        updateProjectProgress(updatedTask.projectId, progressResult.progress).catch((error) => {
+          console.error('Failed to update project progress:', error);
+        });
+      }
+    }
+
     return successResponse({
       task: {
         ...updatedTask,

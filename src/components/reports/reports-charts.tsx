@@ -178,24 +178,47 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
     ],
   };
 
-  // Chart 3: Open Tasks by Assignee (Bar)
+  // Chart 3: Tasks by Status per Assignee (Stacked Bar)
   const assigneeNames = Object.keys(statistics.workloadByType);
-  const openTasksByAssignee = assigneeNames.map((name) => {
+
+  // Prepare data for each status
+  const notStartedData = assigneeNames.map((name) => {
     const userData = statistics.workloadByType[name];
-    const notStarted = Number(userData["Not Started"]) || 0;
-    const inProgress = Number(userData["In Progress"]) || 0;
-    const total = notStarted + inProgress;
-    return total;
+    return Number(userData["Not Started"]) || 0;
   });
 
-  const openTasksData = {
+  const inProgressData = assigneeNames.map((name) => {
+    const userData = statistics.workloadByType[name];
+    return Number(userData["In Progress"]) || 0;
+  });
+
+  const doneData = assigneeNames.map((name) => {
+    const userData = statistics.workloadByType[name];
+    return Number(userData.Done) || 0;
+  });
+
+  const stackedTasksData = {
     labels: assigneeNames,
     datasets: [
       {
-        label: "งานที่ยังไม่เสร็จ",
-        data: openTasksByAssignee,
-        backgroundColor: "rgba(59, 130, 246, 0.8)",
+        label: "ยังไม่เริ่ม",
+        data: notStartedData,
+        backgroundColor: "rgba(148, 163, 184, 0.8)", // slate-500
+        borderColor: "rgb(148, 163, 184)",
+        borderWidth: 1,
+      },
+      {
+        label: "กำลังทำ",
+        data: inProgressData,
+        backgroundColor: "rgba(59, 130, 246, 0.8)", // blue-500
         borderColor: "rgb(59, 130, 246)",
+        borderWidth: 1,
+      },
+      {
+        label: "เสร็จแล้ว",
+        data: doneData,
+        backgroundColor: "rgba(16, 185, 129, 0.8)", // green-500
+        borderColor: "rgb(16, 185, 129)",
         borderWidth: 1,
       },
     ],
@@ -203,9 +226,10 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
 
   const barOptions: ChartOptions<"bar"> = {
     ...commonOptions,
-    indexAxis: "x" as const, // Vertical bar (สลับจาก horizontal)
+    indexAxis: "x" as const, // Vertical bar
     scales: {
       x: {
+        stacked: true, // Enable stacking on x-axis
         grid: {
           display: false,
         },
@@ -218,6 +242,7 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
         },
       },
       y: {
+        stacked: true, // Enable stacking on y-axis
         beginAtZero: true,
         grid: {
           color: isDark
@@ -260,15 +285,15 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
         </Card>
       </div>
 
-      {/* Row 2: Bar Chart */}
+      {/* Row 2: Stacked Bar Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            งานที่ยังไม่เสร็จแยกตามผู้รับผิดชอบ
+            งานแยกตามสถานะและผู้รับผิดชอบ
           </CardTitle>
         </CardHeader>
         <CardContent className="h-[400px]">
-          <Bar data={openTasksData} options={barOptions} />
+          <Bar data={stackedTasksData} options={barOptions} />
         </CardContent>
       </Card>
     </>
