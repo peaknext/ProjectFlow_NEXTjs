@@ -83,7 +83,7 @@ export function TaskPanelHeader({ task, isLoading }: TaskPanelHeaderProps) {
             <span
               className={cn(
                 'material-symbols-outlined',
-                task?.isPinned && 'filled text-primary'
+                task?.isPinned && 'filled text-amber-500'
               )}
             >
               keep
