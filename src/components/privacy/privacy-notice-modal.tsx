@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Cookie, FileText, Settings } from "lucide-react";
+import { Cookie, FileText, Settings } from "lucide-react";
 import { CookieSettingsModal } from "./cookie-settings-modal";
 
 interface PrivacyNoticeModalProps {
@@ -45,7 +46,13 @@ export function PrivacyNoticeModal({
           <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
-                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+                <Image
+                  src="/ProjectFlowLogo.svg"
+                  alt="ProjectFlows"
+                  width={24}
+                  height={24}
+                  className="h-5 w-5 sm:h-6 sm:w-6"
+                />
               </div>
               <div className="min-w-0">
                 <DialogTitle className="text-lg sm:text-xl md:text-2xl leading-tight">
