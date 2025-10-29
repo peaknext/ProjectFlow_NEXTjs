@@ -158,7 +158,7 @@ function TaskChecklistGroup({ group }: { group: MyChecklistGroup }) {
           <div className="flex-1 min-w-0">
             <h4 className="font-medium text-sm truncate">{group.taskName}</h4>
             <p className="text-xs text-muted-foreground truncate mt-0.5">
-              📁 {group.projectName}
+              {group.projectName}
             </p>
           </div>
           {/* Right: Progress bar (same line, same length as header) */}

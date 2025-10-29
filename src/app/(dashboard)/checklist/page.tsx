@@ -87,7 +87,7 @@ export default function ChecklistPage() {
                         {group.taskName}
                       </h3>
                       <p className="text-xs text-muted-foreground">
-                        📁 {group.projectName}
+                        {group.projectName}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
