@@ -40,11 +40,16 @@ function calculateProgress(tasks, statuses) {
   let totalWeight = 0; // Σ(Smax × difficulty)
 
   validTasks.forEach((task) => {
-    const statusOrder = task.status?.order || 1;
     const difficulty = task.difficulty || 2; // Default to 2 if not set
 
     // Validate difficulty is 1-5
     const validDifficulty = [1, 2, 3, 4, 5].includes(difficulty) ? difficulty : 2;
+
+    // For COMPLETED tasks, use Smax (count as 100% complete)
+    // For open tasks, use their current status order
+    const statusOrder = task.closeType === 'COMPLETED'
+      ? Smax
+      : (task.status?.order || 1);
 
     completedWeight += statusOrder * validDifficulty;
     totalWeight += Smax * validDifficulty;
