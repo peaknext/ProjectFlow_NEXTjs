@@ -42,38 +42,38 @@ export function PrivacyNoticeModal({
   return (
     <>
       <Dialog open={open} onOpenChange={canClose ? onClose : undefined}>
-        <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[95vh] sm:max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
+                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
-                <DialogTitle className="text-2xl">
+              <div className="min-w-0">
+                <DialogTitle className="text-lg sm:text-xl md:text-2xl leading-tight">
                   ประกาศความเป็นส่วนตัวและการใช้คุกกี้
                 </DialogTitle>
-                <DialogDescription className="mt-1">
+                <DialogDescription className="mt-0.5 sm:mt-1 text-xs sm:text-sm">
                   กรุณาอ่านและยอมรับนโยบายก่อนเข้าใช้งานระบบ
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <Tabs defaultValue="privacy" className="flex-1">
-            <div className="px-6 pt-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="privacy" className="gap-2">
-                  <FileText className="h-4 w-4" />
-                  นโยบายความเป็นส่วนตัว
+          <Tabs defaultValue="privacy" className="flex-1 overflow-hidden flex flex-col">
+            <div className="px-4 sm:px-6 pt-3 sm:pt-4 flex-shrink-0">
+              <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+                <TabsTrigger value="privacy" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">นโยบายความเป็นส่วนตัว</span>
                 </TabsTrigger>
-                <TabsTrigger value="cookies" className="gap-2">
-                  <Cookie className="h-4 w-4" />
-                  นโยบายคุกกี้
+                <TabsTrigger value="cookies" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Cookie className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">นโยบายคุกกี้</span>
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <ScrollArea className="h-[400px] px-6 py-4">
+            <ScrollArea className="h-[300px] sm:h-[400px] px-4 sm:px-6 py-3 sm:py-4 flex-1">
               <TabsContent value="privacy" className="mt-0 space-y-4 text-sm">
                 <section>
                   <h3 className="font-semibold text-base mb-2">1. ข้อมูลที่เราเก็บรวบรวม</h3>
@@ -259,28 +259,28 @@ export function PrivacyNoticeModal({
             </ScrollArea>
           </Tabs>
 
-          <div className="px-6 py-4 border-t bg-muted/30 flex flex-col sm:flex-row gap-2">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-muted/30 flex flex-col sm:flex-row gap-2 flex-shrink-0">
             <Button
               variant="outline"
               onClick={handleOpenCookieSettings}
-              className="flex-1 sm:flex-none gap-2"
+              className="flex-1 sm:flex-none gap-1 sm:gap-2 min-h-[44px] text-sm"
             >
-              <Settings className="h-4 w-4" />
-              ตั้งค่าคุกกี้
+              <Settings className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">ตั้งค่าคุกกี้</span>
             </Button>
             <div className="flex gap-2 flex-1">
               <Button
                 variant="outline"
                 onClick={onDeclineOptional}
-                className="flex-1"
+                className="flex-1 min-h-[44px] text-xs sm:text-sm px-2 sm:px-4"
               >
-                ยอมรับเฉพาะที่จำเป็น
+                <span className="truncate">ยอมรับเฉพาะที่จำเป็น</span>
               </Button>
               <Button
                 onClick={onAcceptAll}
-                className="flex-1"
+                className="flex-1 min-h-[44px] text-xs sm:text-sm px-2 sm:px-4"
               >
-                ยอมรับทั้งหมด
+                <span className="truncate">ยอมรับทั้งหมด</span>
               </Button>
             </div>
           </div>
