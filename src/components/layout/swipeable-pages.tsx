@@ -22,6 +22,7 @@
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, PanInfo } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-media-query';
+import { useUIStore } from '@/stores/use-ui-store';
 
 interface SwipeablePagesProps {
   children: React.ReactNode;
@@ -39,6 +40,7 @@ export function SwipeablePages({ children }: SwipeablePagesProps) {
   const router = useRouter();
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const isAnyModalOpen = useUIStore((state) => state.isAnyModalOpen());
 
   // Desktop mode: render children without swipe
   if (!isMobile) {
@@ -51,6 +53,11 @@ export function SwipeablePages({ children }: SwipeablePagesProps) {
   // Not a swipeable page, render normally
   if (currentIndex === -1) {
     return <>{children}</>;
+  }
+
+  // Modal/Panel is open: disable swipe to prevent gesture conflict
+  if (isAnyModalOpen) {
+    return <div className="h-full w-full">{children}</div>;
   }
 
   const handleDragEnd = (_event: any, info: PanInfo) => {

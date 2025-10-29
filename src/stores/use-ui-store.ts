@@ -64,6 +64,7 @@ interface UIState {
 
   // Getters (convenience)
   createTaskModal: ModalState['createTask'];
+  isAnyModalOpen: () => boolean;
 
   // Actions - Loading states
   setTaskClosing: (taskId: string, type: CloseTaskType) => void;
@@ -135,6 +136,19 @@ export const useUIStore = create<UIState>()(
       // Getters
       get createTaskModal() {
         return get().modals.createTask;
+      },
+
+      isAnyModalOpen: () => {
+        const modals = get().modals;
+        return (
+          modals.createTask.isOpen ||
+          modals.editTask.isOpen ||
+          modals.createProject.isOpen ||
+          modals.editProject.isOpen ||
+          modals.createUser.isOpen ||
+          modals.editUser.isOpen ||
+          modals.taskPanel.isOpen
+        );
       },
 
       // Loading state actions
