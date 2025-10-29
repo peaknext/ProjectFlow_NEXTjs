@@ -170,16 +170,16 @@ export default function RegisterPage() {
 
   return (
     <div className="flex items-center justify-center w-full">
-      <div className="w-full max-w-3xl mx-auto p-8 space-y-6 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
+      <div className="w-full max-w-3xl mx-auto p-8 space-y-6 bg-card backdrop-blur-sm rounded-xl shadow-2xl border border-border">
         {/* Logo + Title */}
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
             <Logo size={16} marginRight={4} />
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl sm:text-4xl font-bold">
               สร้างบัญชีใหม่
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             กรุณากรอกข้อมูลเพื่อสมัครใช้งาน ProjectFlows
           </p>
         </div>
@@ -187,13 +187,13 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {/* Title Prefix (Full width) */}
           <div>
-            <label htmlFor="titlePrefix" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <label htmlFor="titlePrefix" className="block text-sm font-medium mb-1">
               คำนำหน้าชื่อ (ถ้ามี)
             </label>
             <select
               id="titlePrefix"
               {...register('titlePrefix')}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
+              className="w-full px-4 py-3 bg-background border border-input rounded-lg focus:ring-ring focus:border-ring transition-colors text-sm sm:text-base"
             >
               <option value="">-- ไม่ระบุ --</option>
               {getCommonTitlePrefixes().map((item) => (
@@ -208,8 +208,8 @@ export default function RegisterPage() {
           <div className="grid grid-cols-2 gap-4">
             {/* First Name */}
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                ชื่อ <span className="text-red-500">*</span>
+              <label htmlFor="firstName" className="block text-sm font-medium mb-1">
+                ชื่อ <span className="text-destructive">*</span>
               </label>
               <input
                 id="firstName"
@@ -217,15 +217,15 @@ export default function RegisterPage() {
                 placeholder="เช่น สมชาย"
                 autoComplete="given-name"
                 {...register('firstName')}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
+                className="w-full px-4 py-3 bg-background border border-input rounded-lg focus:ring-ring focus:border-ring transition-colors text-sm sm:text-base"
               />
-              <p className="text-sm text-red-500 mt-1 h-4">{errors.firstName?.message || ''}</p>
+              <p className="text-sm text-destructive mt-1 h-4">{errors.firstName?.message || ''}</p>
             </div>
 
             {/* Last Name */}
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                นามสกุล <span className="text-red-500">*</span>
+              <label htmlFor="lastName" className="block text-sm font-medium mb-1">
+                นามสกุล <span className="text-destructive">*</span>
               </label>
               <input
                 id="lastName"
@@ -233,16 +233,16 @@ export default function RegisterPage() {
                 placeholder="เช่น ใจดี"
                 autoComplete="family-name"
                 {...register('lastName')}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
+                className="w-full px-4 py-3 bg-background border border-input rounded-lg focus:ring-ring focus:border-ring transition-colors text-sm sm:text-base"
               />
-              <p className="text-sm text-red-500 mt-1 h-4">{errors.lastName?.message || ''}</p>
+              <p className="text-sm text-destructive mt-1 h-4">{errors.lastName?.message || ''}</p>
             </div>
           </div>
 
           {/* Email (Full width) */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-              อีเมล <span className="text-red-500">*</span>
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
+              อีเมล <span className="text-destructive">*</span>
             </label>
             <input
               id="email"
@@ -250,16 +250,16 @@ export default function RegisterPage() {
               placeholder="กรอกอีเมล"
               autoComplete="email"
               {...register('email')}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
+              className="w-full px-4 py-3 bg-background border border-input rounded-lg focus:ring-ring focus:border-ring transition-colors text-sm sm:text-base"
             />
-            <p className="text-sm text-red-500 mt-1 h-4">{errors.email?.message || ''}</p>
+            <p className="text-sm text-destructive mt-1 h-4">{errors.email?.message || ''}</p>
           </div>
 
           {/* Division + Department */}
           <div className="grid grid-cols-2 gap-4">
             {/* Division */}
             <div>
-              <label htmlFor="divisionId" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              <label htmlFor="divisionId" className="block text-sm font-medium mb-1">
                 กลุ่มงาน
               </label>
               <div className="relative">
@@ -271,7 +271,7 @@ export default function RegisterPage() {
                     setValue('divisionId', e.target.value);
                   }}
                   disabled={loadingDivisions}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base disabled:opacity-50"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-foreground focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base disabled:opacity-50"
                 >
                   <option value="">เลือกกลุ่มงาน...</option>
                   {divisions.map((division) => (
@@ -284,12 +284,12 @@ export default function RegisterPage() {
                   </div>
                 )}
               </div>
-              <p className="text-sm text-red-500 mt-1 h-4">{errors.divisionId?.message || ''}</p>
+              <p className="text-sm text-destructive mt-1 h-4">{errors.divisionId?.message || ''}</p>
             </div>
 
             {/* Department */}
             <div>
-              <label htmlFor="departmentId" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              <label htmlFor="departmentId" className="block text-sm font-medium mb-1">
                 หน่วยงาน
               </label>
               <div className="relative">
@@ -297,7 +297,7 @@ export default function RegisterPage() {
                   id="departmentId"
                   {...register('departmentId')}
                   disabled={!selectedDivision || loadingDepartments}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base disabled:opacity-50"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-foreground focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base disabled:opacity-50"
                 >
                   <option value="">เลือกหน่วยงาน...</option>
                   {departments.map((dept) => (
@@ -310,14 +310,14 @@ export default function RegisterPage() {
                   </div>
                 )}
               </div>
-              <p className="text-sm text-red-500 mt-1 h-4">{errors.departmentId?.message || ''}</p>
+              <p className="text-sm text-destructive mt-1 h-4">{errors.departmentId?.message || ''}</p>
             </div>
           </div>
 
           {/* Password with Popover */}
           <div className="relative pt-2">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium mb-1">
                 รหัสผ่าน
               </label>
               <input
@@ -328,7 +328,7 @@ export default function RegisterPage() {
                 {...register('password')}
                 onFocus={() => setShowPopover(true)}
                 onBlur={() => setShowPopover(false)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
+                className="w-full px-4 py-3 bg-background border border-input rounded-lg focus:ring-ring focus:border-ring transition-colors text-sm sm:text-base"
               />
             </div>
 
@@ -338,33 +338,33 @@ export default function RegisterPage() {
                 showPopover ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
               }`}
             >
-              <div className="bg-white dark:bg-gray-700 rounded-lg shadow-xl border dark:border-gray-600 p-4 relative">
+              <div className="bg-popover rounded-lg shadow-xl border border-border p-4 relative">
                 {/* Arrow pointing left */}
-                <div className="absolute top-1/2 -left-2 w-4 h-4 bg-white dark:bg-gray-700 transform -translate-y-1/2 rotate-45 border-l border-b dark:border-gray-600"></div>
+                <div className="absolute top-1/2 -left-2 w-4 h-4 bg-popover transform -translate-y-1/2 rotate-45 border-l border-b border-border"></div>
 
-                <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                <p className="text-sm font-semibold text-popover-foreground mb-2">
                   รหัสผ่านควรประกอบด้วย:
                 </p>
                 <ul className="space-y-1 text-sm">
-                  <li className={`flex items-center transition-colors ${requirements.length ? 'text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <li className={`flex items-center transition-colors ${requirements.length ? 'text-green-500' : 'text-muted-foreground'}`}>
                     <span className="w-5 h-5 mr-2 flex items-center justify-center">
                       {requirements.length ? '✓' : '○'}
                     </span>
                     <span>อย่างน้อย 8 ตัวอักษร</span>
                   </li>
-                  <li className={`flex items-center transition-colors ${requirements.case ? 'text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <li className={`flex items-center transition-colors ${requirements.case ? 'text-green-500' : 'text-muted-foreground'}`}>
                     <span className="w-5 h-5 mr-2 flex items-center justify-center">
                       {requirements.case ? '✓' : '○'}
                     </span>
                     <span>มีตัวพิมพ์เล็กและใหญ่ (a-Z)</span>
                   </li>
-                  <li className={`flex items-center transition-colors ${requirements.number ? 'text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <li className={`flex items-center transition-colors ${requirements.number ? 'text-green-500' : 'text-muted-foreground'}`}>
                     <span className="w-5 h-5 mr-2 flex items-center justify-center">
                       {requirements.number ? '✓' : '○'}
                     </span>
                     <span>มีตัวเลขอย่างน้อย 1 ตัว (0-9)</span>
                   </li>
-                  <li className={`flex items-center transition-colors ${requirements.special ? 'text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <li className={`flex items-center transition-colors ${requirements.special ? 'text-green-500' : 'text-muted-foreground'}`}>
                     <span className="w-5 h-5 mr-2 flex items-center justify-center">
                       {requirements.special ? '✓' : '○'}
                     </span>
@@ -376,7 +376,7 @@ export default function RegisterPage() {
 
             {/* Strength Meter */}
             <div className="mt-2 space-y-2">
-              <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-1 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full transition-all duration-300 ease-in-out"
                   style={{
@@ -385,14 +385,14 @@ export default function RegisterPage() {
                   }}
                 ></div>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 h-4">
+              <p className="text-xs text-muted-foreground h-4">
                 {meter.text}
               </p>
             </div>
 
             {/* Confirm Password */}
             <div className="mt-4">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
                 ยืนยันรหัสผ่าน
               </label>
               <div className="relative">
@@ -402,7 +402,7 @@ export default function RegisterPage() {
                   placeholder="กรอกรหัสผ่านอีกครั้ง"
                   autoComplete="new-password"
                   {...register('confirmPassword')}
-                  className="w-full px-4 py-3 pr-10 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
+                  className="w-full px-4 py-3 pr-10 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-600 focus:border-blue-600 transition-colors text-sm sm:text-base"
                 />
                 {/* Confirmation Icon */}
                 {watchedConfirmPassword && (
@@ -412,7 +412,7 @@ export default function RegisterPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     ) : passwordsDontMatch ? (
-                      <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     ) : null}
@@ -420,7 +420,7 @@ export default function RegisterPage() {
                 )}
               </div>
               {/* Password Match Feedback */}
-              <p className={`text-xs mt-1 h-4 ${passwordsMatch ? 'text-green-500' : passwordsDontMatch ? 'text-red-500' : ''}`}>
+              <p className={`text-xs mt-1 h-4 ${passwordsMatch ? 'text-green-500' : passwordsDontMatch ? 'text-destructive' : ''}`}>
                 {passwordsMatch ? 'รหัสผ่านตรงกัน' : passwordsDontMatch ? 'รหัสผ่านไม่ตรงกัน' : ''}
               </p>
             </div>
@@ -442,9 +442,9 @@ export default function RegisterPage() {
         </form>
 
         {/* Login Link */}
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-center text-sm text-muted-foreground">
           มีบัญชีอยู่แล้ว?{' '}
-          <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+          <Link href="/login" className="font-medium text-primary hover:text-primary/80 transition-colors">
             เข้าสู่ระบบ
           </Link>
         </p>

@@ -108,16 +108,16 @@ export default function LoginPage() {
       />
 
       <div className="flex items-center justify-center w-full">
-        <div className="w-full max-w-md p-8 space-y-6 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
+        <div className="w-full max-w-md p-8 space-y-6 bg-card backdrop-blur-sm rounded-xl shadow-2xl border border-border">
         {/* Logo + Title */}
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
             <Logo size={16} marginRight={3} />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold">
               ProjectFlows
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             ยินดีต้อนรับ! กรุณากรอกข้อมูลเพื่อเข้าสู่ระบบ
           </p>
         </div>
@@ -139,7 +139,7 @@ export default function LoginPage() {
               className="h-[50px] text-base"
             />
             {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
+              <p className="text-sm text-destructive">{errors.email.message}</p>
             )}
           </div>
 
@@ -155,7 +155,7 @@ export default function LoginPage() {
               className="h-[50px] text-base"
             />
             {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
+              <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
 
@@ -163,7 +163,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-end">
             <Link
               href="/request-reset"
-              className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               ลืมรหัสผ่าน?
             </Link>
@@ -191,11 +191,11 @@ export default function LoginPage() {
         </form>
 
         {/* Register Link */}
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-center text-sm text-muted-foreground">
           ยังไม่มีบัญชี?{" "}
           <Link
             href="/register"
-            className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+            className="font-medium text-primary hover:text-primary/80 transition-colors"
           >
             ลงทะเบียน
           </Link>
