@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -12,12 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { CheckSquare } from "lucide-react";
 import { useUIStore } from "@/stores/use-ui-store";
 import { useToggleChecklistItem } from "@/hooks/use-dashboard";
@@ -29,40 +23,20 @@ interface MyChecklistWidgetProps {
   isLoading: boolean;
 }
 
-interface FlattenedChecklistItem {
-  id: string;
-  name: string;
-  isChecked: boolean;
-  taskId: string;
-  taskName: string;
-  projectName: string;
-}
-
 export function MyChecklistWidget({
   myChecklists,
   isLoading,
 }: MyChecklistWidgetProps) {
   const [showAll, setShowAll] = useState(false);
 
-  // Flatten all checklist items from all groups
-  const allItems = useMemo(() => {
-    const flattened: FlattenedChecklistItem[] = [];
-    myChecklists.forEach((group) => {
-      group.items.forEach((item) => {
-        flattened.push({
-          ...item,
-          taskId: group.taskId,
-          taskName: group.taskName,
-          projectName: group.projectName,
-        });
-      });
-    });
-    return flattened;
-  }, [myChecklists]);
+  // Calculate overall completion across all groups
+  let totalItems = 0;
+  let completedItems = 0;
+  myChecklists.forEach((group) => {
+    totalItems += group.items.length;
+    completedItems += group.items.filter((item) => item.isChecked).length;
+  });
 
-  // Calculate overall completion
-  const totalItems = allItems.length;
-  const completedItems = allItems.filter((item) => item.isChecked).length;
   const completionPercentage =
     totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
@@ -71,7 +45,7 @@ export function MyChecklistWidget({
   }
 
   // Empty state
-  if (totalItems === 0) {
+  if (myChecklists.length === 0) {
     return (
       <Card>
         <CardHeader className="border-b">
@@ -94,8 +68,8 @@ export function MyChecklistWidget({
     );
   }
 
-  const displayItems = showAll ? allItems : allItems.slice(0, 10);
-  const hasMore = totalItems > 10;
+  const displayGroups = showAll ? myChecklists : myChecklists.slice(0, 5);
+  const hasMore = myChecklists.length > 5;
 
   return (
     <Card>
@@ -111,11 +85,11 @@ export function MyChecklistWidget({
         </div>
       </CardHeader>
 
-      {/* Checklist Items */}
+      {/* Checklist Groups by Task */}
       <CardContent className="p-0">
-        <div className="divide-y max-h-[500px] overflow-y-auto">
-          {displayItems.map((item) => (
-            <ChecklistItemRow key={item.id} item={item} />
+        <div className="max-h-[500px] overflow-y-auto">
+          {displayGroups.map((group) => (
+            <TaskChecklistGroup key={group.taskId} group={group} />
           ))}
         </div>
 
@@ -128,7 +102,7 @@ export function MyChecklistWidget({
               onClick={() => setShowAll(true)}
               className="text-sm"
             >
-              ดูเพิ่มเติม ({totalItems - 10} รายการ)
+              ดูเพิ่มเติม ({myChecklists.length - 5} งาน)
             </Button>
           </div>
         )}
@@ -151,31 +125,67 @@ export function MyChecklistWidget({
   );
 }
 
-function ChecklistItemRow({ item }: { item: FlattenedChecklistItem }) {
+// Component for each task group with its checklist items
+function TaskChecklistGroup({ group }: { group: MyChecklistGroup }) {
   const { openTaskPanel } = useUIStore();
   const toggleChecklistItem = useToggleChecklistItem();
 
-  const handleCheckboxChange = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const completedCount = group.items.filter((item) => item.isChecked).length;
+  const totalCount = group.items.length;
+  const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  const handleTaskClick = () => {
+    openTaskPanel(group.taskId);
+  };
+
+  const handleCheckboxChange = (checklistId: string, isChecked: boolean) => {
     toggleChecklistItem.mutate({
-      taskId: item.taskId,
-      checklistId: item.id,
-      isChecked: !item.isChecked,
+      taskId: group.taskId,
+      checklistId,
+      isChecked: !isChecked,
     });
   };
 
-  const handleTaskClick = () => {
-    openTaskPanel(item.taskId);
-  };
-
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="p-4 cursor-pointer" onClick={handleTaskClick}>
-            {/* Checkbox + Item Name */}
+    <div className="border-b last:border-b-0">
+      {/* Task Header with Progress in same line */}
+      <div
+        className="px-6 py-3 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={handleTaskClick}
+      >
+        <div className="flex items-center justify-between gap-4">
+          {/* Left: Task name and project */}
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-sm truncate">{group.taskName}</h4>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
+              📁 {group.projectName}
+            </p>
+          </div>
+          {/* Right: Progress bar (same line, same length as header) */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Progress value={progressPercentage} className="h-2 w-32" />
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+              {completedCount}/{totalCount}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Checklist Items */}
+      <div className="divide-y">
+        {group.items.map((item) => (
+          <div
+            key={item.id}
+            className="px-6 py-3 hover:bg-accent/30 transition-colors"
+          >
             <div className="flex items-start gap-3">
-              <div onClick={handleCheckboxChange} className="pt-0.5">
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCheckboxChange(item.id, item.isChecked);
+                }}
+                className="pt-0.5"
+              >
                 <Checkbox checked={item.isChecked} className="h-5 w-5" />
               </div>
               <span
@@ -188,12 +198,9 @@ function ChecklistItemRow({ item }: { item: FlattenedChecklistItem }) {
               </span>
             </div>
           </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{item.taskName}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -201,33 +208,45 @@ function MyChecklistSkeleton() {
   return (
     <Card>
       <CardHeader className="border-b">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-6 w-20" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-2 w-32" />
+            <Skeleton className="h-5 w-16" />
+          </div>
         </div>
       </CardHeader>
 
-      {/* Progress Bar Skeleton */}
-      <CardContent className="pt-4 pb-3 border-b">
-        <div className="space-y-2">
-          <Skeleton className="h-2 w-full" />
-          <Skeleton className="h-3 w-12 ml-auto" />
-        </div>
-      </CardContent>
-
-      {/* Checklist Items Skeleton */}
+      {/* Task Groups Skeleton */}
       <CardContent className="p-0">
-        <div className="divide-y">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="p-4 space-y-1">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-5 w-5 rounded" />
-                <Skeleton className="h-4 flex-1" />
+        {[1, 2].map((groupIdx) => (
+          <div key={groupIdx} className="border-b last:border-b-0">
+            {/* Task Header Skeleton */}
+            <div className="px-6 py-3 bg-muted/30">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-2 w-32" />
+                  <Skeleton className="h-3 w-10" />
+                </div>
               </div>
-              <Skeleton className="h-3 w-32 ml-8" />
             </div>
-          ))}
-        </div>
+            {/* Checklist Items Skeleton */}
+            <div className="divide-y">
+              {[1, 2, 3].map((itemIdx) => (
+                <div key={itemIdx} className="px-6 py-3">
+                  <div className="flex items-start gap-3">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-4 flex-1" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
