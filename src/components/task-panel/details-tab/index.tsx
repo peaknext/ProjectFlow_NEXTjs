@@ -163,7 +163,7 @@ export function DetailsTab({
     handleSubmit,
     formState: { isDirty, isSubmitting, errors }
   } = useForm<TaskFormData>({
-    resolver: (zodResolver as any)(taskFormSchema),
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       name: '',
       description: '',
@@ -247,7 +247,9 @@ export function DetailsTab({
 
   // Register submit handler with parent
   useEffect(() => {
-    registerSubmitHandler?.(handleSubmit(onSubmit as any));
+    if (registerSubmitHandler) {
+      registerSubmitHandler(handleSubmit(onSubmit));
+    }
   }, [handleSubmit, onSubmit, registerSubmitHandler]);
 
   // Don't render if not active tab
@@ -302,7 +304,7 @@ export function DetailsTab({
 
       {/* Field Grid (Assignee, Priority, Difficulty, Dates) */}
       <FieldGrid
-        control={control as any}
+        control={control}
         setValue={setValue}
         watch={watch}
         errors={errors}
