@@ -14,6 +14,7 @@ import type {
   EventClickArg,
   EventMountArg,
   EventDropArg,
+  EventResizeDoneArg,
 } from "@fullcalendar/core";
 import { useTheme } from "next-themes";
 import { useQueryClient } from "@tanstack/react-query";
@@ -229,6 +230,12 @@ export function CalendarView({ projectId }: CalendarViewProps) {
     );
   };
 
+  // Handle event resize (wrapper for handleEventDrop)
+  const handleEventResize = (info: EventResizeDoneArg) => {
+    // EventResizeDoneArg has the same structure as EventDropArg
+    handleEventDrop(info as EventDropArg);
+  };
+
   // Handle event click
   const handleEventClick = (info: EventClickArg) => {
     const taskId = info.event.id;
@@ -327,7 +334,7 @@ export function CalendarView({ projectId }: CalendarViewProps) {
           events={events}
           editable={true}
           eventDrop={handleEventDrop}
-          eventResize={handleEventDrop as any} // Use same handler for resize
+          eventResize={handleEventResize}
           eventClick={handleEventClick}
           eventDidMount={handleEventDidMount}
           dayCellContent={(arg) => {

@@ -176,7 +176,7 @@ export function BoardView({ projectId }: BoardViewProps) {
               <StatusColumn
                 key={status.id}
                 status={status}
-                tasks={statusTasks as any}
+                tasks={statusTasks}
                 onTaskClick={handleTaskClick}
                 onAddTask={handleAddTask}
               />

@@ -171,7 +171,7 @@ export default function DepartmentTasksPage() {
       <div className="flex-1 overflow-auto p-6">
         <DepartmentTasksView
           departmentId={departmentId}
-          projects={data.projects as any}
+          projects={data.projects}
           allUsers={allUsers}
         />
 
