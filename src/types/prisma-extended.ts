@@ -77,6 +77,7 @@ export interface TaskWithProject extends TaskWithRelations {
     department?: {
       id: string;
       name: string;
+      divisionId: string;
     };
   };
 }
@@ -97,8 +98,9 @@ export interface TaskWithCreator extends TaskWithRelations {
 
 /**
  * Project with all possible relations loaded
+ * Note: Omits createdAt/updatedAt from base Project type to override as strings for JSON responses
  */
-export interface ProjectWithRelations extends Project {
+export interface ProjectWithRelations extends Omit<Project, 'createdAt' | 'updatedAt'> {
   creator?: {
     id: string;
     fullName: string;
@@ -135,7 +137,7 @@ export interface ProjectWithRelations extends Project {
     tasks: number;
     statuses: number;
   };
-  // Timestamps that may not be in base Prisma type
+  // Timestamps that may not be in base Prisma type (overridden as strings for JSON)
   createdAt?: string;
   updatedAt?: string;
   dateCreated?: string;
@@ -160,8 +162,9 @@ export interface ProjectWithCreator extends ProjectWithRelations {
 
 /**
  * User with additional custom fields
+ * Note: Omits notes and additionalRoles from base User type to override as optional for flexibility
  */
-export interface UserWithExtras extends User {
+export interface UserWithExtras extends Omit<User, 'notes' | 'additionalRoles'> {
   // Custom notes field (may not be in schema)
   notes?: string;
   // Department relation

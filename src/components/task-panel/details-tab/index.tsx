@@ -103,8 +103,8 @@ export interface TaskFormData {
   statusId: string;
   priority: string;
   difficulty: string;
-  startDate: string | null;
-  dueDate: string | null;
+  startDate?: string;
+  dueDate?: string;
   assigneeUserIds: string[];
 }
 

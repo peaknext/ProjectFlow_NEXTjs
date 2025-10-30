@@ -176,7 +176,7 @@ export function EditUserModal() {
         workLocation: user.workLocation || '',
         internalPhone: user.internalPhone || '',
         profileImageUrl: user.profileImageUrl || '',
-        notes: (user as UserWithExtras).notes || '',
+        notes: (user as unknown as UserWithExtras).notes || '',
       });
     } else {
       // Closing: trigger animation, then unmount after animation completes

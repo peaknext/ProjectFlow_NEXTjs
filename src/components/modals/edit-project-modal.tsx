@@ -393,27 +393,27 @@ export function EditProjectModal() {
               <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <span>สร้างโดย:</span>
-                  {(project as ProjectWithCreator).creator && (
+                  {(project as unknown as ProjectWithCreator).creator && (
                     <Avatar className="h-5 w-5">
                       <AvatarImage
-                        src={(project as ProjectWithCreator).creator.profileImageUrl || undefined}
-                        alt={(project as ProjectWithCreator).creator.fullName}
+                        src={(project as unknown as ProjectWithCreator).creator.profileImageUrl || undefined}
+                        alt={(project as unknown as ProjectWithCreator).creator.fullName}
                       />
                       <AvatarFallback className="text-[10px]">
-                        {((project as ProjectWithCreator).creator.fullName || '').charAt(0)}
+                        {((project as unknown as ProjectWithCreator).creator.fullName || '').charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                   )}
                   <span className="font-medium text-foreground">
-                    {(project as ProjectWithCreator).creator?.fullName || "-"}
+                    {(project as unknown as ProjectWithCreator).creator?.fullName || "-"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span>วันที่สร้าง:</span>
                   <span className="font-medium text-foreground">
-                    {(project as ProjectWithCreator).createdAt
+                    {(project as unknown as ProjectWithCreator).createdAt
                       ? (() => {
-                          const date = new Date((project as ProjectWithCreator).createdAt);
+                          const date = new Date((project as unknown as ProjectWithCreator).createdAt);
                           const thaiYear = date.getFullYear() + 543;
                           const dateStr = format(date, "d MMMM yyyy, HH:mm", {
                             locale: th,

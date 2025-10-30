@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useDepartmentTasks } from "@/hooks/use-department-tasks";
+import { useDepartmentTasks, type ProjectGroup } from "@/hooks/use-department-tasks";
 import { DepartmentTasksView } from "@/components/views/department-tasks";
 import { DepartmentToolbar } from "@/components/layout/department-toolbar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -171,7 +171,7 @@ export default function DepartmentTasksPage() {
       <div className="flex-1 overflow-auto p-6">
         <DepartmentTasksView
           departmentId={departmentId}
-          projects={data.projects}
+          projects={data.projects as unknown as any[]}
           allUsers={allUsers}
         />
 

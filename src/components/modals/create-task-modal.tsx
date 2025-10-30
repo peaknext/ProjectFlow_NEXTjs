@@ -36,6 +36,8 @@ import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { WorkspaceData, BoardData } from "@/types/api-responses";
+import type { PriorityValue } from "@/components/ui/priority-popover";
+import type { DifficultyValue } from "@/components/ui/difficulty-popover";
 
 interface Status {
   id: string;
@@ -47,6 +49,7 @@ interface Status {
 interface User {
   id: string;
   fullName: string;
+  email: string;
   profileImageUrl?: string | null;
 }
 
@@ -623,8 +626,8 @@ export function CreateTaskModal() {
                   control={control}
                   render={({ field }) => (
                     <PriorityPopover
-                      value={Number(field.value) || 3}
-                      onChange={(newValue) => field.onChange(String(newValue))}
+                      value={(field.value || '3') as PriorityValue}
+                      onChange={(newValue) => field.onChange(newValue)}
                     />
                   )}
                 />
@@ -642,8 +645,8 @@ export function CreateTaskModal() {
                   control={control}
                   render={({ field }) => (
                     <DifficultyPopover
-                      value={Number(field.value) || 3}
-                      onChange={(newValue) => field.onChange(String(newValue))}
+                      value={(field.value || '3') as DifficultyValue}
+                      onChange={(newValue) => field.onChange(newValue)}
                     />
                   )}
                 />

@@ -302,7 +302,7 @@ export function TaskRow({
         {/* Project Column (optional) */}
         {showProjectColumn && (
           <TableCell className="text-sm text-muted-foreground">
-            {(task as TaskWithProject).project?.name || '-'}
+            {(task as unknown as TaskWithProject).project?.name || '-'}
           </TableCell>
         )}
 
