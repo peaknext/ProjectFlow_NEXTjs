@@ -6,24 +6,11 @@
  */
 
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import { ApiResponse, ApiErrorResponse, isApiError } from '@/types/api-responses';
 
-// API Response types
-export interface ApiSuccessResponse<T = any> {
-  success: true;
-  data: T;
-  message?: string;
-}
-
-export interface ApiErrorResponse {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: any;
-  };
-}
-
-export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse;
+// Re-export types for backward compatibility
+export type { ApiResponse, ApiErrorResponse };
+export { isApiError };
 
 // Create axios instance
 const axiosInstance: AxiosInstance = axios.create({
@@ -93,8 +80,8 @@ class ApiClient {
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.instance.get<ApiResponse<T>>(url, config);
 
-    if (!response.data.success) {
-      throw new Error((response.data as any).error?.message || 'Request failed');
+    if (isApiError(response.data)) {
+      throw new Error(response.data.error.message || 'Request failed');
     }
 
     // Ensure we return the data (even if it's an empty object)
@@ -111,14 +98,14 @@ class ApiClient {
   ): Promise<T> {
     const response = await this.instance.post<ApiResponse<T>>(url, data, config);
 
-    if (!response.data.success) {
+    if (isApiError(response.data)) {
       console.error('[API Client] POST request failed:', {
         url,
         data,
-        error: (response.data as any).error,
+        error: response.data.error,
         fullResponse: response.data
       });
-      throw new Error((response.data as any).error?.message || 'Request failed');
+      throw new Error(response.data.error.message || 'Request failed');
     }
 
     return response.data.data ?? ({} as T);
@@ -134,8 +121,8 @@ class ApiClient {
   ): Promise<T> {
     const response = await this.instance.patch<ApiResponse<T>>(url, data, config);
 
-    if (!response.data.success) {
-      throw new Error((response.data as any).error?.message || 'Request failed');
+    if (isApiError(response.data)) {
+      throw new Error(response.data.error.message || 'Request failed');
     }
 
     return response.data.data ?? ({} as T);
@@ -147,8 +134,8 @@ class ApiClient {
   async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.instance.delete<ApiResponse<T>>(url, config);
 
-    if (!response.data.success) {
-      throw new Error((response.data as any).error?.message || 'Request failed');
+    if (isApiError(response.data)) {
+      throw new Error(response.data.error.message || 'Request failed');
     }
 
     return response.data.data ?? ({} as T);
@@ -164,8 +151,8 @@ class ApiClient {
   ): Promise<T> {
     const response = await this.instance.put<ApiResponse<T>>(url, data, config);
 
-    if (!response.data.success) {
-      throw new Error((response.data as any).error?.message || 'Request failed');
+    if (isApiError(response.data)) {
+      throw new Error(response.data.error.message || 'Request failed');
     }
 
     return response.data.data ?? ({} as T);
