@@ -313,7 +313,7 @@ export function useDeleteNotification() {
 
       // Find if the notification being deleted is unread
       const notifications =
-        (previousNotifications as any)?.notifications || [];
+        (previousNotifications as NotificationsResponse | undefined)?.notifications || [];
       const deletedNotification = notifications.find(
         (n: Notification) => n.id === notificationId
       );

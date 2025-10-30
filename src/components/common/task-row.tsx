@@ -12,6 +12,7 @@ import { useUIStore } from '@/stores/use-ui-store';
 import { useSession } from '@/hooks/use-session';
 import { canEditTask } from '@/hooks/use-task-permissions';
 import { projectKeys } from '@/hooks/use-projects';
+import type { TaskWithProject } from '@/types/prisma-extended';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -301,7 +302,7 @@ export function TaskRow({
         {/* Project Column (optional) */}
         {showProjectColumn && (
           <TableCell className="text-sm text-muted-foreground">
-            {(task as any).project?.name || '-'}
+            {(task as TaskWithProject).project?.name || '-'}
           </TableCell>
         )}
 
