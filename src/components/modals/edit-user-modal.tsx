@@ -61,6 +61,7 @@ import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types/user';
+import type { UserWithExtras } from '@/types/prisma-extended';
 
 interface Department {
   id: string;
@@ -175,7 +176,7 @@ export function EditUserModal() {
         workLocation: user.workLocation || '',
         internalPhone: user.internalPhone || '',
         profileImageUrl: user.profileImageUrl || '',
-        notes: (user as any).notes || '', // Type cast because notes might not be in type yet
+        notes: (user as UserWithExtras).notes || '',
       });
     } else {
       // Closing: trigger animation, then unmount after animation completes
