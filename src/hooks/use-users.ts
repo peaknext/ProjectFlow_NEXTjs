@@ -274,7 +274,7 @@ export function useUpdateUserStatus() {
           queryClient.setQueryData(queryKey, {
             ...data,
             users: data.users.map((u: User) =>
-              u.id === userId ? { ...u, userStatus: status as any } : u
+              u.id === userId ? { ...u, userStatus: status } : u
             ),
           });
         }

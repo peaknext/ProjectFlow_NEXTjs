@@ -49,7 +49,7 @@ export function useSyncMutation<TData = unknown, TError = unknown, TVariables = 
 
       // Return context with sync metadata
       return {
-        ...(userContext as any),
+        ...(userContext && typeof userContext === 'object' ? userContext : {}),
         __syncStartTime: syncStartTime,
       } as TContext;
     },

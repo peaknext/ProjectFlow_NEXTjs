@@ -220,7 +220,7 @@ export function TaskPanel() {
           isDirty={formState.isDirty}
           isSubmitting={formState.isSubmitting}
           onSave={handleSave}
-          statuses={statuses as any}
+          statuses={statuses}
           currentStatusId={formState.currentStatusId}
         />
       </motion.div>

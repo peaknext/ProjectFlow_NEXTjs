@@ -155,6 +155,7 @@ export function useHasStaleProgress(projectId: string): boolean {
     const queryState = queryClient.getQueryState(projectKeys.board(projectId));
 
     // If there are pending mutations, progress is stale
-    return (queryState?.status === 'success' && !(queryState as any)?.isFetching) || false;
+    const state = queryState as typeof queryState & { isFetching?: boolean };
+    return (state?.status === 'success' && !state?.isFetching) || false;
   }, [projectId, queryClient]);
 }
