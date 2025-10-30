@@ -340,11 +340,11 @@ export function CreateProjectModal() {
       order: index + 1,
       statusType:
         index === 0
-          ? "NOT_STARTED"
+          ? ("NOT_STARTED" as const)
           : index === array.length - 1
-          ? "DONE"
-          : "IN_PROGRESS",
-    })) as any;
+          ? ("DONE" as const)
+          : ("IN_PROGRESS" as const),
+    }));
 
     // Close modal immediately (optimistic)
     handleClose();
