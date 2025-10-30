@@ -81,11 +81,13 @@ export function Sidebar() {
           if (item.name === "งาน") {
             // Highlight "งาน" for all task-related paths:
             // - /department/tasks
+            // - /division/overview (Division View)
             // - /projects/[projectId]/board
             // - /projects/[projectId]/calendar
             // - /projects/[projectId]/list
             isActive =
               isActive ||
+              pathname?.startsWith("/division/") ||
               (pathname?.includes("/projects/") &&
                 (pathname?.endsWith("/board") ||
                   pathname?.endsWith("/calendar") ||

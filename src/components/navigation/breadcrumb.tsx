@@ -112,13 +112,18 @@ export function Breadcrumb({
       return;
     }
 
-    // Mission Group and Division are non-clickable (display only)
-    if (level === "missionGroup" || level === "division") {
+    // Mission Group is non-clickable (display only)
+    if (level === "missionGroup") {
       return;
     }
 
     // Navigate based on level
     switch (level) {
+      case "division":
+        // Navigate to division overview
+        router.push(`/division/overview`);
+        break;
+
       case "department":
         // Navigate to department view
         setDepartment(id, name);
@@ -143,7 +148,7 @@ export function Breadcrumb({
     missionGroupName: string
   ) => {
     setDivision(divisionId, divisionName, missionGroupId, missionGroupName);
-    router.push(`/division/tasks?id=${divisionId}`);
+    router.push(`/division/overview`);
   };
 
   /**
@@ -229,8 +234,7 @@ export function Breadcrumb({
     >
       {path.map((item, index) => {
         const isCurrentLevel = item.level === currentLevel;
-        const isNonClickable =
-          item.level === "missionGroup" || item.level === "division";
+        const isNonClickable = item.level === "missionGroup";
         const isLast = index === path.length - 1;
 
         // Determine what selector to show after this item

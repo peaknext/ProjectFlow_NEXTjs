@@ -7,6 +7,7 @@
  * Features:
  * - Collapsible cards for Mission Groups and Divisions
  * - Icon-based visual hierarchy
+ * - Click division name → navigate to division overview
  * - Click department name → navigate to department task view
  * - Click project name → navigate to project board view
  * - Badge counters showing number of projects
@@ -37,7 +38,7 @@ import type {
 export function WorkspaceNavigation() {
   const router = useRouter();
   const { data: workspace, isLoading } = useWorkspace();
-  const { setDepartment, setProject } = useNavigationStore();
+  const { setDivision, setDepartment, setProject } = useNavigationStore();
 
   // Track expanded state for each level
   const [expandedMissionGroups, setExpandedMissionGroups] = useState<Set<string>>(
@@ -83,6 +84,25 @@ export function WorkspaceNavigation() {
       }
       return next;
     });
+  };
+
+  /**
+   * Navigate to division overview
+   */
+  const handleDivisionClick = (
+    division: WorkspaceDivision,
+    missionGroup: WorkspaceMissionGroup
+  ) => {
+    // Update navigation store
+    setDivision(
+      division.id,
+      division.name,
+      missionGroup.id,
+      missionGroup.name
+    );
+
+    // Navigate to division overview with divisionId query param
+    router.push(`/division/overview?divisionId=${division.id}`);
   };
 
   /**
@@ -228,28 +248,44 @@ export function WorkspaceNavigation() {
 
                   return (
                     <div key={division.id} className="space-y-1">
-                      {/* Division Card */}
-                      <button
-                        onClick={() => toggleDivision(division.id)}
-                        className={cn(
-                          "w-full flex items-start gap-2 px-3 py-2 rounded-lg transition-colors",
-                          "hover:bg-accent/50",
-                          isDivExpanded && "bg-accent/30"
+                      {/* Division Card - Clickable to navigate to division overview */}
+                      <div className="flex items-center gap-1">
+                        {/* Expand/collapse button (only if has departments) */}
+                        {division.departments.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 flex-shrink-0"
+                            onClick={() => toggleDivision(division.id)}
+                          >
+                            {isDivExpanded ? (
+                              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                            )}
+                          </Button>
                         )}
-                      >
-                        {isDivExpanded ? (
-                          <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground mt-0.5" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground mt-0.5" />
-                        )}
-                        <Briefcase className="h-3.5 w-3.5 flex-shrink-0 text-blue-500 mt-0.5" />
-                        <span className="flex-1 min-w-0 text-left text-sm font-medium break-words">
-                          {division.name}
-                        </span>
-                        <Badge variant="outline" className="text-xs flex-shrink-0 mt-0.5">
-                          {divProjects}
-                        </Badge>
-                      </button>
+
+                        {/* Division name - clickable */}
+                        <button
+                          onClick={() =>
+                            handleDivisionClick(division, missionGroup)
+                          }
+                          className={cn(
+                            "flex-1 min-w-0 flex items-start gap-2 px-3 py-2 rounded-lg transition-colors",
+                            "hover:bg-primary/10 hover:text-primary",
+                            division.departments.length === 0 && "ml-8"
+                          )}
+                        >
+                          <Briefcase className="h-3.5 w-3.5 flex-shrink-0 text-blue-500 mt-0.5" />
+                          <span className="flex-1 min-w-0 text-left text-sm font-medium break-words">
+                            {division.name}
+                          </span>
+                          <Badge variant="outline" className="text-xs flex-shrink-0 mt-0.5">
+                            {divProjects}
+                          </Badge>
+                        </button>
+                      </div>
 
                       {/* Departments (collapsible) */}
                       {isDivExpanded && (
