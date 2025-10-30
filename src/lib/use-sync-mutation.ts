@@ -42,29 +42,33 @@ export function useSyncMutation<TData = unknown, TError = unknown, TVariables = 
       const syncStartTime = Date.now();
 
       // Call original onMutate if provided
-      const context = (onMutate as any) ? await (onMutate as any)(variables) : undefined;
+      let userContext: TContext | undefined;
+      if (onMutate) {
+        userContext = await onMutate(variables);
+      }
 
       // Return context with sync metadata
       return {
-        ...context,
+        ...(userContext as any),
         __syncStartTime: syncStartTime,
       } as TContext;
     },
     onSuccess: (data, variables, context) => {
       // Call original onSuccess if provided
       if (onSuccess) {
-        (onSuccess as any)(data, variables, context);
+        onSuccess(data, variables, context);
       }
     },
     onError: (error, variables, context) => {
       // Call original onError if provided
       if (onError) {
-        (onError as any)(error, variables, context);
+        onError(error, variables, context);
       }
     },
     onSettled: (data, error, variables, context) => {
       // Ensure minimum display time
-      const syncStartTime = (context as any)?.__syncStartTime ?? Date.now();
+      const contextWithSync = context as (TContext & { __syncStartTime?: number }) | undefined;
+      const syncStartTime = contextWithSync?.__syncStartTime ?? Date.now();
       const elapsed = Date.now() - syncStartTime;
       const delay = Math.max(0, minSyncTime - elapsed);
 
@@ -74,7 +78,7 @@ export function useSyncMutation<TData = unknown, TError = unknown, TVariables = 
 
       // Call original onSettled if provided
       if (onSettled) {
-        (onSettled as any)(data, error, variables, context);
+        onSettled(data, error, variables, context);
       }
     },
   });

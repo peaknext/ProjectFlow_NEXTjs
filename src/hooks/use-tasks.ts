@@ -9,6 +9,7 @@ import { projectKeys } from './use-projects';
 import { departmentTasksKeys } from './use-department-tasks';
 import { dashboardKeys } from './use-dashboard';
 import { updateProjectProgressCache } from '@/lib/update-project-progress-cache';
+import type { BoardData } from '@/types/api-responses';
 
 // Types
 export interface Task {
@@ -252,9 +253,9 @@ export function useUpdateTask() {
       const boardCaches = queryClient.getQueriesData({ queryKey: projectKeys.all });
 
       for (const [key, value] of boardCaches) {
-        const boardData = value as any;
+        const boardData = value as BoardData | undefined;
         if (boardData?.tasks) {
-          const task = boardData.tasks.find((t: Task) => t.id === taskId);
+          const task = boardData.tasks.find((t) => t.id === taskId);
           if (task) {
             projectId = task.projectId;
             break;
@@ -348,9 +349,9 @@ export function useCloseTask() {
       const boardCaches = queryClient.getQueriesData({ queryKey: projectKeys.all });
 
       for (const [key, value] of boardCaches) {
-        const boardData = value as any;
+        const boardData = value as BoardData | undefined;
         if (boardData?.tasks) {
-          const task = boardData.tasks.find((t: Task) => t.id === taskId);
+          const task = boardData.tasks.find((t) => t.id === taskId);
           if (task) {
             projectId = task.projectId;
             break;
@@ -444,9 +445,9 @@ export function useDeleteTask() {
       const boardCaches = queryClient.getQueriesData({ queryKey: projectKeys.all });
 
       for (const [key, value] of boardCaches) {
-        const boardData = value as any;
+        const boardData = value as BoardData | undefined;
         if (boardData?.tasks) {
-          const task = boardData.tasks.find((t: Task) => t.id === taskId);
+          const task = boardData.tasks.find((t) => t.id === taskId);
           if (task) {
             projectId = task.projectId;
             break;
@@ -887,9 +888,9 @@ export function useTogglePinTask() {
       const boardCaches = queryClient.getQueriesData({ queryKey: projectKeys.all });
 
       for (const [key, value] of boardCaches) {
-        const boardData = value as any;
+        const boardData = value as BoardData | undefined;
         if (boardData?.tasks) {
-          const task = boardData.tasks.find((t: Task) => t.id === taskId);
+          const task = boardData.tasks.find((t) => t.id === taskId);
           if (task) {
             projectId = task.projectId;
             break;
