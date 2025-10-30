@@ -272,10 +272,6 @@ async function handler(req: AuthenticatedRequest) {
             },
           },
         },
-        // Legacy single assignee (for backward compatibility)
-        assignee: {
-          select: userSelect,
-        },
         creator: {
           select: userSelect,
         },
@@ -343,23 +339,9 @@ async function handler(req: AuthenticatedRequest) {
 
   // Transform tasks to match expected format
   const transformedTasks = tasks.map((task) => {
-    // Combine multi-assignee and legacy assignee
-    const assigneeUserIds: string[] = [];
-    const assigneesList: any[] = [];
-
-    // Add multi-assignees
-    if (task.assignees && task.assignees.length > 0) {
-      task.assignees.forEach((ta) => {
-        assigneeUserIds.push(ta.user.id);
-        assigneesList.push(ta.user);
-      });
-    }
-
-    // Add legacy assignee if exists and not already in list
-    if (task.assignee && !assigneeUserIds.includes(task.assignee.id)) {
-      assigneeUserIds.push(task.assignee.id);
-      assigneesList.push(task.assignee);
-    }
+    // Extract assignee data from multi-assignee relation
+    const assigneeUserIds: string[] = task.assignees.map((ta) => ta.user.id);
+    const assigneesList: any[] = task.assignees.map((ta) => ta.user);
 
     return {
       id: task.id,

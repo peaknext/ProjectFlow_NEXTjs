@@ -11,7 +11,6 @@ interface Task {
   description: string | null;
   statusId: string;
   priority: number;
-  assigneeUserId?: string | null;
   assigneeUserIds?: string[];
   isClosed?: boolean;
   [key: string]: any;
@@ -51,8 +50,7 @@ export function filterTasks(tasks: Task[], filters: TaskFilters): Task[] {
   // Filter: Assignee
   if (filters.assigneeId) {
     filtered = filtered.filter((task) =>
-      task.assigneeUserIds?.includes(filters.assigneeId) ||
-      task.assigneeUserId === filters.assigneeId // Fallback for old data
+      task.assigneeUserIds?.includes(filters.assigneeId)
     );
   }
 
@@ -65,13 +63,11 @@ export function filterTasks(tasks: Task[], filters: TaskFilters): Task[] {
 export function getUniqueAssignees(tasks: Task[]): Array<{ id: string; fullName: string }> {
   const assignees = new Map();
   tasks.forEach((task: any) => {
-    // Support both new multi-assignee and legacy single assignee
+    // Support multi-assignee
     if (task.assignees) {
       task.assignees.forEach((assignee: any) => {
         assignees.set(assignee.id, assignee);
       });
-    } else if (task.assignee) {
-      assignees.set(task.assignee.id, task.assignee);
     }
   });
   return Array.from(assignees.values());

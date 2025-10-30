@@ -6,6 +6,7 @@
 
 import { prisma } from './db';
 import type { UserRole } from '../generated/prisma';
+import { logger } from './logger';
 
 /**
  * Represents the full scope of departments/divisions/mission groups
@@ -139,24 +140,8 @@ export async function checkPermission(
       if (permission === 'edit_own_tasks' && context.taskId) {
         const task = await prisma.task.findUnique({
           where: { id: context.taskId },
-          select: { creatorUserId: true, assigneeUserId: true },
-        });
-
-        if (!task) return false;
-
-        // User can edit if they created or are assigned to the task
-        return (
-          task.creatorUserId === userId || task.assigneeUserId === userId
-        );
-      }
-
-      // Check if closing own tasks
-      if (permission === 'close_own_tasks' && context.taskId) {
-        const task = await prisma.task.findUnique({
-          where: { id: context.taskId },
           select: {
             creatorUserId: true,
-            assigneeUserId: true,
             assignees: {
               select: { userId: true }
             }
@@ -165,9 +150,27 @@ export async function checkPermission(
 
         if (!task) return false;
 
-        // User can close if they created or are assigned to the task (support multi-assignee)
-        const isAssignee = task.assigneeUserId === userId ||
-                          task.assignees.some(a => a.userId === userId);
+        // User can edit if they created or are assigned to the task (multi-assignee support)
+        const isAssignee = task.assignees.some(a => a.userId === userId);
+        return task.creatorUserId === userId || isAssignee;
+      }
+
+      // Check if closing own tasks
+      if (permission === 'close_own_tasks' && context.taskId) {
+        const task = await prisma.task.findUnique({
+          where: { id: context.taskId },
+          select: {
+            creatorUserId: true,
+            assignees: {
+              select: { userId: true }
+            }
+          },
+        });
+
+        if (!task) return false;
+
+        // User can close if they created or are assigned to the task (multi-assignee support)
+        const isAssignee = task.assignees.some(a => a.userId === userId);
 
         return task.creatorUserId === userId || isAssignee;
       }
@@ -261,7 +264,7 @@ export async function checkPermission(
 
     return true;
   } catch (error) {
-    console.error('Permission check error:', error);
+    logger.error('Permission check error', error as Error, { userId, permission });
     return false;
   }
 }
@@ -330,7 +333,7 @@ async function isInScope(
         return false;
     }
   } catch (error) {
-    console.error('Scope check error:', error);
+    logger.error('Scope check error', error as Error, { userId });
     return false;
   }
 }

@@ -95,13 +95,6 @@ async function handler(
         tasks: {
           where: { deletedAt: null },
           include: {
-            assignee: {
-              select: {
-                id: true,
-                fullName: true,
-                profileImageUrl: true,
-              },
-            },
             assignees: {
               include: {
                 user: {
@@ -209,10 +202,8 @@ async function handler(
     priority: task.priority,
     dueDate: task.dueDate?.toISOString() || null,
     startDate: task.startDate?.toISOString() || null,
-    assigneeUserId: task.assigneeUserId, // @deprecated - keep for backward compatibility
-    assignee: task.assignee, // @deprecated - keep for backward compatibility
-    assigneeUserIds: task.assignees.map(a => a.userId), // New: Array of assignee IDs
-    assignees: task.assignees.map(a => a.user), // New: Array of assignee user objects
+    assigneeUserIds: task.assignees.map(a => a.userId),
+    assignees: task.assignees.map(a => a.user),
     status: task.status,
     isClosed: task.isClosed,
     closeType: task.closeType,

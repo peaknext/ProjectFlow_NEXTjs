@@ -142,8 +142,7 @@ export function ListView({ projectId }: ListViewProps) {
 
     if (filters.assigneeId) {
       tasks = tasks.filter((task) =>
-        task.assigneeUserIds?.includes(filters.assigneeId) ||
-        task.assigneeUserId === filters.assigneeId // Fallback for old data
+        task.assigneeUserIds?.includes(filters.assigneeId)
       );
     }
 
@@ -173,8 +172,8 @@ export function ListView({ projectId }: ListViewProps) {
 
         case 'assignee':
           // Sort by first assignee's name
-          const nameA = a.assignees?.[0]?.fullName || a.assignee?.fullName || 'zzz';
-          const nameB = b.assignees?.[0]?.fullName || b.assignee?.fullName || 'zzz';
+          const nameA = a.assignees?.[0]?.fullName || 'zzz';
+          const nameB = b.assignees?.[0]?.fullName || 'zzz';
           comparison = nameA.localeCompare(nameB, 'th');
           break;
 
@@ -530,8 +529,6 @@ export function ListView({ projectId }: ListViewProps) {
         task.assignees.forEach((assignee) => {
           assignees.set(assignee.id, assignee);
         });
-      } else if (task.assignee) {
-        assignees.set(task.assignee.id, task.assignee);
       }
     });
     return Array.from(assignees.values());

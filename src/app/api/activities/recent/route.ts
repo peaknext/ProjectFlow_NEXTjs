@@ -88,7 +88,11 @@ async function handler(req: AuthenticatedRequest) {
   // Get recent comments on user's tasks
   const assignedTaskIds = await prisma.task.findMany({
     where: {
-      assigneeUserId: req.session.userId,
+      assignees: {
+        some: {
+          userId: req.session.userId,
+        },
+      },
       deletedAt: null,
     },
     select: { id: true },

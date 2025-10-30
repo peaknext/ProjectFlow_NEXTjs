@@ -16,12 +16,12 @@ import {
 } from '@/lib/api-response';
 import { checkPermission } from '@/lib/permissions';
 import { buildFiscalYearFilter } from '@/lib/fiscal-year';
+import { logger } from '@/lib/logger';
 
 const createTaskSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255),
   description: z.string().optional().nullable(),
-  assigneeUserId: z.string().optional().nullable(), // Legacy single assignee
-  assigneeUserIds: z.array(z.string()).optional().nullable(), // New multi-assignee support
+  assigneeUserIds: z.array(z.string()).optional().nullable(), // Multi-assignee support
   statusId: z.string().min(1, 'Status ID is required'),
   priority: z.number().int().min(1).max(4).default(3),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format. Expected YYYY-MM-DD').optional().nullable(),
@@ -42,7 +42,7 @@ async function getHandler(
   const { searchParams } = new URL(req.url);
 
   const statusId = searchParams.get('statusId') || undefined;
-  const assigneeUserId = searchParams.get('assigneeUserId') || undefined;
+  const assigneeUserIds = searchParams.get('assigneeUserIds')?.split(',') || undefined;
   const isClosed = searchParams.get('isClosed');
   const parentTaskId = searchParams.get('parentTaskId') || undefined;
   const fiscalYearsParam = searchParams.get('fiscalYears');
@@ -71,7 +71,13 @@ async function getHandler(
   };
 
   if (statusId) where.statusId = statusId;
-  if (assigneeUserId) where.assigneeUserId = assigneeUserId;
+  if (assigneeUserIds && assigneeUserIds.length > 0) {
+    where.assignees = {
+      some: {
+        userId: { in: assigneeUserIds }
+      }
+    };
+  }
   if (isClosed !== null) where.isClosed = isClosed === 'true';
   if (parentTaskId) where.parentTaskId = parentTaskId;
 
@@ -134,8 +140,9 @@ async function postHandler(
   req: AuthenticatedRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
+  const { projectId } = await params;
+
   try {
-    const { projectId } = await params;
 
 
     // Check if project exists
@@ -144,7 +151,7 @@ async function postHandler(
     });
 
     if (!project) {
-      console.error('[POST /api/projects/:projectId/tasks] Project not found:', projectId);
+      logger.error('POST /api/projects/:projectId/tasks - Project not found', undefined, { projectId });
       return errorResponse('PROJECT_NOT_FOUND', 'Project not found', 404);
     }
 
@@ -157,7 +164,10 @@ async function postHandler(
     );
 
     if (!hasAccess) {
-      console.error('[POST /api/projects/:projectId/tasks] No permission for user:', req.session.userId);
+      logger.error('POST /api/projects/:projectId/tasks - No permission to create tasks', undefined, {
+        userId: req.session.userId,
+        projectId
+      });
       return errorResponse('FORBIDDEN', 'No permission to create tasks', 403);
     }
 
@@ -166,13 +176,10 @@ async function postHandler(
 
     const data = createTaskSchema.parse(body);
 
-    // Determine assignees: use array if provided, otherwise fallback to single assignee
+    // Get assignee user IDs (multi-assignee support)
     const assigneeUserIds = data.assigneeUserIds && data.assigneeUserIds.length > 0
       ? data.assigneeUserIds
-      : (data.assigneeUserId ? [data.assigneeUserId] : []);
-
-    // For backward compatibility: store first assignee in legacy assigneeUserId field
-    const assigneeUserId = assigneeUserIds[0] || null;
+      : [];
 
     // Validate status belongs to project
     const status = await prisma.status.findUnique({
@@ -214,7 +221,6 @@ async function postHandler(
           name: data.name,
           description: data.description || null,
           projectId,
-          assigneeUserId: assigneeUserId, // Legacy field (stores first assignee)
           statusId: data.statusId,
           priority: data.priority,
           startDate: data.startDate ? new Date(data.startDate) : null,
@@ -224,12 +230,16 @@ async function postHandler(
           creatorUserId: req.session.userId,
         },
         include: {
-          assignee: {
-            select: {
-              id: true,
-              fullName: true,
-              email: true,
-              profileImageUrl: true,
+          assignees: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  email: true,
+                  profileImageUrl: true,
+                },
+              },
             },
           },
           status: {
@@ -314,11 +324,7 @@ async function postHandler(
       201
     );
   } catch (error) {
-    console.error('[POST /api/projects/:projectId/tasks] Error occurred:', error);
-    if (error instanceof Error) {
-      console.error('[POST /api/projects/:projectId/tasks] Error message:', error.message);
-      console.error('[POST /api/projects/:projectId/tasks] Error stack:', error.stack);
-    }
+    logger.error('POST /api/projects/:projectId/tasks - Error creating task', error as Error, { projectId });
     return handleApiError(error);
   }
 }

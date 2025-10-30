@@ -130,9 +130,9 @@ export function TaskCard({ task, isDragging, onClick }: TaskCardProps) {
       </div>
 
       {/* Assignee avatar - positioned at bottom right */}
-      {task.assignee && (
+      {task.assignees?.[0] && (
         <div className="absolute bottom-2 right-2">
-          <UserAvatar user={task.assignee} size="xs" />
+          <UserAvatar user={task.assignees[0]} size="xs" />
         </div>
       )}
     </div>

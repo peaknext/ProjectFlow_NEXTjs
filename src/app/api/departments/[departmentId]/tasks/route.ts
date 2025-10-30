@@ -80,7 +80,11 @@ async function handler(
 
     // Filter by assignee
     if (assigneeId) {
-      taskWhereClause.assigneeUserId = assigneeId;
+      taskWhereClause.assignees = {
+        some: {
+          userId: assigneeId,
+        },
+      };
     }
 
     // Filter by search query
@@ -139,9 +143,6 @@ async function handler(
           tasks: {
             where: taskWhereClause,
             include: {
-              assignee: {
-                select: userSelect,
-              },
               assignees: {
                 select: {
                   user: {
@@ -287,9 +288,9 @@ async function handler(
       // Get assigned users (unique)
       const assignedUsersMap = new Map();
       projectTasks.forEach((task) => {
-        if (task.assignee) {
-          assignedUsersMap.set(task.assignee.id, task.assignee);
-        }
+        task.assignees?.forEach((assignee) => {
+          assignedUsersMap.set(assignee.user.id, assignee.user);
+        });
       });
       const assignedUsers = Array.from(assignedUsersMap.values());
 
@@ -329,8 +330,6 @@ async function handler(
           projectId: task.projectId,
           project: task.project,
           creatorUserId: task.creatorUserId, // IMPORTANT: Required for permission checks
-          assignee: task.assignee,
-          assigneeUserId: task.assigneeUserId,
           assignees,
           assigneeUserIds,
           createdAt: task.createdAt.toISOString(),

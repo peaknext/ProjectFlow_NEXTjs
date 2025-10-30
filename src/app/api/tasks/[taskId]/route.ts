@@ -24,8 +24,7 @@ import { sanitizeHtml } from '@/lib/sanitize';
 const updateTaskSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().nullable().optional(),
-  assigneeUserId: z.string().nullable().optional(), // @deprecated - use assigneeUserIds
-  assigneeUserIds: z.array(z.string()).optional(), // New: Support multiple assignees
+  assigneeUserIds: z.array(z.string()).optional(), // Support multiple assignees
   statusId: z.string().optional(),
   priority: z.number().int().min(1).max(4).optional(),
   startDate: z.string().nullable().optional(), // Accept both "YYYY-MM-DD" and ISO datetime
@@ -231,8 +230,8 @@ async function patchHandler(
       changes.after.description = sanitizedDescription;
     }
 
-    // Handle assignee updates (support both old single and new multi-assignee)
-    if (updates.assigneeUserIds !== undefined || updates.assigneeUserId !== undefined) {
+    // Handle assignee updates (multi-assignee support)
+    if (updates.assigneeUserIds !== undefined) {
       // ✅ SECURITY: Check assignment permission
       const currentUser = await prisma.user.findUnique({
         where: { id: req.session.userId },
@@ -246,8 +245,7 @@ async function patchHandler(
         where: { taskId },
         select: { userId: true },
       });
-      const isCurrentAssignee = existingTask.assigneeUserId === req.session.userId ||
-        currentAssignees.some(a => a.userId === req.session.userId);
+      const isCurrentAssignee = currentAssignees.some(a => a.userId === req.session.userId);
 
       // Only creator, management, or current assignee can assign/re-assign
       if (!isCreator && !isManagement && !isCurrentAssignee) {
@@ -293,26 +291,6 @@ async function patchHandler(
             userId,
             assignedBy: req.session.userId,
           })),
-        });
-      }
-
-      // Update legacy assigneeUserId field (use first assignee for backward compatibility)
-      updateData.assigneeUserId = updates.assigneeUserIds.length > 0 ? updates.assigneeUserIds[0] : null;
-    } else if (updates.assigneeUserId !== undefined) {
-      // Legacy single-assignee approach (backward compatibility)
-      updateData.assigneeUserId = updates.assigneeUserId;
-      changes.before.assigneeUserId = existingTask.assigneeUserId;
-      changes.after.assigneeUserId = updates.assigneeUserId;
-
-      // Sync with new TaskAssignee table
-      await prisma.taskAssignee.deleteMany({ where: { taskId } });
-      if (updates.assigneeUserId) {
-        await prisma.taskAssignee.create({
-          data: {
-            taskId,
-            userId: updates.assigneeUserId,
-            assignedBy: req.session.userId,
-          },
         });
       }
     }
@@ -370,7 +348,6 @@ async function patchHandler(
         difficulty: true,
         startDate: true,
         dueDate: true,
-        assigneeUserId: true,
         creatorUserId: true,
         parentTaskId: true,
         isClosed: true,
@@ -378,14 +355,6 @@ async function patchHandler(
         closeDate: true,
         createdAt: true,
         updatedAt: true,
-        assignee: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            profileImageUrl: true,
-          },
-        },
         assignees: {
           include: {
             user: {
@@ -523,102 +492,6 @@ async function patchHandler(
           userId: req.session.userId,
           historyText: `ยกเลิกการมอบหมายงาน "${updatedTask.name}" ของ ${names}`,
         });
-      }
-    } else if (updates.assigneeUserId !== undefined && changes.before.assigneeUserId !== changes.after.assigneeUserId) {
-      // Legacy single-assignee logging (backward compatibility)
-      const assigneeBefore = changes.before.assigneeUserId
-        ? await prisma.user.findUnique({
-            where: { id: changes.before.assigneeUserId },
-            select: { fullName: true },
-          })
-        : null;
-      const assigneeAfter = changes.after.assigneeUserId
-        ? await prisma.user.findUnique({
-            where: { id: changes.after.assigneeUserId },
-            select: { fullName: true },
-          })
-        : null;
-
-      if (!assigneeBefore && assigneeAfter) {
-        historyEntries.push({
-          taskId,
-          userId: req.session.userId,
-          historyText: `มอบหมายงาน "${updatedTask.name}" ให้กับ ${assigneeAfter.fullName}`,
-        });
-
-        // Create notification for newly assigned user (legacy single-assignee)
-        if (changes.after.assigneeUserId && changes.after.assigneeUserId !== req.session.userId) {
-          await prisma.notification.create({
-            data: {
-              userId: changes.after.assigneeUserId,
-              type: 'TASK_ASSIGNED',
-              message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ให้กับคุณ`,
-              taskId,
-              triggeredByUserId: req.session.userId,
-            },
-          });
-        }
-
-        // ✅ TASK OWNER NOTIFICATION: Notify task creator about assignment (legacy)
-        const taskCreatorId = existingTask.creatorUserId;
-        if (
-          taskCreatorId &&
-          taskCreatorId !== req.session.userId && // Owner is not the one assigning
-          taskCreatorId !== changes.after.assigneeUserId // Owner is not the newly assigned user (avoid duplicate)
-        ) {
-          await prisma.notification.create({
-            data: {
-              userId: taskCreatorId,
-              type: 'TASK_ASSIGNED',
-              message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ของคุณให้กับ ${assigneeAfter?.fullName}`,
-              taskId,
-              triggeredByUserId: req.session.userId,
-            },
-          });
-        }
-      } else if (assigneeBefore && !assigneeAfter) {
-        historyEntries.push({
-          taskId,
-          userId: req.session.userId,
-          historyText: `ยกเลิกการมอบหมายงาน "${updatedTask.name}" ให้กับ ${assigneeBefore.fullName}`,
-        });
-      } else if (assigneeBefore && assigneeAfter) {
-        historyEntries.push({
-          taskId,
-          userId: req.session.userId,
-          historyText: `ยกเลิกการมอบหมายงาน "${updatedTask.name}" ให้กับ ${assigneeBefore.fullName} และมอบหมายให้กับ ${assigneeAfter.fullName}`,
-        });
-
-        // Create notification for newly assigned user (reassignment case)
-        if (changes.after.assigneeUserId && changes.after.assigneeUserId !== req.session.userId) {
-          await prisma.notification.create({
-            data: {
-              userId: changes.after.assigneeUserId,
-              type: 'TASK_ASSIGNED',
-              message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ให้กับคุณ`,
-              taskId,
-              triggeredByUserId: req.session.userId,
-            },
-          });
-        }
-
-        // ✅ TASK OWNER NOTIFICATION: Notify task creator about reassignment (legacy)
-        const taskCreatorId = existingTask.creatorUserId;
-        if (
-          taskCreatorId &&
-          taskCreatorId !== req.session.userId && // Owner is not the one reassigning
-          taskCreatorId !== changes.after.assigneeUserId // Owner is not the newly assigned user (avoid duplicate)
-        ) {
-          await prisma.notification.create({
-            data: {
-              userId: taskCreatorId,
-              type: 'TASK_ASSIGNED',
-              message: `${req.session.user.fullName} ได้มอบหมายงาน "${updatedTask.name}" ของคุณให้กับ ${assigneeAfter?.fullName}`,
-              taskId,
-              triggeredByUserId: req.session.userId,
-            },
-          });
-        }
       }
     }
 

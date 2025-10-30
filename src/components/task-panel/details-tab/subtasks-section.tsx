@@ -13,7 +13,7 @@ interface Task {
   id: string;
   name: string;
   statusId: string;
-  assigneeUserId: string | null;
+  assigneeUserIds?: string[];
   isClosed?: boolean;
 }
 
@@ -125,7 +125,7 @@ export function SubtasksSection({
       {!isLoading && subtasks.length > 0 && (
         <div className="space-y-1">
           {subtasks.map((subtask) => {
-            const assignee = getUserById(subtask.assigneeUserId);
+            const assignee = getUserById(subtask.assigneeUserIds?.[0]);
             const status = getStatusById(subtask.statusId);
 
             return (

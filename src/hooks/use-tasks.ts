@@ -21,8 +21,7 @@ export interface Task {
   priority: number;
   startDate: string | null;
   dueDate: string | null;
-  assigneeUserId: string | null; // @deprecated - use assigneeUserIds
-  assigneeUserIds?: string[]; // New: Array of assignee user IDs
+  assigneeUserIds?: string[]; // Array of assignee user IDs
   parentTaskId: string | null;
   isClosed: boolean;
   closeType: 'COMPLETED' | 'ABORTED' | null;
@@ -37,12 +36,6 @@ export interface Task {
   isPinned?: boolean;
 
   // Relations
-  assignee?: {
-    id: string;
-    fullName: string;
-    email: string;
-    profileImageUrl: string | null;
-  }; // @deprecated - use assignees
   assignees?: Array<{
     id: string;
     fullName: string;
@@ -81,8 +74,7 @@ export interface UpdateTaskInput {
   priority?: number;
   startDate?: string;
   dueDate?: string;
-  assigneeUserId?: string; // @deprecated - use assigneeUserIds
-  assigneeUserIds?: string[]; // New: Array of assignee user IDs
+  assigneeUserIds?: string[]; // Array of assignee user IDs
   difficulty?: number;
 }
 
@@ -120,7 +112,7 @@ export function useTask(taskId: string | null) {
  */
 export function useTasks(params?: {
   projectId?: string;
-  assigneeUserId?: string;
+  assigneeUserIds?: string[];
   statusId?: string;
   priority?: number;
   includeClosed?: boolean;
@@ -131,7 +123,7 @@ export function useTasks(params?: {
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (params?.projectId) searchParams.set('projectId', params.projectId);
-      if (params?.assigneeUserId) searchParams.set('assigneeUserId', params.assigneeUserId);
+      if (params?.assigneeUserIds) searchParams.set('assigneeUserIds', params.assigneeUserIds.join(','));
       if (params?.statusId) searchParams.set('statusId', params.statusId);
       if (params?.priority) searchParams.set('priority', params.priority.toString());
       if (params?.includeClosed) searchParams.set('includeClosed', 'true');
@@ -174,7 +166,6 @@ export function useCreateTask() {
         statusId: data.statusId || '',
         priority: data.priority || 3,
         difficulty: data.difficulty || 2,
-        assigneeUserId: null,
         assigneeUserIds: data.assigneeUserIds || [],
         parentTaskId: data.parentTaskId || null,
         startDate: data.startDate || null,

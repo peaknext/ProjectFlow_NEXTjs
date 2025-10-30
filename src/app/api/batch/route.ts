@@ -1,4 +1,3 @@
-// @ts-nocheck - Prisma type issues
 /**
  * POST /api/batch
  * Batch operations endpoint (PERFORMANCE CRITICAL)
@@ -16,6 +15,15 @@ import {
   handleApiError,
 } from '@/lib/api-response';
 import { canUserEditTask } from '@/lib/permissions';
+
+// Result types
+interface BatchOperationResult {
+  index: number;
+  success: boolean;
+  operation: string;
+  data?: unknown;
+  error?: string;
+}
 
 // Operation schemas
 const updateTaskFieldSchema = z.object({
@@ -47,7 +55,7 @@ const addChecklistItemSchema = z.object({
 const updateTaskAssigneeSchema = z.object({
   type: z.literal('UPDATE_TASK_ASSIGNEE'),
   taskId: z.string(),
-  assigneeUserId: z.string().nullable(),
+  assigneeUserIds: z.array(z.string()),
 });
 
 const batchOperationSchema = z.object({
@@ -80,8 +88,8 @@ async function handler(req: AuthenticatedRequest) {
     const body = await req.json();
     const { operations } = batchOperationSchema.parse(body);
 
-    const results: any[] = [];
-    const errors: any[] = [];
+    const results: BatchOperationResult[] = [];
+    const errors: BatchOperationResult[] = [];
 
     // Process all operations in a transaction
     await prisma.$transaction(async (tx) => {
@@ -89,8 +97,8 @@ async function handler(req: AuthenticatedRequest) {
         const op = operations[i];
 
         try {
-          let result: any = null;
-          let historyLog: any = null;
+          let result: unknown = null;
+          let historyLog: unknown = null;
 
           switch (op.type) {
             case 'UPDATE_TASK_FIELD': {
@@ -137,7 +145,7 @@ async function handler(req: AuthenticatedRequest) {
 
               // Verify status exists
               const status = await tx.status.findUnique({
-                where: { id: op.statusId, deletedAt: null },
+                where: { id: op.statusId },
                 select: { name: true },
               });
 
@@ -170,43 +178,56 @@ async function handler(req: AuthenticatedRequest) {
                 throw new Error('No permission to edit this task');
               }
 
-              // Verify assignee exists if provided
-              if (op.assigneeUserId) {
-                const assignee = await tx.user.findUnique({
-                  where: { id: op.assigneeUserId, deletedAt: null },
-                  select: { fullName: true },
+              // Verify all assignees exist
+              if (op.assigneeUserIds.length > 0) {
+                const assignees = await tx.user.findMany({
+                  where: { id: { in: op.assigneeUserIds }, deletedAt: null },
                 });
 
-                if (!assignee) {
-                  throw new Error('Assignee not found');
+                if (assignees.length !== op.assigneeUserIds.length) {
+                  throw new Error('One or more assignees not found');
                 }
               }
 
-              // Update assignee
-              result = await tx.task.update({
+              // Get task name for notifications
+              const task = await tx.task.findUnique({
                 where: { id: op.taskId },
-                data: { assigneeUserId: op.assigneeUserId },
+                select: { name: true },
               });
 
-              // Create notification if assignee changed
-              if (op.assigneeUserId) {
-                await tx.notification.create({
-                  data: {
-                    userId: op.assigneeUserId,
-                    triggeredByUserId: req.session.userId,
-                    type: 'TASK_ASSIGNED',
-                    message: `คุณได้รับมอบหมายงาน: ${result.name}`,
+              // Update assignees via TaskAssignee table
+              await tx.taskAssignee.deleteMany({ where: { taskId: op.taskId } });
+              if (op.assigneeUserIds.length > 0) {
+                await tx.taskAssignee.createMany({
+                  data: op.assigneeUserIds.map(userId => ({
                     taskId: op.taskId,
-                  },
+                    userId,
+                    assignedBy: req.session.userId,
+                  })),
+                });
+
+                // Create notifications for all new assignees
+                await tx.notification.createMany({
+                  data: op.assigneeUserIds
+                    .filter(userId => userId !== req.session.userId)
+                    .map(userId => ({
+                      userId,
+                      triggeredByUserId: req.session.userId,
+                      type: 'TASK_ASSIGNED' as const,
+                      message: `คุณได้รับมอบหมายงาน: ${task?.name}`,
+                      taskId: op.taskId,
+                    })),
                 });
               }
+
+              result = task;
 
               // Log activity
               historyLog = await tx.history.create({
                 data: {
                   taskId: op.taskId,
                   userId: req.session.userId,
-                  historyText: op.assigneeUserId
+                  historyText: op.assigneeUserIds.length > 0
                     ? 'เปลี่ยนผู้รับผิดชอบ'
                     : 'ลบผู้รับผิดชอบออก',
                 },
@@ -244,8 +265,8 @@ async function handler(req: AuthenticatedRequest) {
                   taskId: item.taskId,
                   userId: req.session.userId,
                   historyText: op.isChecked
-                    ? `เช็ครายการ: ${result.name}`
-                    : `ยกเลิกการเช็ครายการ: ${result.name}`,
+                    ? `เช็ครายการ: ${(result as { name: string }).name}`
+                    : `ยกเลิกการเช็ครายการ: ${(result as { name: string }).name}`,
                 },
               });
 

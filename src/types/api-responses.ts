@@ -152,7 +152,6 @@ export interface BoardData {
     priority: number;
     startDate: string | null;
     dueDate: string | null;
-    assigneeUserId: string | null;
     assigneeUserIds?: string[];
     parentTaskId: string | null;
     isClosed: boolean;

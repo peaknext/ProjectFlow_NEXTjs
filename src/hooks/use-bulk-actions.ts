@@ -5,6 +5,7 @@ import { departmentTasksKeys } from "./use-department-tasks";
 import { taskKeys } from "./use-tasks";
 import { dashboardKeys } from "./use-dashboard";
 import { projectKeys } from "./use-projects";
+import { logger } from "@/lib/logger";
 
 // ============================================
 // TYPES
@@ -15,7 +16,7 @@ export interface BulkUpdatePayload {
   updates: {
     statusId?: string;
     priority?: 1 | 2 | 3 | 4;
-    assigneeUserId?: string;
+    assigneeUserIds?: string[];
     dueDate?: string;
   };
 }
@@ -77,7 +78,7 @@ export function useBulkUpdateTasks(departmentId: string) {
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
     onError: (error) => {
-      console.error("Bulk update failed:", error);
+      logger.error("Bulk update failed", error as Error);
     },
   });
 }

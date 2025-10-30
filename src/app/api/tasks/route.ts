@@ -45,7 +45,11 @@ async function handler(req: AuthenticatedRequest) {
   }
 
   if (assigneeId) {
-    where.assigneeUserId = assigneeId;
+    where.assignees = {
+      some: {
+        userId: assigneeId
+      }
+    };
   }
 
   if (priority) {

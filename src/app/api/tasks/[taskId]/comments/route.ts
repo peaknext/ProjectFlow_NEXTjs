@@ -1,4 +1,3 @@
-// @ts-nocheck - Prisma type issues
 /**
  * GET /api/tasks/:taskId/comments
  * POST /api/tasks/:taskId/comments
@@ -98,8 +97,10 @@ async function postHandler(
         id: true,
         name: true,
         projectId: true,
-        assigneeUserId: true,
         creatorUserId: true,
+        assignees: {
+          select: { userId: true }
+        },
       },
     });
 
@@ -161,7 +162,7 @@ async function postHandler(
         .filter(userId => userId !== req.session.userId) // Don't notify self
         .map(userId => ({
           userId,
-          type: 'COMMENT_MENTION',
+          type: 'COMMENT_MENTION' as const,
           message: `${currentUserFullName} ได้แท็กคุณในความคิดเห็น`,
           taskId,
           triggeredByUserId: req.session.userId,
@@ -184,7 +185,7 @@ async function postHandler(
       await prisma.notification.create({
         data: {
           userId: taskCreatorId,
-          type: 'COMMENT_MENTION',
+          type: 'COMMENT_MENTION' as const,
           message: `${req.session.user.fullName} แสดงความคิดเห็นในงาน "${task.name}" ของคุณ`,
           taskId,
           triggeredByUserId: req.session.userId,

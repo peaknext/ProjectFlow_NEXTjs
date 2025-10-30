@@ -19,6 +19,7 @@ import { SubtasksSection } from './subtasks-section';
 import { ChecklistsSection } from './checklists-section';
 import { CommentsSection } from './comments-section';
 import { StatusSlider } from '@/components/ui/status-slider';
+import { logger } from '@/lib/logger';
 
 interface Task {
   id: string;
@@ -30,8 +31,7 @@ interface Task {
   difficulty: number | null;
   startDate: string | null;
   dueDate: string | null;
-  assigneeUserId: string | null; // @deprecated
-  assigneeUserIds?: string[]; // New: Array of assignee IDs
+  assigneeUserIds?: string[];
   parentTaskId: string | null;
   isClosed?: boolean;
   creator?: {
@@ -213,7 +213,7 @@ export function DetailsTab({
             resolve();
           },
           onError: (error) => {
-            console.error('Failed to update task:', error);
+            logger.error('Task panel: Failed to update task', error as Error, { taskId: task.id });
             reject(error);
           },
         }

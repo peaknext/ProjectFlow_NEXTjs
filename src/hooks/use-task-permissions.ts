@@ -4,7 +4,6 @@ import { useSession } from '@/hooks/use-session';
 interface Task {
   id: string;
   creatorUserId?: string; // Database field name (not creatorId)
-  assigneeUserId?: string | null; // Legacy single assignee
   assigneeUserIds?: string[]; // Multi-assignee support
   isClosed?: boolean;
   projectId?: string;
@@ -67,7 +66,7 @@ export function useTaskPermissions(
 
     // Check if user is task creator or assignee
     const isCreator = task.creatorUserId === userId;
-    const isAssignee = task.assigneeUserId === userId || task.assigneeUserIds?.includes(userId) || false;
+    const isAssignee = task.assigneeUserIds?.includes(userId) || false;
     const isOwner = isCreator || isAssignee;
 
     // Check if user is high-level admin
@@ -164,7 +163,7 @@ export function canEditTask(
   if (!task || !userId) return false;
 
   const isCreator = task.creatorUserId === userId;
-  const isAssignee = task.assigneeUserId === userId || task.assigneeUserIds?.includes(userId) || false;
+  const isAssignee = task.assigneeUserIds?.includes(userId) || false;
   const isOwner = isCreator || isAssignee;
 
   const isHighLevel = ['ADMIN', 'CHIEF', 'LEADER', 'HEAD'].includes(userRole || '');

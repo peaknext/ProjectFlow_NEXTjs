@@ -194,8 +194,7 @@ export function DepartmentTasksView({
     if (filters.assigneeId) {
       filtered = filtered.filter(
         (task) =>
-          task.assigneeUserIds?.includes(filters.assigneeId) ||
-          task.assigneeUserId === filters.assigneeId // Fallback for old data
+          task.assigneeUserIds?.includes(filters.assigneeId)
       );
     }
 
@@ -253,10 +252,6 @@ export function DepartmentTasksView({
         task.assignees?.forEach((assignee) => {
           assigneeMap.set(assignee.id, assignee);
         });
-        // Fallback for old data
-        if (task.assignee) {
-          assigneeMap.set(task.assignee.id, task.assignee);
-        }
       });
     });
     return Array.from(assigneeMap.values());
@@ -288,9 +283,9 @@ export function DepartmentTasksView({
 
         case "assignee":
           const nameA =
-            a.assignees?.[0]?.fullName || a.assignee?.fullName || "zzz";
+            a.assignees?.[0]?.fullName || "zzz";
           const nameB =
-            b.assignees?.[0]?.fullName || b.assignee?.fullName || "zzz";
+            b.assignees?.[0]?.fullName || "zzz";
           comparison = nameA.localeCompare(nameB, "th");
           break;
 

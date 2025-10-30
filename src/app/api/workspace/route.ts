@@ -465,7 +465,13 @@ async function getUserWorkspace(user: any, scope: AccessibleScope) {
           tasks: {
             some: {
               OR: [
-                { assigneeUserId: user.id },
+                {
+                  assignees: {
+                    some: {
+                      userId: user.id,
+                    },
+                  },
+                },
                 { creatorUserId: user.id },
               ],
               deletedAt: null,

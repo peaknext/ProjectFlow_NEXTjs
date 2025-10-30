@@ -15,7 +15,7 @@ import { checkPermission } from "@/lib/permissions";
  *   updates: {
  *     statusId?: string,
  *     priority?: 1 | 2 | 3 | 4,
- *     assigneeUserId?: string,
+ *     assigneeUserIds?: string[],
  *     dueDate?: string,
  *   }
  * }
@@ -109,15 +109,15 @@ async function handler(req: AuthenticatedRequest) {
       updateData.priority = updates.priority;
     }
 
-    if (updates.assigneeUserId) {
-      // Verify user exists
-      const user = await prisma.user.findUnique({
-        where: { id: updates.assigneeUserId },
+    if (updates.assigneeUserIds) {
+      // Verify all users exist
+      const users = await prisma.user.findMany({
+        where: { id: { in: updates.assigneeUserIds } },
       });
-      if (!user) {
-        return errorResponse("BAD_REQUEST", "Invalid assigneeUserId", 400);
+      if (users.length !== updates.assigneeUserIds.length) {
+        return errorResponse("BAD_REQUEST", "Invalid assigneeUserIds", 400);
       }
-      updateData.assigneeUserId = updates.assigneeUserId;
+      // Note: assigneeUserIds will be handled separately via TaskAssignee table
     }
 
     if (updates.dueDate) {
@@ -134,11 +134,15 @@ async function handler(req: AuthenticatedRequest) {
             updatedAt: new Date(),
           },
           include: {
-            assignee: {
-              select: {
-                id: true,
-                fullName: true,
-                profileImageUrl: true,
+            assignees: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                    profileImageUrl: true,
+                  },
+                },
               },
             },
             status: {
@@ -168,8 +172,9 @@ async function handler(req: AuthenticatedRequest) {
         ];
         changes.push(`เปลี่ยนความสำคัญเป็น ${priorityText}`);
       }
-      if (updates.assigneeUserId) {
-        changes.push(`มอบหมายให้ ${task.assignee?.fullName || "ไม่มี"}`);
+      if (updates.assigneeUserIds) {
+        const assigneeNames = task.assignees.map(a => a.user.fullName).join(', ') || "ไม่มี";
+        changes.push(`มอบหมายให้ ${assigneeNames}`);
       }
       if (updates.dueDate) {
         changes.push(`เปลี่ยนกำหนดส่ง`);
@@ -197,7 +202,8 @@ async function handler(req: AuthenticatedRequest) {
         name: task.name,
         status: task.status,
         priority: task.priority,
-        assignee: task.assignee,
+        assignees: task.assignees.map((ta) => ta.user),
+        assigneeUserIds: task.assignees.map((ta) => ta.userId),
         dueDate: task.dueDate?.toISOString(),
         updatedAt: task.updatedAt.toISOString(),
       })),
