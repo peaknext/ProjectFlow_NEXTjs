@@ -15,6 +15,7 @@ import {
   errorResponse,
   handleApiError,
 } from '@/lib/api-response';
+import type { Prisma } from '@/generated/prisma';
 
 const pinTaskSchema = z.object({
   taskId: z.string().min(1, 'Task ID is required'),
@@ -159,7 +160,7 @@ async function postHandler(req: AuthenticatedRequest) {
     await prisma.user.update({
       where: { id: req.session.userId },
       data: {
-        pinnedTasks: updatedPinnedTasks as any,
+        pinnedTasks: updatedPinnedTasks as Prisma.JsonArray,
       },
     });
 
@@ -213,7 +214,7 @@ async function deleteHandler(req: AuthenticatedRequest) {
     await prisma.user.update({
       where: { id: req.session.userId },
       data: {
-        pinnedTasks: updatedPinnedTasks as any,
+        pinnedTasks: updatedPinnedTasks as Prisma.JsonArray,
       },
     });
 
