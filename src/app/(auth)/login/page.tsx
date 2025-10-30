@@ -48,7 +48,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (loginError) {
-      const errorMessage = (loginError as any)?.response?.data?.message ||
+      const error = loginError as Error & { response?: { data?: { message?: string } } };
+      const errorMessage = error.response?.data?.message ||
                           'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง';
       setDisplayError(errorMessage);
       errorJustSetRef.current = true; // Mark that error was just set
