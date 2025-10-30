@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-media-query";
+import type { ProjectWithCreator } from "@/types/prisma-extended";
 import {
   Popover,
   PopoverContent,
@@ -392,27 +393,27 @@ export function EditProjectModal() {
               <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <span>สร้างโดย:</span>
-                  {(project as any).creator && (
+                  {(project as ProjectWithCreator).creator && (
                     <Avatar className="h-5 w-5">
                       <AvatarImage
-                        src={(project as any).creator.profileImageUrl || undefined}
-                        alt={(project as any).creator.fullName}
+                        src={(project as ProjectWithCreator).creator.profileImageUrl || undefined}
+                        alt={(project as ProjectWithCreator).creator.fullName}
                       />
                       <AvatarFallback className="text-[10px]">
-                        {((project as any).creator.fullName || '').charAt(0)}
+                        {((project as ProjectWithCreator).creator.fullName || '').charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                   )}
                   <span className="font-medium text-foreground">
-                    {(project as any).creator?.fullName || "-"}
+                    {(project as ProjectWithCreator).creator?.fullName || "-"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span>วันที่สร้าง:</span>
                   <span className="font-medium text-foreground">
-                    {(project as any).createdAt
+                    {(project as ProjectWithCreator).createdAt
                       ? (() => {
-                          const date = new Date((project as any).createdAt);
+                          const date = new Date((project as ProjectWithCreator).createdAt);
                           const thaiYear = date.getFullYear() + 543;
                           const dateStr = format(date, "d MMMM yyyy, HH:mm", {
                             locale: th,
