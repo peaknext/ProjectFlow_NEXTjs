@@ -73,7 +73,7 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
           font: {
             family: "Sarabun, ui-sans-serif, system-ui, sans-serif",
             size: 12, // Reduced to 12px (2/3 of 18px)
-            weight: "500" as any, // Medium weight for better visibility
+            weight: 500, // Medium weight for better visibility
           },
           padding: 12,
           boxWidth: 20,
@@ -91,7 +91,7 @@ export function ReportsCharts({ statistics }: ReportsChartsProps) {
         titleFont: {
           family: "Sarabun, ui-sans-serif, system-ui, sans-serif",
           size: 16,
-          weight: "600" as any,
+          weight: 600,
         },
         bodyFont: {
           family: "Sarabun, ui-sans-serif, system-ui, sans-serif",

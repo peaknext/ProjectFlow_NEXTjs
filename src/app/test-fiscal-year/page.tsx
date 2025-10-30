@@ -73,7 +73,7 @@ export default function TestFiscalYearPage() {
 
     // Test 4: Filter invalid years
     setTimeout(() => {
-      setSelectedYears([2568, 1999, 2567] as any);
+      setSelectedYears([2568, 1999, 2567] as number[]);
       const state = useFiscalYearStore.getState().selectedYears;
       const hasNoInvalid = !state.includes(1999);
       addTestResult('Test 4: Filter invalid years (1999 removed)', hasNoInvalid);

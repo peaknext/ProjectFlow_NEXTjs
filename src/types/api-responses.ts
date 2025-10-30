@@ -38,7 +38,7 @@ export function isApiError(response: unknown): response is ApiErrorResponse {
     typeof response === 'object' &&
     response !== null &&
     'success' in response &&
-    (response as any).success === false &&
+    (response as Record<string, unknown>).success === false &&
     'error' in response
   );
 }
@@ -51,7 +51,7 @@ export function isApiSuccess<T>(response: unknown): response is ApiSuccessRespon
     typeof response === 'object' &&
     response !== null &&
     'success' in response &&
-    (response as any).success === true &&
+    (response as Record<string, unknown>).success === true &&
     'data' in response
   );
 }
