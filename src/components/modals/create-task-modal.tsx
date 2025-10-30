@@ -35,6 +35,7 @@ import { useSwipeToClose } from "@/hooks/use-swipe-to-close";
 import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { WorkspaceData, BoardData } from "@/types/api-responses";
 
 interface Status {
   id: string;
@@ -217,7 +218,7 @@ export function CreateTaskModal() {
     // PRIORITY 3: Fallback to workspace cache (last resort)
     else {
       try {
-        const cachedWorkspace = queryClient.getQueryData(["workspace"]) as any;
+        const cachedWorkspace = queryClient.getQueryData(["workspace"]) as { workspace: WorkspaceData } | undefined;
 
         if (cachedWorkspace?.workspace) {
           // If departmentId is provided, filter projects by department
@@ -317,13 +318,13 @@ export function CreateTaskModal() {
       const cachedData = queryClient.getQueryData([
         "project-board",
         projectId,
-      ]) as any;
+      ]) as BoardData | undefined;
 
       if (cachedData) {
-        setProjectUsers(cachedData.users || []);
+        setProjectUsers(cachedData.departmentUsers || []);
         setProjectStatuses(cachedData.statuses || []);
         setProjectTasks(
-          cachedData.tasks?.filter((t: any) => !t.parentTaskId) || []
+          cachedData.tasks?.filter((t) => !t.parentTaskId) || []
         );
 
         // Set default status
@@ -600,7 +601,7 @@ export function CreateTaskModal() {
                   control={control}
                   render={({ field }) => (
                     <AssigneePopover
-                      users={projectUsers as any}
+                      users={projectUsers}
                       selectedUserIds={field.value}
                       onSave={(newIds) => field.onChange(newIds)}
                       disabled={isLoadingProjectData}
@@ -622,8 +623,8 @@ export function CreateTaskModal() {
                   control={control}
                   render={({ field }) => (
                     <PriorityPopover
-                      value={field.value as any}
-                      onChange={(newValue) => field.onChange(newValue)}
+                      value={Number(field.value) || 3}
+                      onChange={(newValue) => field.onChange(String(newValue))}
                     />
                   )}
                 />
@@ -641,8 +642,8 @@ export function CreateTaskModal() {
                   control={control}
                   render={({ field }) => (
                     <DifficultyPopover
-                      value={field.value as any}
-                      onChange={(newValue) => field.onChange(newValue)}
+                      value={Number(field.value) || 3}
+                      onChange={(newValue) => field.onChange(String(newValue))}
                     />
                   )}
                 />
