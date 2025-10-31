@@ -7,14 +7,15 @@
 
 ### 📝 Recent Updates (2025-11-01) ⭐ **UPDATED**
 
-**Phase 2 Progress - IT Service Portal UI** (2025-11-01 Session 2)
-- ✅ **Task 1: IT Service Layout** - Enhanced with USER role isolation
+**Phase 2 Progress - IT Service Portal UI** (2025-11-01 Session 2-3)
+
+- ✅ **Task 1: IT Service Layout** - COMPLETE
   - USER role redirect system (login → IT Service, blocked from dashboard)
   - Clean layout for USER (no sidebar) for profile/settings pages
   - Back button and menu item for returning to IT Service portal
   - ITServiceTopBar with ProjectFlows logo and fiscal year filter
 
-- ✅ **Task 2: Sidebar Navigation** - Badge count with role-based scope filtering
+- ✅ **Task 2: Sidebar Navigation** - COMPLETE
   - "IT Service" menu (all roles)
   - "คำร้องขอ" menu (management roles only) with pending count badge
   - Role-based request filtering: USER/MEMBER/HEAD → department, LEADER → division, CHIEF → mission group
@@ -24,8 +25,23 @@
   - ✅ Request cards list in sidebar (desktop) and below cards (mobile)
   - ✅ Filters UI (type, status, search, myRequests toggle)
   - ✅ Responsive design (mobile: 1 col, tablet: 2 cols, desktop: 4 cols + sidebar)
-  - ✅ Request forms (COMPLETE - Phase 2 Task 4 with Hardware/Network addition)
-  - ❌ Document preview (pending - Phase 2 Task 5)
+
+- ✅ **Task 4: Request Forms** - COMPLETE (Session 3)
+  - ✅ 3 request types: Data/Program, Hardware/Network, IT Issue
+  - ✅ Hardware/Network modal component (~400 lines)
+  - ✅ Purpose checkboxes for Data/Program requests (EXECUTIVE, EDUCATION, CAPABILITY, OTHER)
+  - ✅ Conditional "other purpose" text input
+  - ✅ Dropdown z-index fix (z-[300] prevents overlap)
+  - ✅ Custom scrollbar styling (thin, right-aligned, hover effect)
+  - ✅ Proper padding (px-6 on both sides)
+  - ✅ White backgrounds on inputs/textareas/dropdowns (light mode)
+  - ✅ Success state with auto-redirect to tracking page
+  - See: IT_SERVICE_SESSION_3_SUMMARY.md for detailed changes
+
+- ❌ **Task 5: Document Preview** - PENDING
+  - PDF/Word document preview in modal
+  - Template-based document generation
+  - Print and download functionality
 
 **UI/UX Enhancements**:
 - Centered action cards with increased spacing

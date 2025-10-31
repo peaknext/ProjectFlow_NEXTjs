@@ -25,6 +25,8 @@ export const hardwareNetworkRequestTypeSchema = z.enum(["HARDWARE", "NETWORK"]);
  * - subject: Request title (max 200 chars)
  * - description: Detailed description (max 2000 chars)
  * - urgency: Priority level
+ * - purposes: Array of purpose options (EXECUTIVE, EDUCATION, CAPABILITY, OTHER)
+ * - otherPurpose: Details when OTHER is selected
  */
 export const dataRequestFormSchema = z.object({
   type: dataRequestTypeSchema,
@@ -39,6 +41,15 @@ export const dataRequestFormSchema = z.object({
     .max(2000, "รายละเอียดต้องไม่เกิน 2,000 ตัวอักษร")
     .trim(),
   urgency: requestUrgencySchema,
+  purposes: z
+    .array(z.enum(["EXECUTIVE", "EDUCATION", "CAPABILITY", "OTHER"]))
+    .min(1, "กรุณาเลือกวัตถุประสงค์อย่างน้อย 1 ข้อ"),
+  otherPurpose: z
+    .string()
+    .max(200, "รายละเอียดต้องไม่เกิน 200 ตัวอักษร")
+    .trim()
+    .optional()
+    .or(z.literal("")),
 });
 
 export type DataRequestFormData = z.infer<typeof dataRequestFormSchema>;
@@ -136,4 +147,14 @@ export const requestTypeLabels: Record<string, string> = {
   HARDWARE: "ขอฮาร์ดแวร์",
   NETWORK: "ขอเครือข่าย",
   IT_ISSUE: "แจ้งปัญหา IT",
+};
+
+/**
+ * Request purpose labels (Thai)
+ */
+export const purposeLabels: Record<string, string> = {
+  EXECUTIVE: "ผู้บริหาร",
+  EDUCATION: "ศึกษาต่อ",
+  CAPABILITY: "เพิ่มสมรรถนะบุคลากร",
+  OTHER: "อื่นๆ",
 };

@@ -173,11 +173,11 @@ export function HardwareNetworkModal({
               <DialogDescription>กรอกข้อมูลคำร้องขอของคุณ</DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto pr-1">
+            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30">
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(handleSubmit)}
-                  className="space-y-6 pb-6"
+                  className="space-y-6 px-6 pb-6"
                 >
                 {/* Requester Information (Read-only) */}
                 <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
@@ -280,6 +280,7 @@ export function HardwareNetworkModal({
                               ? "เช่น: ขอคอมพิวเตอร์ตั้งโต๊ะ สำหรับพนักงานใหม่"
                               : "เช่น: ขอติดตั้งอินเทอร์เน็ตที่ห้องประชุม"
                           }
+                          className="bg-white dark:bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -305,7 +306,7 @@ export function HardwareNetworkModal({
                               ? "ระบุรายละเอียดฮาร์ดแวร์ที่ต้องการ เช่น สเปคที่ต้องการ, วัตถุประสงค์การใช้งาน, จำนวน..."
                               : "ระบุรายละเอียดเครือข่ายที่ต้องการ เช่น ความเร็วที่ต้องการ, จำนวนจุดเชื่อมต่อ, วัตถุประสงค์..."
                           }
-                          className="min-h-[150px] resize-y"
+                          className="min-h-[150px] resize-y bg-white dark:bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -327,6 +328,7 @@ export function HardwareNetworkModal({
                       <FormControl>
                         <Input
                           placeholder="เช่น: ห้องทำงาน 201, แผนกผู้ป่วยนอก"
+                          className="bg-white dark:bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -350,11 +352,11 @@ export function HardwareNetworkModal({
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white dark:bg-background">
                             <SelectValue placeholder="เลือกความเร่งด่วน" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="z-[300]">
                           <SelectItem value="LOW">
                             {urgencyLabels.LOW} - ไม่เร่งด่วน
                           </SelectItem>

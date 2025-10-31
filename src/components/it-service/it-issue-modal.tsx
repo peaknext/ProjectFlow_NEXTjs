@@ -164,11 +164,11 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
               <DialogDescription>กรอกข้อมูลปัญหาที่พบ</DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto pr-1">
+            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30">
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(handleSubmit)}
-                  className="space-y-6 pb-6"
+                  className="space-y-6 px-6 pb-6"
                 >
                 {/* Requester Information (Read-only) */}
                 <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
@@ -207,6 +207,7 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
                       <FormControl>
                         <Input
                           placeholder="เช่น: คอมพิวเตอร์เปิดไม่ติด, เครือข่ายขาดการเชื่อมต่อ"
+                          className="bg-white dark:bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -228,7 +229,7 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
                       <FormControl>
                         <Textarea
                           placeholder="อธิบายปัญหาที่พบโดยละเอียด เช่น อาการที่เกิดขึ้น, เวลาที่เกิดปัญหา, สิ่งที่ได้ลองทำไปแล้ว..."
-                          className="min-h-[150px] resize-y"
+                          className="min-h-[150px] resize-y bg-white dark:bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -251,6 +252,7 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
                       <FormControl>
                         <Input
                           placeholder="เช่น: ห้องทำงาน 201, แผนกผู้ป่วยนอก"
+                          className="bg-white dark:bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -274,11 +276,11 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white dark:bg-background">
                             <SelectValue placeholder="เลือกความเร่งด่วน" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="z-[300]">
                           <SelectItem value="LOW">
                             {urgencyLabels.LOW} - ไม่เร่งด่วน
                           </SelectItem>

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -42,6 +43,7 @@ import {
   dataRequestFormSchema,
   type DataRequestFormData,
   urgencyLabels,
+  purposeLabels,
 } from "@/lib/validations/service-request";
 
 interface DataRequestModalProps {
@@ -79,10 +81,13 @@ export function DataRequestModal({
       subject: "",
       description: "",
       urgency: "MEDIUM",
+      purposes: [],
+      otherPurpose: "",
     },
   });
 
   const selectedType = form.watch("type");
+  const selectedPurposes = form.watch("purposes");
 
   const handleSubmit = async (data: DataRequestFormData) => {
     setIsSubmitting(true);
@@ -102,6 +107,8 @@ export function DataRequestModal({
         subject: data.subject,
         description: data.description,
         urgency: data.urgency,
+        purposes: data.purposes,
+        otherPurpose: data.otherPurpose || null,
       });
 
       // Invalidate queries to refresh request list
@@ -170,11 +177,11 @@ export function DataRequestModal({
               <DialogDescription>กรอกข้อมูลคำร้องขอของคุณ</DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto pr-1">
+            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30">
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(handleSubmit)}
-                  className="space-y-6 pb-6"
+                  className="space-y-6 px-6 pb-6"
                 >
                 {/* Requester Information (Read-only) */}
                 <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
@@ -277,6 +284,7 @@ export function DataRequestModal({
                               ? "เช่น: ขอข้อมูลจำนวนผู้ป่วย OPD ประจำเดือน"
                               : "เช่น: พัฒนาระบบลงทะเบียนผู้ป่วยออนไลน์"
                           }
+                          className="bg-white dark:bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -302,7 +310,7 @@ export function DataRequestModal({
                               ? "ระบุรายละเอียดข้อมูลที่ต้องการ เช่น รูปแบบข้อมูล, ช่วงเวลา, วัตถุประสงค์การใช้งาน..."
                               : "ระบุรายละเอียดโปรแกรมที่ต้องการพัฒนา เช่น ฟีเจอร์ที่ต้องการ, ผู้ใช้งาน, ข้อกำหนดพิเศษ..."
                           }
-                          className="min-h-[150px] resize-y"
+                          className="min-h-[150px] resize-y bg-white dark:bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -313,6 +321,79 @@ export function DataRequestModal({
                     </FormItem>
                   )}
                 />
+
+                {/* Purpose Checkboxes */}
+                <FormField
+                  control={form.control}
+                  name="purposes"
+                  render={() => (
+                    <FormItem>
+                      <div className="mb-4">
+                        <FormLabel>วัตถุประสงค์การขอ *</FormLabel>
+                        <FormDescription>
+                          เลือกวัตถุประสงค์อย่างน้อย 1 ข้อ
+                        </FormDescription>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {(["EXECUTIVE", "EDUCATION", "CAPABILITY", "OTHER"] as const).map((purpose) => (
+                          <FormField
+                            key={purpose}
+                            control={form.control}
+                            name="purposes"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={purpose}
+                                  className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(purpose)}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([...field.value, purpose])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== purpose
+                                              )
+                                            )
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal cursor-pointer">
+                                    {purposeLabels[purpose]}
+                                  </FormLabel>
+                                </FormItem>
+                              )
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Other Purpose Text Input (shown when OTHER is checked) */}
+                {selectedPurposes?.includes("OTHER") && (
+                  <FormField
+                    control={form.control}
+                    name="otherPurpose"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ระบุวัตถุประสงค์อื่นๆ *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="ระบุรายละเอียดวัตถุประสงค์อื่นๆ"
+                            className="bg-white dark:bg-background"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 {/* Urgency */}
                 <FormField
@@ -326,11 +407,11 @@ export function DataRequestModal({
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white dark:bg-background">
                             <SelectValue placeholder="เลือกความเร่งด่วน" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="z-[300]">
                           <SelectItem value="LOW">
                             {urgencyLabels.LOW} - ไม่เร่งด่วน
                           </SelectItem>
