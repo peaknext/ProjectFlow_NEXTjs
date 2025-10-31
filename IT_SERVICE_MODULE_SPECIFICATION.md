@@ -20,11 +20,11 @@
   - Role-based request filtering: USER/MEMBER/HEAD → department, LEADER → division, CHIEF → mission group
 
 - ✅ **Task 3: Portal Page** - COMPLETE
-  - ✅ 3 action cards with lucide icons (Database, Code, Wrench)
+  - ✅ 4 action cards with lucide icons (Database, Network, Wrench, Search)
   - ✅ Request cards list in sidebar (desktop) and below cards (mobile)
   - ✅ Filters UI (type, status, search, myRequests toggle)
-  - ✅ Responsive design (mobile: 1 col, tablet: 2 cols, desktop: 3 cols + sidebar)
-  - ✅ Request forms (COMPLETE - Phase 2 Task 4)
+  - ✅ Responsive design (mobile: 1 col, tablet: 2 cols, desktop: 4 cols + sidebar)
+  - ✅ Request forms (COMPLETE - Phase 2 Task 4 with Hardware/Network addition)
   - ❌ Document preview (pending - Phase 2 Task 5)
 
 **UI/UX Enhancements**:
@@ -2540,18 +2540,19 @@ export function generateRequestNumber(): string {
      - CHIEF: mission group scope
      - ADMIN/SUPER_ADMIN: all requests
 
-3. ⏳ **Build Portal Page** - IN PROGRESS (2025-11-01)
-   - ✅ 3 action cards with lucide icons (Database, Code, Wrench)
-   - ✅ Centered layout with responsive grid (1/2/3 columns)
+3. ✅ **Build Portal Page** - COMPLETE (2025-11-01)
+   - ✅ 4 action cards with lucide icons (Database, Network, Wrench, Search)
+   - ✅ Centered layout with responsive grid (1/2/4 columns)
    - ✅ Request cards list (sidebar on desktop, below on mobile)
    - ✅ Filters UI (type, status, search, myRequests toggle)
    - ✅ Role-based scope filtering in API
    - ✅ Responsive design (mobile/tablet/desktop)
-   - ❌ Modal integration (pending Task 4)
+   - ✅ Modal integration (COMPLETE - Task 4 with Hardware/Network addition)
 
 4. ✅ **Implement Request Forms** - COMPLETE (2025-11-01 Session 3)
    - ✅ Zod validation schemas (service-request.ts)
      - `dataRequestFormSchema` with type, subject, description, urgency
+     - `hardwareNetworkRequestFormSchema` with type, subject, description, urgency, location
      - `itIssueRequestFormSchema` with subject, description, urgency, location
      - Helper objects: urgencyLabels, urgencyColors, requestTypeLabels
    - ✅ Data/Program form modal (data-request-modal.tsx)
@@ -2562,6 +2563,11 @@ export function generateRequestNumber(): string {
      - Success state with request number
      - Auto-redirect to tracking page after 2s
      - Query invalidation for request list refresh
+   - ✅ Hardware/Network form modal (hardware-network-modal.tsx)
+     - Radio button type selector (HARDWARE/NETWORK) with icons
+     - Dynamic placeholders based on selected type
+     - Optional location field for installation/setup
+     - Same success flow as Data/Program modal
    - ✅ IT Issue form modal (it-issue-modal.tsx)
      - Subject, description, urgency fields
      - Optional location field

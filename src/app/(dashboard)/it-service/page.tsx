@@ -9,6 +9,7 @@ import {
   Database,
   Code,
   Wrench,
+  Network,
 } from "lucide-react";
 import { ITServiceLayout } from "@/components/layout/it-service-layout";
 import { ActionCard } from "@/components/it-service/action-card";
@@ -16,6 +17,7 @@ import { RequestCard } from "@/components/it-service/request-card";
 import { RequestListFilters } from "@/components/it-service/request-list-filters";
 import { DataRequestModal } from "@/components/it-service/data-request-modal";
 import { ITIssueModal } from "@/components/it-service/it-issue-modal";
+import { HardwareNetworkModal } from "@/components/it-service/hardware-network-modal";
 import { Button } from "@/components/ui/button";
 import {
   useServiceRequests,
@@ -54,8 +56,9 @@ export default function ITServicePortalPage() {
   // Fetch requests with filters
   const { data: requests, isLoading, error } = useServiceRequests(filters);
 
-  // Modal state (will be implemented in Phase 2 Task 4)
+  // Modal state
   const [showDataRequestModal, setShowDataRequestModal] = useState(false);
+  const [showHardwareNetworkModal, setShowHardwareNetworkModal] = useState(false);
   const [showITIssueModal, setShowITIssueModal] = useState(false);
 
   // Handle filter changes
@@ -81,6 +84,10 @@ export default function ITServicePortalPage() {
     setShowDataRequestModal(true);
   };
 
+  const handleHardwareNetworkClick = () => {
+    setShowHardwareNetworkModal(true);
+  };
+
   const handleITIssueClick = () => {
     setShowITIssueModal(true);
   };
@@ -102,13 +109,21 @@ export default function ITServicePortalPage() {
           <div className="p-4 sm:p-6 lg:min-h-full lg:flex lg:items-center lg:justify-center">
             <div className="w-full max-w-5xl">
               {/* Action Cards Grid */}
-              <div className="grid gap-6 sm:gap-8 md:gap-10 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:gap-8 md:gap-10 sm:grid-cols-2 lg:grid-cols-4">
               {/* Data Request Card */}
               <ActionCard
                 icon={Database}
                 title="ขอข้อมูล / พัฒนาโปรแกรม"
                 color="blue"
                 onClick={handleDataRequestClick}
+              />
+
+              {/* Hardware/Network Request Card */}
+              <ActionCard
+                icon={Network}
+                title="ขอฮาร์ดแวร์ / เครือข่าย"
+                color="orange"
+                onClick={handleHardwareNetworkClick}
               />
 
               {/* IT Issue Card */}
@@ -217,6 +232,11 @@ export default function ITServicePortalPage() {
           <DataRequestModal
             open={showDataRequestModal}
             onOpenChange={setShowDataRequestModal}
+          />
+
+          <HardwareNetworkModal
+            open={showHardwareNetworkModal}
+            onOpenChange={setShowHardwareNetworkModal}
           />
 
           <ITIssueModal

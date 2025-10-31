@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  * Used on IT Service portal page for main actions.
  *
  * Features:
- * - 3 color variants (blue, green, purple)
+ * - 4 color variants (blue, orange, green, purple)
  * - Hover effects (scale, shadow, border)
  * - Gradient background
  * - Dark mode support
@@ -20,18 +20,20 @@ interface ActionCardProps {
   icon: LucideIcon;
   title: string;
   description?: string;
-  color: "blue" | "green" | "purple";
+  color: "blue" | "orange" | "green" | "purple";
   onClick: () => void;
 }
 
 const colorClasses = {
   blue: "text-blue-600 dark:text-blue-400",
+  orange: "text-orange-600 dark:text-orange-400",
   green: "text-green-600 dark:text-green-400",
   purple: "text-purple-600 dark:text-purple-400",
 };
 
 const bgColorClasses = {
   blue: "bg-blue-50 dark:bg-blue-950/20",
+  orange: "bg-orange-50 dark:bg-orange-950/20",
   green: "bg-green-50 dark:bg-green-950/20",
   purple: "bg-purple-50 dark:bg-purple-950/20",
 };

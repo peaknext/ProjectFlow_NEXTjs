@@ -14,6 +14,9 @@ export const requestUrgencySchema = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 // Data/Program request type
 export const dataRequestTypeSchema = z.enum(["DATA", "PROGRAM"]);
 
+// Hardware/Network request type
+export const hardwareNetworkRequestTypeSchema = z.enum(["HARDWARE", "NETWORK"]);
+
 /**
  * Data/Program Request Form Schema
  *
@@ -39,6 +42,39 @@ export const dataRequestFormSchema = z.object({
 });
 
 export type DataRequestFormData = z.infer<typeof dataRequestFormSchema>;
+
+/**
+ * Hardware/Network Request Form Schema
+ *
+ * Fields:
+ * - type: HARDWARE or NETWORK
+ * - subject: Request title (max 200 chars)
+ * - description: Detailed description (max 2000 chars)
+ * - urgency: Priority level
+ * - location: Optional location for installation/setup (max 100 chars)
+ */
+export const hardwareNetworkRequestFormSchema = z.object({
+  type: hardwareNetworkRequestTypeSchema,
+  subject: z
+    .string()
+    .min(5, "หัวเรื่องต้องมีอย่างน้อย 5 ตัวอักษร")
+    .max(200, "หัวเรื่องต้องไม่เกิน 200 ตัวอักษร")
+    .trim(),
+  description: z
+    .string()
+    .min(20, "รายละเอียดต้องมีอย่างน้อย 20 ตัวอักษร")
+    .max(2000, "รายละเอียดต้องไม่เกิน 2,000 ตัวอักษร")
+    .trim(),
+  urgency: requestUrgencySchema,
+  location: z
+    .string()
+    .max(100, "สถานที่ต้องไม่เกิน 100 ตัวอักษร")
+    .trim()
+    .optional()
+    .or(z.literal("")),
+});
+
+export type HardwareNetworkRequestFormData = z.infer<typeof hardwareNetworkRequestFormSchema>;
 
 /**
  * IT Issue Request Form Schema
@@ -97,5 +133,7 @@ export const urgencyColors: Record<string, string> = {
 export const requestTypeLabels: Record<string, string> = {
   DATA: "ขอข้อมูล",
   PROGRAM: "พัฒนาโปรแกรม",
+  HARDWARE: "ขอฮาร์ดแวร์",
+  NETWORK: "ขอเครือข่าย",
   IT_ISSUE: "แจ้งปัญหา IT",
 };
