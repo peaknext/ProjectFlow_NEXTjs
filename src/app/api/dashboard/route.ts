@@ -4,6 +4,7 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { getUserAccessibleScope } from "@/lib/permissions";
 import { buildFiscalYearFilter } from "@/lib/fiscal-year";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/dashboard
@@ -68,7 +69,7 @@ async function handler(req: AuthenticatedRequest) {
     try {
       scope = await getUserAccessibleScope(userId);
     } catch (scopeError) {
-      console.error('[Dashboard API] getUserAccessibleScope error:', scopeError);
+      logger.error('Dashboard API: getUserAccessibleScope error', scopeError as Error, { userId });
       return errorResponse('INTERNAL_ERROR', 'Failed to get user scope', 500);
     }
 
@@ -418,7 +419,7 @@ async function handler(req: AuthenticatedRequest) {
         take: 5,
       }),
 
-      // 13. MY CHECKLISTS - Get checklists from assigned tasks OR created tasks
+      // 13. MY CHECKLISTS - Get checklists from assigned tasks OR created tasks (open tasks only, same department)
       prisma.checklist.findMany({
         where: {
           deletedAt: null, // Filter out deleted checklist items
@@ -435,7 +436,11 @@ async function handler(req: AuthenticatedRequest) {
                 creatorUserId: userId,
               },
             ],
+            project: {
+              departmentId: user.departmentId, // Only tasks from user's department
+            },
             deletedAt: null,
+            isClosed: false, // Only show checklists from open tasks
             ...fiscalYearFilter,
           },
         },
@@ -454,7 +459,7 @@ async function handler(req: AuthenticatedRequest) {
           },
         },
         orderBy: { createdDate: "asc" },
-        take: 10,
+        take: 100, // Increased limit to show more checklists
       }),
     ]);
 
@@ -507,8 +512,7 @@ async function handler(req: AuthenticatedRequest) {
       myChecklists: myChecklistsGrouped,
     });
   } catch (error) {
-    console.error("[Dashboard API] Error fetching dashboard data:", error);
-    console.error("[Dashboard API] Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+    logger.error("Dashboard API: Error fetching dashboard data", error as Error);
     return errorResponse(
       "INTERNAL_ERROR",
       `Failed to fetch dashboard data: ${error instanceof Error ? error.message : 'Unknown error'}`,
