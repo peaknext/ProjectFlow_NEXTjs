@@ -19,12 +19,12 @@
   - "คำร้องขอ" menu (management roles only) with pending count badge
   - Role-based request filtering: USER/MEMBER/HEAD → department, LEADER → division, CHIEF → mission group
 
-- ⏳ **Task 3: Portal Page** - In Progress
+- ✅ **Task 3: Portal Page** - COMPLETE
   - ✅ 3 action cards with lucide icons (Database, Code, Wrench)
   - ✅ Request cards list in sidebar (desktop) and below cards (mobile)
   - ✅ Filters UI (type, status, search, myRequests toggle)
   - ✅ Responsive design (mobile: 1 col, tablet: 2 cols, desktop: 3 cols + sidebar)
-  - ❌ Request forms (pending - Phase 2 Task 4)
+  - ✅ Request forms (COMPLETE - Phase 2 Task 4)
   - ❌ Document preview (pending - Phase 2 Task 5)
 
 **UI/UX Enhancements**:
@@ -2549,11 +2549,25 @@ export function generateRequestNumber(): string {
    - ✅ Responsive design (mobile/tablet/desktop)
    - ❌ Modal integration (pending Task 4)
 
-4. ❌ **Implement Request Forms** - PENDING
-   - Data/Program form modal
-   - IT Issue form modal
-   - Form validation (React Hook Form + Zod)
-   - Auto-fill user data
+4. ✅ **Implement Request Forms** - COMPLETE (2025-11-01 Session 3)
+   - ✅ Zod validation schemas (service-request.ts)
+     - `dataRequestFormSchema` with type, subject, description, urgency
+     - `itIssueRequestFormSchema` with subject, description, urgency, location
+     - Helper objects: urgencyLabels, urgencyColors, requestTypeLabels
+   - ✅ Data/Program form modal (data-request-modal.tsx)
+     - Radio button type selector (DATA/PROGRAM) with icons
+     - Dynamic placeholders based on selected type
+     - React Hook Form + Zod validation
+     - Auto-filled user information (read-only display)
+     - Success state with request number
+     - Auto-redirect to tracking page after 2s
+     - Query invalidation for request list refresh
+   - ✅ IT Issue form modal (it-issue-modal.tsx)
+     - Subject, description, urgency fields
+     - Optional location field
+     - Same success flow as Data/Program modal
+   - ✅ API integration (/api/service-requests POST)
+   - ✅ Type-check passed (0 errors)
 
 5. ❌ **Document Preview** - PENDING
    - Generate HTML from template
@@ -2563,13 +2577,13 @@ export function generateRequestNumber(): string {
 **Deliverables**:
 - ✅ Portal page UI complete and responsive
 - ✅ Sidebar navigation integrated with badge counts
-- ⏳ Forms implementation (next task)
-- ⏳ Document preview (after forms)
+- ✅ Forms implementation complete (Task 4)
+- ⏳ Document preview (next task - Task 5)
 
 **Next Steps**:
-1. Implement request submission forms (Data/Program, IT Issue)
-2. Add form validation and auto-fill logic
-3. Create document preview modal with print support
+1. ~~Implement request submission forms (Data/Program, IT Issue)~~ ✅ DONE
+2. ~~Add form validation and auto-fill logic~~ ✅ DONE
+3. Create document preview modal with print support (Task 5)
 
 ---
 

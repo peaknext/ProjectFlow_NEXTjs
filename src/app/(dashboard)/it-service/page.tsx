@@ -14,6 +14,8 @@ import { ITServiceLayout } from "@/components/layout/it-service-layout";
 import { ActionCard } from "@/components/it-service/action-card";
 import { RequestCard } from "@/components/it-service/request-card";
 import { RequestListFilters } from "@/components/it-service/request-list-filters";
+import { DataRequestModal } from "@/components/it-service/data-request-modal";
+import { ITIssueModal } from "@/components/it-service/it-issue-modal";
 import { Button } from "@/components/ui/button";
 import {
   useServiceRequests,
@@ -211,40 +213,16 @@ export default function ITServicePortalPage() {
             </div>
           </div>
 
-          {/* Placeholder for modals (will be implemented in Task 4) */}
-          {showDataRequestModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              <div className="rounded-lg bg-white p-6 dark:bg-gray-900">
-                <h2 className="text-xl font-bold">ฟอร์มขอข้อมูล / พัฒนาโปรแกรม</h2>
-                <p className="mt-2 text-muted-foreground">
-                  จะพัฒนาในงาน Phase 2 Task 4
-                </p>
-                <Button
-                  onClick={() => setShowDataRequestModal(false)}
-                  className="mt-4"
-                >
-                  ปิด
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Request Submission Modals */}
+          <DataRequestModal
+            open={showDataRequestModal}
+            onOpenChange={setShowDataRequestModal}
+          />
 
-          {showITIssueModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              <div className="rounded-lg bg-white p-6 dark:bg-gray-900">
-                <h2 className="text-xl font-bold">ฟอร์มแจ้งปัญหา IT</h2>
-                <p className="mt-2 text-muted-foreground">
-                  จะพัฒนาในงาน Phase 2 Task 4
-                </p>
-                <Button
-                  onClick={() => setShowITIssueModal(false)}
-                  className="mt-4"
-                >
-                  ปิด
-                </Button>
-              </div>
-            </div>
-          )}
+          <ITIssueModal
+            open={showITIssueModal}
+            onOpenChange={setShowITIssueModal}
+          />
         </div>
 
         {/* Right Sidebar - Request List (hidden on mobile, shown on lg+) */}
