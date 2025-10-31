@@ -6,10 +6,15 @@
  *
  * Features:
  * - Displays hierarchical navigation path
- * - Clickable links to navigate back to parent levels
+ * - Clickable links to navigate back to parent levels (role-based)
  * - Current level is non-clickable and highlighted
- * - Mission Group and Division are display-only (non-clickable)
- * - Project selector button after department name
+ * - Role-based access control for breadcrumb items and selectors
+ *
+ * Role-based permissions:
+ * - USER: No clickable items, no selectors
+ * - MEMBER/HEAD: Department clickable, Department selector only
+ * - LEADER: Department + Division clickable, Department + Division selectors
+ * - CHIEF/ADMIN: All clickable, All selectors (including Mission Group)
  *
  * Pattern: Based on GAS renderBreadcrumb() function
  */
@@ -21,6 +26,7 @@ import {
   useBreadcrumbPath,
   useNavigationStore,
 } from "@/stores/use-navigation-store";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -86,6 +92,66 @@ interface BreadcrumbProps {
   className?: string;
 }
 
+/**
+ * Helper: Check if breadcrumb level is clickable based on user role
+ */
+function canClickLevel(
+  role: string | undefined,
+  level: "missionGroup" | "division" | "department" | "project"
+): boolean {
+  if (!role) return false;
+
+  // USER: Cannot click anything
+  if (role === "USER") return false;
+
+  // MEMBER, HEAD: Can click department and project only
+  if (role === "MEMBER" || role === "HEAD") {
+    return level === "department" || level === "project";
+  }
+
+  // LEADER: Can click division, department, and project
+  if (role === "LEADER") {
+    return level === "division" || level === "department" || level === "project";
+  }
+
+  // CHIEF, ADMIN: Can click everything except mission group (display only)
+  if (role === "CHIEF" || role === "ADMIN") {
+    return level !== "missionGroup";
+  }
+
+  return false;
+}
+
+/**
+ * Helper: Check if selector should be shown after level based on user role
+ */
+function canShowSelector(
+  role: string | undefined,
+  level: "missionGroup" | "division" | "department" | "project"
+): boolean {
+  if (!role) return false;
+
+  // USER: No selectors
+  if (role === "USER") return false;
+
+  // MEMBER, HEAD: Department selector only
+  if (role === "MEMBER" || role === "HEAD") {
+    return level === "department";
+  }
+
+  // LEADER: Division and Department selectors
+  if (role === "LEADER") {
+    return level === "division" || level === "department";
+  }
+
+  // CHIEF, ADMIN: All selectors (Mission Group, Division, Department)
+  if (role === "CHIEF" || role === "ADMIN") {
+    return level === "missionGroup" || level === "division" || level === "department";
+  }
+
+  return false;
+}
+
 export function Breadcrumb({
   workspace,
   projects,
@@ -97,10 +163,11 @@ export function Breadcrumb({
   const navigation = useNavigationStore();
   const { navigateToLevel, setDepartment, setDivision, setProject } =
     useNavigationStore();
+  const { user } = useAuth();
 
   /**
    * Handle breadcrumb link click
-   * Navigate back to selected level
+   * Navigate back to selected level (with role-based permission check)
    */
   const handleBreadcrumbClick = async (
     level: "missionGroup" | "division" | "department" | "project",
@@ -112,8 +179,8 @@ export function Breadcrumb({
       return;
     }
 
-    // Mission Group is non-clickable (display only)
-    if (level === "missionGroup") {
+    // Check role-based permission
+    if (!canClickLevel(user?.role, level)) {
       return;
     }
 
@@ -234,27 +301,28 @@ export function Breadcrumb({
     >
       {path.map((item, index) => {
         const isCurrentLevel = item.level === currentLevel;
-        const isNonClickable = item.level === "missionGroup";
+        const isClickable = canClickLevel(user?.role, item.level) && !isCurrentLevel;
         const isLast = index === path.length - 1;
 
-        // Determine what selector to show after this item
+        // Determine what selector to show after this item (role-based)
         let selectorType: "division" | "department" | "project" | null = null;
         let selectorData: any[] = [];
 
-        if (item.level === "missionGroup" && workspace) {
-          // Show division selector after mission group
+        if (item.level === "missionGroup" && workspace && canShowSelector(user?.role, "missionGroup")) {
+          // Show division selector after mission group (CHIEF/ADMIN only)
           selectorType = "division";
           selectorData = getDivisionsForMissionGroup(item.id);
-        } else if (item.level === "division" && workspace) {
-          // Show department selector after division
+        } else if (item.level === "division" && workspace && canShowSelector(user?.role, "division")) {
+          // Show department selector after division (LEADER/CHIEF/ADMIN)
           selectorType = "department";
           selectorData = getDepartmentsForDivision(item.id);
         } else if (
           item.level === "department" &&
           projects &&
-          projects.length > 0
+          projects.length > 0 &&
+          canShowSelector(user?.role, "department")
         ) {
-          // Show project selector after department
+          // Show project selector after department (MEMBER/HEAD/LEADER/CHIEF/ADMIN)
           selectorType = "project";
           selectorData = projects;
         }
@@ -264,18 +332,8 @@ export function Breadcrumb({
         return (
           <div key={item.id} className="flex items-center gap-2">
             {/* Breadcrumb Item */}
-            {isNonClickable || isCurrentLevel ? (
-              // Non-clickable: Mission Group, Division, or current level
-              <span
-                className={cn(
-                  "font-medium",
-                  isCurrentLevel && "text-foreground font-semibold"
-                )}
-              >
-                {item.name}
-              </span>
-            ) : (
-              // Clickable: Department or Project (if not current)
+            {isClickable ? (
+              // Clickable: Based on role permission
               <button
                 onClick={() =>
                   handleBreadcrumbClick(item.level, item.id, item.name)
@@ -284,6 +342,16 @@ export function Breadcrumb({
               >
                 {item.name}
               </button>
+            ) : (
+              // Non-clickable: No permission or current level
+              <span
+                className={cn(
+                  "font-medium",
+                  isCurrentLevel && "text-foreground font-semibold"
+                )}
+              >
+                {item.name}
+              </span>
             )}
 
             {/* Selector Button (Division/Department/Project) */}
