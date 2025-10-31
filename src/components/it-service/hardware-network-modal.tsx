@@ -147,7 +147,7 @@ export function HardwareNetworkModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         {isSuccess ? (
           // Success State
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
@@ -168,16 +168,17 @@ export function HardwareNetworkModal({
         ) : (
           // Form State
           <>
-            <DialogHeader>
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>ฟอร์มขอฮาร์ดแวร์ / เครือข่าย</DialogTitle>
               <DialogDescription>กรอกข้อมูลคำร้องขอของคุณ</DialogDescription>
             </DialogHeader>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-6"
-              >
+            <div className="flex-1 overflow-y-auto pr-1">
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-6 pb-6"
+                >
                 {/* Requester Information (Read-only) */}
                 <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
                   <h4 className="font-semibold text-sm">ข้อมูลผู้ยื่นคำร้อง</h4>
@@ -400,6 +401,7 @@ export function HardwareNetworkModal({
                 </div>
               </form>
             </Form>
+            </div>
           </>
         )}
       </DialogContent>

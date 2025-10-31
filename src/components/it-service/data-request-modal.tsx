@@ -60,7 +60,10 @@ interface DataRequestModalProps {
  * - Success state with request number
  * - Redirect to tracking page after submission
  */
-export function DataRequestModal({ open, onOpenChange }: DataRequestModalProps) {
+export function DataRequestModal({
+  open,
+  onOpenChange,
+}: DataRequestModalProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -141,7 +144,7 @@ export function DataRequestModal({ open, onOpenChange }: DataRequestModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         {isSuccess ? (
           // Success State
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
@@ -151,7 +154,8 @@ export function DataRequestModal({ open, onOpenChange }: DataRequestModalProps) 
             <div className="text-center space-y-2">
               <h3 className="text-xl font-semibold">ส่งคำร้องสำเร็จ</h3>
               <p className="text-muted-foreground">
-                หมายเลขคำร้อง: <span className="font-mono font-semibold">{requestNumber}</span>
+                หมายเลขคำร้อง:{" "}
+                <span className="font-mono font-semibold">{requestNumber}</span>
               </p>
               <p className="text-sm text-muted-foreground">
                 กำลังเปลี่ยนเส้นทางไปหน้าติดตามงาน...
@@ -161,15 +165,17 @@ export function DataRequestModal({ open, onOpenChange }: DataRequestModalProps) 
         ) : (
           // Form State
           <>
-            <DialogHeader>
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>ฟอร์มขอข้อมูล / พัฒนาโปรแกรม</DialogTitle>
-              <DialogDescription>
-                กรอกข้อมูลคำร้องขอของคุณ ข้อมูลผู้ยื่นคำร้องจะถูกเติมอัตโนมัติ
-              </DialogDescription>
+              <DialogDescription>กรอกข้อมูลคำร้องขอของคุณ</DialogDescription>
             </DialogHeader>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <div className="flex-1 overflow-y-auto pr-1">
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-6 pb-6"
+                >
                 {/* Requester Information (Read-only) */}
                 <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
                   <h4 className="font-semibold text-sm">ข้อมูลผู้ยื่นคำร้อง</h4>
@@ -184,11 +190,15 @@ export function DataRequestModal({ open, onOpenChange }: DataRequestModalProps) 
                     </div>
                     <div>
                       <span className="text-muted-foreground">หน่วยงาน:</span>
-                      <p className="font-medium">{user?.department?.name || "-"}</p>
+                      <p className="font-medium">
+                        {user?.department?.name || "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">เบอร์โทร:</span>
-                      <p className="font-medium">{user?.internalPhone || "-"}</p>
+                      <p className="font-medium">
+                        {user?.internalPhone || "-"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -237,7 +247,9 @@ export function DataRequestModal({ open, onOpenChange }: DataRequestModalProps) 
                             >
                               <Code className="mb-3 h-6 w-6" />
                               <div className="text-center">
-                                <div className="font-semibold">พัฒนาโปรแกรม</div>
+                                <div className="font-semibold">
+                                  พัฒนาโปรแกรม
+                                </div>
                                 <div className="text-xs text-muted-foreground mt-1">
                                   พัฒนา/แก้ไขโปรแกรม
                                 </div>
@@ -309,7 +321,10 @@ export function DataRequestModal({ open, onOpenChange }: DataRequestModalProps) 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>ความเร่งด่วน *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="เลือกความเร่งด่วน" />
@@ -349,13 +364,20 @@ export function DataRequestModal({ open, onOpenChange }: DataRequestModalProps) 
                   >
                     ยกเลิก
                   </Button>
-                  <Button type="submit" disabled={isSubmitting} className="flex-1">
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     {isSubmitting ? "กำลังส่งคำร้อง..." : "ส่งคำร้อง"}
                   </Button>
                 </div>
               </form>
             </Form>
+            </div>
           </>
         )}
       </DialogContent>

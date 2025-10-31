@@ -138,7 +138,7 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         {isSuccess ? (
           // Success State
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
@@ -148,7 +148,8 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
             <div className="text-center space-y-2">
               <h3 className="text-xl font-semibold">ส่งคำร้องสำเร็จ</h3>
               <p className="text-muted-foreground">
-                หมายเลขคำร้อง: <span className="font-mono font-semibold">{requestNumber}</span>
+                หมายเลขคำร้อง:{" "}
+                <span className="font-mono font-semibold">{requestNumber}</span>
               </p>
               <p className="text-sm text-muted-foreground">
                 กำลังเปลี่ยนเส้นทางไปหน้าติดตามงาน...
@@ -158,15 +159,17 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
         ) : (
           // Form State
           <>
-            <DialogHeader>
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>ฟอร์มแจ้งปัญหา IT</DialogTitle>
-              <DialogDescription>
-                กรอกข้อมูลปัญหาที่พบ ข้อมูลผู้แจ้งจะถูกเติมอัตโนมัติ
-              </DialogDescription>
+              <DialogDescription>กรอกข้อมูลปัญหาที่พบ</DialogDescription>
             </DialogHeader>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <div className="flex-1 overflow-y-auto pr-1">
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-6 pb-6"
+                >
                 {/* Requester Information (Read-only) */}
                 <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
                   <h4 className="font-semibold text-sm">ข้อมูลผู้แจ้งปัญหา</h4>
@@ -181,11 +184,15 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
                     </div>
                     <div>
                       <span className="text-muted-foreground">หน่วยงาน:</span>
-                      <p className="font-medium">{user?.department?.name || "-"}</p>
+                      <p className="font-medium">
+                        {user?.department?.name || "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">เบอร์โทร:</span>
-                      <p className="font-medium">{user?.internalPhone || "-"}</p>
+                      <p className="font-medium">
+                        {user?.internalPhone || "-"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -226,7 +233,8 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
                         />
                       </FormControl>
                       <FormDescription>
-                        อธิบายปัญหาให้ชัดเจนเพื่อให้สามารถแก้ไขได้อย่างรวดเร็ว (20-2,000 ตัวอักษร)
+                        อธิบายปัญหาให้ชัดเจนเพื่อให้สามารถแก้ไขได้อย่างรวดเร็ว
+                        (20-2,000 ตัวอักษร)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -261,7 +269,10 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>ความเร่งด่วน *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="เลือกความเร่งด่วน" />
@@ -301,13 +312,20 @@ export function ITIssueModal({ open, onOpenChange }: ITIssueModalProps) {
                   >
                     ยกเลิก
                   </Button>
-                  <Button type="submit" disabled={isSubmitting} className="flex-1">
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     {isSubmitting ? "กำลังส่งคำร้อง..." : "ส่งคำร้อง"}
                   </Button>
                 </div>
               </form>
             </Form>
+            </div>
           </>
         )}
       </DialogContent>
