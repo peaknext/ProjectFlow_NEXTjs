@@ -15,12 +15,14 @@ import { RecentActivitiesWidget } from "@/components/dashboard/recent-activities
 import { MyChecklistWidget } from "@/components/dashboard/my-checklist-widget";
 import { useDashboard, useRefreshDashboard } from "@/hooks/use-dashboard";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import type { DashboardTask, MyTasksData } from "@/types/dashboard";
 
 export default function DashboardPage() {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   // Pagination state for each widget
   const [myCreatedTasksOffset, setMyCreatedTasksOffset] = useState(0);
   const [assignedToMeTasksOffset, setAssignedToMeTasksOffset] = useState(0);
@@ -86,9 +88,25 @@ export default function DashboardPage() {
     }
   }, [isMobile, router]);
 
+  // Redirect USER role to IT Service (they shouldn't see dashboard)
+  useEffect(() => {
+    if (user && user.role === 'USER') {
+      router.replace('/it-service');
+    }
+  }, [user, router]);
+
   // ✅ Early return AFTER all hooks
   // Show loading while redirecting
   if (isMobile) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Show loading while redirecting USER role to IT Service
+  if (user && user.role === 'USER') {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

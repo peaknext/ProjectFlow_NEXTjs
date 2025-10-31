@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface User {
   id: string;
@@ -140,12 +141,18 @@ export function useAuth() {
             }
           }
         } catch (error) {
-          console.error('Failed to extend privacy consent:', error);
+          logger.error('Failed to extend privacy consent', error as Error);
         }
       }
 
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Conditional redirect based on role
+      // USER role goes to IT Service, other roles go to dashboard
+      // Use replace (not push) to avoid adding to history and faster redirect
+      if (data.user.role === 'USER') {
+        router.replace('/it-service');
+      } else {
+        router.replace('/dashboard');
+      }
     },
     onError: (error: any) => {
       // Toast notification (will disappear)
