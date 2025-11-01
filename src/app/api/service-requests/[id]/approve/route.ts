@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
 import { withAuth, type AuthenticatedRequest } from "@/lib/api-middleware";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { checkPermission, getUserAccessibleScope } from "@/lib/permissions";
-import { createRequestTimeline, notifyRequester } from "@/lib/service-request-utils";
+import {
+  createRequestTimeline,
+  notifyRequester,
+} from "@/lib/service-request-utils";
 
 /**
  * POST /api/service-requests/:id/approve
@@ -46,11 +48,21 @@ async function handlePost(
   // Get existing request
   const existingRequest = await prisma.serviceRequest.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      requestNumber: true,
+      type: true,
+      subject: true,
+      description: true,
+      status: true,
+      requesterId: true,
+      documentHtml: true, // ✅ Need original document HTML to update
       requester: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
         },
       },
     },
@@ -109,8 +121,17 @@ async function handlePost(
   // Get approver info
   const approver = await prisma.user.findUnique({
     where: { id: userId },
-    include: {
-      jobTitle: true,
+    select: {
+      id: true,
+      titlePrefix: true,
+      firstName: true,
+      lastName: true,
+      jobTitle: {
+        select: {
+          jobTitleTh: true,
+        },
+      },
+      jobLevel: true,
     },
   });
 
@@ -118,10 +139,33 @@ async function handlePost(
     return errorResponse("NOT_FOUND", "Approver not found", 404);
   }
 
-  const approverName = approver.fullName || `${approver.firstName} ${approver.lastName}`;
-  const approverJobTitle = approver.jobTitle?.jobTitleTh || null;
+  const approverName = `${approver.titlePrefix}${approver.firstName} ${approver.lastName}`;
+  const approverJobTitle =
+    (
+      (approver.jobTitle?.jobTitleTh || "") + (approver.jobLevel || "")
+    ).trim() || "";
 
-  // Create task (with first assignee if provided)
+  // Update documentHtml by replacing approver placeholders with actual info
+  // This approach preserves the original document (urgency, location, etc.)
+  // and only updates the approver section
+  let updatedDocumentHtml = existingRequest.documentHtml;
+
+  // Replace approver name placeholders
+  updatedDocumentHtml = updatedDocumentHtml
+    .replace(
+      /ลงชื่อ \.{10,} ผู้รับเรื่องและอนุมัติ/g,
+      `ลงชื่อ ${approverName} ผู้รับเรื่องและอนุมัติ`
+    )
+    .replace(
+      /\(รอการมอบหมาย\)/g,
+      `(${approverName})`
+    )
+    .replace(
+      /ตำแหน่ง \.{10,}/g,
+      `ตำแหน่ง ${approverJobTitle || "ไม่ระบุ"}`
+    );
+
+  // Create task
   const task = await prisma.task.create({
     data: {
       name: `คำร้อง${existingRequest.type} #${existingRequest.requestNumber} - ${existingRequest.subject}`,
@@ -130,7 +174,6 @@ async function handlePost(
       projectId: body.projectId,
       statusId: defaultStatus.id,
       creatorUserId: userId,
-      assigneeUserId: body.assigneeUserIds?.[0] || null, // First assignee (or null)
     },
     include: {
       project: {
@@ -169,19 +212,24 @@ async function handlePost(
       approverJobTitle,
       approvedAt: new Date(),
       taskId: task.id,
+      documentHtml: updatedDocumentHtml, // ✅ Update document with approver info
     },
     include: {
       requester: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
           email: true,
         },
       },
       approver: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
         },
       },
       task: {
@@ -204,7 +252,7 @@ async function handlePost(
   await createRequestTimeline(
     id,
     "APPROVED",
-    `${approverName} อนุมัติคำร้อง${body.comment ? `: ${body.comment}` : ""}`,
+    `${approverName} อนุมัติคำร้อง${body.comment ? ` (หมายเหตุ: ${body.comment})` : ""}`,
     userId,
     approverName
   );
@@ -212,7 +260,7 @@ async function handlePost(
   await createRequestTimeline(
     id,
     "TASK_CREATED",
-    `สร้างงาน "${task.name}" ใน Project "${project.name}"`,
+    `สร้างงาน "${task.name}" ในโปรเจกต์ "${project.name}"`,
     userId,
     approverName
   );

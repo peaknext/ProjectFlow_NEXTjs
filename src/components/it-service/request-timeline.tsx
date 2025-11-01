@@ -1,6 +1,7 @@
 "use client";
 
-import { format } from "date-fns";
+import { useState, useEffect } from "react";
+import { format, differenceInMinutes, differenceInHours, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
 import {
   CheckCircle2,
@@ -11,14 +12,20 @@ import {
   MessageSquare,
   Briefcase,
   User,
+  RefreshCw,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useRequestTimeline } from "@/hooks/use-service-requests";
+import { VerticalTaskTimeline } from "./vertical-task-timeline";
+import type { RequestStatus } from "@/generated/prisma";
 
 interface RequestTimelineProps {
   requestId: string;
+  createdAt: string | Date;
+  status: RequestStatus;
+  completedAt?: string | Date | null;
   task?: {
     id: string;
     name: string;
@@ -36,6 +43,15 @@ interface RequestTimelineProps {
         profileImageUrl?: string | null;
       };
     }[];
+    project?: {
+      id: string;
+      name: string;
+      statuses: {
+        id: string;
+        name: string;
+        order: number;
+      }[];
+    };
   } | null;
 }
 
@@ -48,7 +64,8 @@ interface RequestTimelineProps {
  * - User avatars and names
  * - Timestamps in Thai format
  * - Auto-refresh every minute
- * - Show task assignees and status for TASK_CREATED events
+ * - Show task assignees and status for TASK_CREATED and TASK_STATUS_CHANGED events
+ * - Display elapsed time from creation to now (or completion)
  *
  * Action Types:
  * - CREATED: Request was created
@@ -57,11 +74,64 @@ interface RequestTimelineProps {
  * - APPROVED: Request was approved
  * - REJECTED: Request was rejected
  * - TASK_CREATED: Task was created from request (shows assignees and status)
+ * - TASK_STATUS_CHANGED: Task status was updated (shows assignees and status)
  * - CANCELLED: Request was cancelled
  * - COMPLETED: Request was completed
  */
-export function RequestTimeline({ requestId, task }: RequestTimelineProps) {
+export function RequestTimeline({ requestId, createdAt, status, completedAt, task }: RequestTimelineProps) {
   const { data: timeline, isLoading } = useRequestTimeline(requestId);
+  const [elapsedTime, setElapsedTime] = useState("");
+
+  // Calculate elapsed time
+  useEffect(() => {
+    const calculateElapsedTime = () => {
+      const startDate = new Date(createdAt);
+
+      // Determine end date: use completedAt if request is closed, otherwise use current time
+      const isClosed = ["COMPLETED", "CANCELLED", "REJECTED"].includes(status);
+      const endDate = isClosed && completedAt ? new Date(completedAt) : new Date();
+
+      // Calculate differences
+      const totalMinutes = differenceInMinutes(endDate, startDate);
+      const days = Math.floor(totalMinutes / (24 * 60));
+      const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+      const minutes = totalMinutes % 60;
+
+      // Format text
+      let text = "ระยะเวลาในการดำเนินงาน ";
+      if (days > 0) {
+        text += `${days} วัน `;
+      }
+      if (hours > 0 || days > 0) {
+        text += `${hours} ชั่วโมง `;
+      }
+      text += `${minutes} นาที`;
+
+      setElapsedTime(text);
+    };
+
+    // Calculate immediately
+    calculateElapsedTime();
+
+    // If request is not closed, update every minute
+    const isClosed = ["COMPLETED", "CANCELLED", "REJECTED"].includes(status);
+    if (!isClosed) {
+      const interval = setInterval(calculateElapsedTime, 60000); // Update every 1 minute
+      return () => clearInterval(interval);
+    }
+  }, [createdAt, status, completedAt]);
+
+  // Find the latest task-related timeline item (TASK_CREATED, TASK_STATUS_CHANGED, or TASK_ASSIGNEES_CHANGED)
+  // Use slice().reverse() to find from the end (latest item first)
+  const latestTaskTimelineId = timeline
+    ?.slice()
+    .reverse()
+    .find(
+      (item) =>
+        item.action === "TASK_CREATED" ||
+        item.action === "TASK_STATUS_CHANGED" ||
+        item.action === "TASK_ASSIGNEES_CHANGED"
+    )?.id;
 
   // Get icon for action type
   const getActionIcon = (action: string) => {
@@ -78,6 +148,10 @@ export function RequestTimeline({ requestId, task }: RequestTimelineProps) {
         return <XCircle className="h-4 w-4 text-red-600" />;
       case "TASK_CREATED":
         return <Briefcase className="h-4 w-4 text-blue-600" />;
+      case "TASK_STATUS_CHANGED":
+        return <RefreshCw className="h-4 w-4 text-blue-600" />;
+      case "TASK_ASSIGNEES_CHANGED":
+        return <User className="h-4 w-4 text-blue-600" />;
       case "CANCELLED":
         return <XCircle className="h-4 w-4 text-gray-600" />;
       case "COMPLETED":
@@ -101,6 +175,10 @@ export function RequestTimeline({ requestId, task }: RequestTimelineProps) {
       case "REJECTED":
         return "bg-red-500";
       case "TASK_CREATED":
+        return "bg-blue-600";
+      case "TASK_STATUS_CHANGED":
+        return "bg-blue-600";
+      case "TASK_ASSIGNEES_CHANGED":
         return "bg-blue-600";
       case "CANCELLED":
         return "bg-gray-500";
@@ -172,6 +250,12 @@ export function RequestTimeline({ requestId, task }: RequestTimelineProps) {
                     <div className="flex items-start gap-2">
                       {item.userName && (
                         <Avatar className="h-6 w-6">
+                          {item.user?.profileImageUrl && (
+                            <AvatarImage
+                              src={item.user.profileImageUrl}
+                              alt={item.userName}
+                            />
+                          )}
                           <AvatarFallback className="text-xs">
                             {item.userName.charAt(0)}
                           </AvatarFallback>
@@ -196,43 +280,56 @@ export function RequestTimeline({ requestId, task }: RequestTimelineProps) {
                           )}
                         </div>
 
-                        {/* Task Details - Show for TASK_CREATED action */}
-                        {item.action === "TASK_CREATED" && task && (
-                          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800 space-y-2">
-                            {/* Task Status */}
-                            {task.status && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-muted-foreground">สถานะงาน:</span>
-                                <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                                  {task.status.name}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Task Assignees */}
-                            {task.assignees && task.assignees.length > 0 && (
-                              <div className="space-y-1.5">
-                                <span className="text-xs font-medium text-muted-foreground">มอบหมายให้:</span>
-                                <div className="flex flex-wrap gap-2">
-                                  {task.assignees.map((assignee) => (
-                                    <div
-                                      key={assignee.user.id}
-                                      className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-800"
-                                    >
-                                      <Avatar className="h-5 w-5">
-                                        {assignee.user.profileImageUrl && (
-                                          <AvatarImage src={assignee.user.profileImageUrl} />
-                                        )}
-                                        <AvatarFallback className="text-xs">
-                                          {assignee.user.firstName.charAt(0)}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <span className="text-xs font-medium">
-                                        {`${assignee.user.titlePrefix || ''}${assignee.user.firstName} ${assignee.user.lastName}`}
-                                      </span>
-                                    </div>
-                                  ))}
+                        {/* Task Details - Show only for the latest TASK_CREATED or TASK_STATUS_CHANGED action */}
+                        {item.id === latestTaskTimelineId && task && (
+                          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800 flex gap-3">
+                            {/* Left side - Task Status + Assignees */}
+                            <div className="flex-1 space-y-2">
+                              {/* Task Status */}
+                              {task.status && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-medium text-muted-foreground">สถานะงาน:</span>
+                                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                                    {task.status.name}
+                                  </span>
                                 </div>
+                              )}
+
+                              {/* Task Assignees */}
+                              {task.assignees && task.assignees.length > 0 && (
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-medium text-muted-foreground">มอบหมายให้:</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {task.assignees.map((assignee) => (
+                                      <div
+                                        key={assignee.user.id}
+                                        className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-800"
+                                      >
+                                        <Avatar className="h-5 w-5">
+                                          {assignee.user.profileImageUrl && (
+                                            <AvatarImage src={assignee.user.profileImageUrl} />
+                                          )}
+                                          <AvatarFallback className="text-xs">
+                                            {assignee.user.firstName.charAt(0)}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-xs font-medium">
+                                          {`${assignee.user.titlePrefix || ''}${assignee.user.firstName} ${assignee.user.lastName}`}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Right side - Vertical Timeline */}
+                            {task.status && task.project?.statuses && task.project.statuses.length > 0 && (
+                              <div className="flex-shrink-0 pt-1">
+                                <VerticalTaskTimeline
+                                  statuses={task.project.statuses}
+                                  currentStatusId={task.status.id}
+                                />
                               </div>
                             )}
                           </div>
@@ -246,6 +343,16 @@ export function RequestTimeline({ requestId, task }: RequestTimelineProps) {
           ))}
         </div>
       </CardContent>
+
+      {/* Elapsed Time Footer */}
+      {elapsedTime && (
+        <CardFooter className="border-t pt-4 justify-center">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" />
+            <span>{elapsedTime}</span>
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 }

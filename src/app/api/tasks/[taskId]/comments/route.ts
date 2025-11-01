@@ -115,6 +115,17 @@ async function postHandler(
     // Security: VULN-009 Fix - Remove dangerous HTML/scripts
     const sanitizedContent = sanitizeHtml(content);
 
+    // ✅ PHASE 3.6: Check if task is linked to ServiceRequest for bi-directional sync
+    const serviceRequest = await prisma.serviceRequest.findFirst({
+      where: { taskId },
+      select: {
+        id: true,
+        requestNumber: true,
+        requesterId: true,
+        requesterName: true,
+      },
+    });
+
     // Create comment
     const comment = await prisma.comment.create({
       data: {
@@ -122,6 +133,7 @@ async function postHandler(
         commentorUserId: req.session.userId,
         commentText: sanitizedContent,
         mentions: mentionedUserIds.length > 0 ? mentionedUserIds : null,
+        commentSource: 'TASK',
       },
       include: {
         commentor: {
@@ -134,6 +146,42 @@ async function postHandler(
         },
       },
     });
+
+    // ✅ PHASE 3.6: Create mirror comment in ServiceRequest if linked
+    if (serviceRequest) {
+      const mirrorComment = await prisma.requestComment.create({
+        data: {
+          serviceRequestId: serviceRequest.id,
+          commentorUserId: req.session.userId,
+          commentText: sanitizedContent,
+          linkedTaskCommentId: comment.id,
+        },
+      });
+
+      // Update original comment with link to mirror
+      await prisma.comment.update({
+        where: { id: comment.id },
+        data: { linkedServiceRequestCommentId: mirrorComment.id },
+      });
+
+      // ✅ SERVICE REQUEST NOTIFICATION: Notify service request owner about task comments
+      const requesterId = serviceRequest.requesterId;
+      if (
+        requesterId &&
+        requesterId !== req.session.userId && // Requester is not the one commenting
+        !mentionedUserIds.includes(requesterId) // Requester is not already mentioned (avoid duplicate)
+      ) {
+        await prisma.notification.create({
+          data: {
+            userId: requesterId,
+            type: 'COMMENT_MENTION' as const,
+            message: `${req.session.user.fullName} แสดงความคิดเห็นในงานที่เชื่อมกับคำร้อง ${serviceRequest.requestNumber}`,
+            taskId,
+            triggeredByUserId: req.session.userId,
+          },
+        });
+      }
+    }
 
     // Log history
     const commentPreview = sanitizedContent.length > 50 ? sanitizedContent.substring(0, 50) + '...' : sanitizedContent;
