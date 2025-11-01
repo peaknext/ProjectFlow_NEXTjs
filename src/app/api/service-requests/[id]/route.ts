@@ -20,7 +20,9 @@ async function handleGet(
       requester: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
           email: true,
           profileImageUrl: true,
           departmentId: true,
@@ -35,7 +37,9 @@ async function handleGet(
       approver: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
           profileImageUrl: true,
         },
       },
@@ -54,6 +58,26 @@ async function handleGet(
               name: true,
             },
           },
+          status: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+            },
+          },
+          assignees: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  titlePrefix: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImageUrl: true,
+                },
+              },
+            },
+          },
         },
       },
       timeline: {
@@ -69,7 +93,9 @@ async function handleGet(
           commentor: {
             select: {
               id: true,
-              fullName: true,
+              titlePrefix: true,
+              firstName: true,
+              lastName: true,
               profileImageUrl: true,
             },
           },
@@ -150,7 +176,9 @@ async function handlePatch(
       requester: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
           email: true,
         },
       },
@@ -210,16 +238,22 @@ async function handleDelete(
   // Create timeline entry
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { fullName: true },
+    select: {
+      titlePrefix: true,
+      firstName: true,
+      lastName: true,
+    },
   });
+
+  const userName = user ? `${user.titlePrefix}${user.firstName} ${user.lastName}` : undefined;
 
   await prisma.requestTimeline.create({
     data: {
       serviceRequestId: id,
       action: "CANCELLED",
-      description: `${user?.fullName} ยกเลิกคำร้อง`,
+      description: `${userName} ยกเลิกคำร้อง`,
       userId,
-      userName: user?.fullName || undefined,
+      userName,
     },
   });
 

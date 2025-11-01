@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth, type AuthenticatedRequest } from "@/lib/api-middleware";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
-import {
-  createRequestTimeline,
-  notifyCommentAdded,
-} from "@/lib/service-request-utils";
+import { notifyCommentAdded } from "@/lib/service-request-utils";
 
 /**
  * GET /api/service-requests/:id/comments
@@ -37,7 +34,9 @@ async function handleGet(
       commentor: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
           profileImageUrl: true,
           jobTitle: {
             select: {
@@ -90,7 +89,9 @@ async function handlePost(
     prisma.user.findUnique({
       where: { id: userId },
       select: {
-        fullName: true,
+        titlePrefix: true,
+        firstName: true,
+        lastName: true,
       },
     }),
   ]);
@@ -114,7 +115,9 @@ async function handlePost(
       commentor: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
           profileImageUrl: true,
           jobTitle: {
             select: {
@@ -126,20 +129,13 @@ async function handlePost(
     },
   });
 
-  // Create timeline entry
-  await createRequestTimeline(
-    id,
-    "COMMENT_ADDED" as any, // Timeline action for comments
-    `${currentUser.fullName} แสดงความคิดเห็น`,
-    userId,
-    currentUser.fullName
-  );
-
   // Notify requester and approver (if they are not the commenter)
+  // Note: Timeline entry removed - only send notification
+  const fullName = `${currentUser.titlePrefix}${currentUser.firstName} ${currentUser.lastName}`;
   await notifyCommentAdded(
     id,
     request.requestNumber,
-    currentUser.fullName,
+    fullName,
     userId,
     request.requesterId,
     request.approverId

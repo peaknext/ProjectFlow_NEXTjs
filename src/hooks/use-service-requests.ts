@@ -71,6 +71,20 @@ export interface ServiceRequest {
   task?: {
     id: string;
     name: string;
+    status?: {
+      id: string;
+      name: string;
+      type: string;
+    };
+    assignees?: {
+      user: {
+        id: string;
+        titlePrefix?: string | null;
+        firstName: string;
+        lastName: string;
+        profileImageUrl?: string | null;
+      };
+    }[];
   } | null;
 }
 

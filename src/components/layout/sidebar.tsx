@@ -8,6 +8,8 @@ import {
   FolderKanban,
   BarChart3,
   Users,
+  FileText,
+  Inbox,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -16,6 +18,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SyncStatusFooter } from "@/components/layout/sync-status-footer";
 import { WorkspaceNavigation } from "@/components/navigation/workspace-navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useServiceRequests } from "@/hooks/use-service-requests";
+import { Badge } from "@/components/ui/badge";
 
 const mainNavigation = [
   {
@@ -53,11 +57,28 @@ const mainNavigation = [
     enabled: true, // ✅ Implemented 2025-10-24
     requiredRoles: ["ADMIN", "CHIEF", "LEADER", "HEAD"], // Only management roles
   },
+  {
+    name: "IT Service",
+    href: "/it-service",
+    icon: FileText,
+    enabled: true, // ✅ Phase 2 - IT Service Portal with 3 tabs for non-USER
+    requiredRoles: [], // All roles can access
+    showBadge: true, // Show pending count badge for non-USER roles
+  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
+
+  // Fetch pending requests count for badge (only for management roles)
+  const isManagementRole =
+    user?.role &&
+    ["ADMIN", "CHIEF", "LEADER", "HEAD"].includes(user.role);
+  const { data: pendingRequests } = useServiceRequests(
+    isManagementRole ? { status: "PENDING" } : { myRequests: true, status: "PENDING" }
+  );
+  const pendingCount = pendingRequests?.length || 0;
 
   // Filter navigation items based on user role
   const visibleNavigation = mainNavigation.filter((item) => {
@@ -68,14 +89,25 @@ export function Sidebar() {
     return user?.role && item.requiredRoles.includes(user.role);
   });
 
+  // Get dynamic href for IT Service (different for USER vs non-USER)
+  const getItemHref = (item: typeof mainNavigation[number]) => {
+    if (item.name === "IT Service") {
+      // USER role goes to portal, non-USER goes to admin (3 tabs)
+      return user?.role === "USER" ? "/it-service" : "/it-service-admin";
+    }
+    return item.href;
+  };
+
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card">
       {/* Main Navigation - Fixed */}
       <nav className="flex flex-col gap-2 px-4 pt-4 pb-4">
         {visibleNavigation.map((item) => {
+          const itemHref = getItemHref(item);
+
           // Default active state logic
           let isActive =
-            pathname === item.href || pathname?.startsWith(item.href + "/");
+            pathname === itemHref || pathname?.startsWith(itemHref + "/");
 
           // Special logic for "งาน" (Tasks) - should be active for all task-related views
           if (item.name === "งาน") {
@@ -100,10 +132,15 @@ export function Sidebar() {
             isActive = pathname === "/projects";
           }
 
+          // Special logic for "IT Service" - active for /it-service and /it-service-admin
+          if (item.name === "IT Service") {
+            isActive = pathname?.startsWith("/it-service") || false;
+          }
+
           return (
             <Link
               key={item.name}
-              href={item.enabled ? item.href : "#"}
+              href={item.enabled ? itemHref : "#"}
               className={cn(!item.enabled && "cursor-not-allowed")}
             >
               <Button
@@ -125,6 +162,18 @@ export function Sidebar() {
                     (เร็วๆ นี้)
                   </span>
                 )}
+                {item.enabled &&
+                  item.showBadge &&
+                  item.name === "IT Service" &&
+                  user?.role !== "USER" &&
+                  pendingCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="ml-auto h-5 min-w-[20px] px-1.5 text-xs"
+                    >
+                      {pendingCount > 99 ? "99+" : pendingCount}
+                    </Badge>
+                  )}
               </Button>
             </Link>
           );
