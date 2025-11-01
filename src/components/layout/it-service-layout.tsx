@@ -6,21 +6,22 @@ import { useAuth } from "@/hooks/use-auth";
 import { ITServiceTopBar } from "./it-service-top-bar";
 
 /**
- * IT Service Layout Wrapper
+ * IT Service Layout (USER role only)
  *
- * Conditional layout based on user role:
- * - USER: Clean portal (no sidebar, custom top bar)
- * - Others: Regular dashboard layout with sidebar
+ * Clean portal layout for USER role with:
+ * - ITServiceTopBar (profile, notifications, global filter)
+ * - No dashboard sidebar
+ * - Full-screen content area
  *
- * This component wraps IT Service pages and determines
- * whether to show clean portal or use default (dashboard) layout
+ * This layout is ONLY used by USER role.
+ * non-USER roles use standard DesktopLayout with sidebar.
  */
 interface ITServiceLayoutProps {
   children: React.ReactNode;
 }
 
 export function ITServiceLayout({ children }: ITServiceLayoutProps) {
-  const { user, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const router = useRouter();
 
   // Check if IT Service module is enabled (TODO: implement in Phase 5)
@@ -60,17 +61,11 @@ export function ITServiceLayout({ children }: ITServiceLayoutProps) {
     );
   }
 
-  // USER role: Show clean portal (no sidebar)
-  if (user?.role === "USER") {
-    return (
-      <div className="flex h-screen flex-col">
-        <ITServiceTopBar />
-        <main className="flex-1 overflow-auto">{children}</main>
-      </div>
-    );
-  }
-
-  // Other roles: Use default (dashboard) layout with sidebar
-  // The (dashboard) layout will handle sidebar rendering
-  return <>{children}</>;
+  // Clean portal layout (USER role only)
+  return (
+    <div className="flex h-screen flex-col">
+      <ITServiceTopBar />
+      <main className="flex-1 overflow-hidden p-6">{children}</main>
+    </div>
+  );
 }

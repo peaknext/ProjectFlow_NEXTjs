@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, LogOut, Moon, User as UserIcon, ArrowLeft } from "lucide-react";
+import { LogOut, Moon, User as UserIcon, ArrowLeft } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
-import { useNotifications } from "@/hooks/use-notifications";
+import { NotificationBell } from "@/components/notifications";
 import { FiscalYearFilter } from "@/components/filters/fiscal-year-filter";
 
 /**
@@ -32,14 +32,9 @@ export function ITServiceTopBar() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const { data: notificationsData } = useNotifications();
 
   // Check if user is on profile or settings page (show back button)
   const showBackButton = pathname && !pathname.startsWith('/it-service');
-
-  const unreadCount = notificationsData?.notifications?.filter(
-    (n) => !n.isRead
-  ).length || 0;
 
   const handleLogout = async () => {
     await logout();
@@ -47,7 +42,7 @@ export function ITServiceTopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 dark:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-6">
         {/* Back Button (show when not on IT Service portal) */}
         {showBackButton && (
@@ -92,63 +87,7 @@ export function ITServiceTopBar() {
           </div>
 
           {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <div className="flex items-center justify-between p-4">
-                <h3 className="font-semibold">แจ้งเตือน</h3>
-                {unreadCount > 0 && (
-                  <Badge variant="secondary">{unreadCount} ใหม่</Badge>
-                )}
-              </div>
-              <DropdownMenuSeparator />
-              <div className="max-h-[400px] overflow-auto">
-                {notificationsData?.notifications?.slice(0, 5).map((notif) => (
-                  <DropdownMenuItem
-                    key={notif.id}
-                    className="cursor-pointer p-4"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm">{notif.message}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(notif.createdAt).toLocaleDateString("th-TH", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-                {(!notificationsData?.notifications ||
-                  notificationsData.notifications.length === 0) && (
-                  <div className="p-8 text-center text-sm text-muted-foreground">
-                    ไม่มีการแจ้งเตือน
-                  </div>
-                )}
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/notifications"
-                  className="w-full cursor-pointer p-4 text-center"
-                >
-                  ดูทั้งหมด
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationBell />
 
           {/* User Dropdown */}
           <DropdownMenu>

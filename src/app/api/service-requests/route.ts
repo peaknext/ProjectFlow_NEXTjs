@@ -5,11 +5,13 @@ import { prisma } from "@/lib/db";
 import {
   generateRequestNumber,
   createRequestTimeline,
-  renderDocumentHtml,
   notifyApprovers,
   getFiscalYear,
 } from "@/lib/service-request-utils";
+import { generateDocument, type DocumentData } from "@/lib/document-helpers";
 import { buildFiscalYearFilter } from "@/lib/fiscal-year";
+import { getHospitalName } from "@/lib/system-settings";
+import { isAdminOrHigher, hasRoleLevel } from "@/lib/permissions";
 
 /**
  * GET /api/service-requests
@@ -89,23 +91,10 @@ async function handleGet(req: AuthenticatedRequest) {
     // Scope filter by role (only when NOT filtering by "my requests")
     const role = currentUser.role;
 
-    if (role === "USER" || role === "MEMBER" || role === "HEAD") {
-      // USER, MEMBER, HEAD: See only department scope
-      if (currentUser.departmentId) {
-        where.requester = {
-          departmentId: currentUser.departmentId,
-        };
-      }
-    } else if (role === "LEADER") {
-      // LEADER: See division scope
-      if (currentUser.department?.divisionId) {
-        where.requester = {
-          department: {
-            divisionId: currentUser.department.divisionId,
-          },
-        };
-      }
-    } else if (role === "CHIEF") {
+    if (isAdminOrHigher(role)) {
+      // ADMIN, SUPER_ADMIN: See all (no additional filter)
+      // No filter applied - can see all requests
+    } else if (hasRoleLevel(role, "CHIEF")) {
       // CHIEF: See mission group scope
       if (currentUser.department?.division?.missionGroupId) {
         where.requester = {
@@ -116,8 +105,23 @@ async function handleGet(req: AuthenticatedRequest) {
           },
         };
       }
+    } else if (hasRoleLevel(role, "LEADER")) {
+      // LEADER: See division scope
+      if (currentUser.department?.divisionId) {
+        where.requester = {
+          department: {
+            divisionId: currentUser.department.divisionId,
+          },
+        };
+      }
+    } else {
+      // USER, MEMBER, HEAD: See only department scope
+      if (currentUser.departmentId) {
+        where.requester = {
+          departmentId: currentUser.departmentId,
+        };
+      }
     }
-    // ADMIN, SUPER_ADMIN: See all (no additional filter)
   }
 
   // Fetch requests
@@ -127,14 +131,20 @@ async function handleGet(req: AuthenticatedRequest) {
       requester: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
           email: true,
+          profileImageUrl: true,
         },
       },
       approver: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
+          profileImageUrl: true,
         },
       },
       task: {
@@ -209,35 +219,43 @@ async function handlePost(req: AuthenticatedRequest) {
   const fiscalYear = getFiscalYear(new Date());
 
   // Prepare requester snapshot
-  const requesterName = requester.fullName || `${requester.firstName} ${requester.lastName}`;
-  const requesterJobTitle = requester.jobTitle?.jobTitleTh || null;
-  const requesterDivision = requester.department?.division?.name || null;
-  const requesterPhone = requester.internalPhone || null;
+  const requesterName = `${requester.titlePrefix}${requester.firstName} ${requester.lastName}`;
+
+  // รวม ตำแหน่ง + ระดับ (เช่น "นายแพทย์" + "ชำนาญการ" = "นายแพทย์ชำนาญการ")
+  const jobTitleTh = requester.jobTitle?.jobTitleTh || "";
+  const jobLevel = requester.jobLevel || "";
+  const requesterJobTitle = (jobTitleTh + jobLevel).trim();
+
+  const requesterDivision = requester.department?.division?.name || "";
+  const requesterDepartment = requester.department?.name || "";
+  const requesterPhone = requester.internalPhone || undefined;
   const requesterEmail = requester.email;
 
-  // Parse issueTime if provided
-  const issueTime = body.issueTime ? new Date(body.issueTime) : null;
+  // Parse purposes array for DATA/PROGRAM requests
+  const purposes = body.purposes ? (Array.isArray(body.purposes) ? body.purposes : [body.purposes]) : undefined;
 
   // Create request data object for document rendering
-  const requestData = {
+  const documentData: DocumentData = {
     requestNumber,
     type: body.type,
+    subject: body.subject.trim(),
+    description: body.description.trim(),
+    urgency: body.urgency || "MEDIUM",
     requesterName,
     requesterJobTitle,
     requesterDivision,
+    requesterDepartment,
     requesterPhone,
     requesterEmail,
-    subject: body.subject.trim(),
-    description: body.description.trim(),
-    purpose: body.purpose || null,
-    purposeOther: body.purposeOther || null,
-    deadline: body.deadline || null,
-    issueTime,
+    hospitalName: await getHospitalName(), // Get from system settings
     createdAt: new Date(),
+    purposes,
+    otherPurpose: body.otherPurpose || undefined,
+    location: body.location || undefined,
   };
 
   // Render HTML document
-  const documentHtml = renderDocumentHtml(requestData);
+  const documentHtml = generateDocument(documentData);
 
   // Create service request
   const serviceRequest = await prisma.serviceRequest.create({
@@ -253,10 +271,10 @@ async function handlePost(req: AuthenticatedRequest) {
       requesterEmail,
       subject: body.subject.trim(),
       description: body.description.trim(),
-      purpose: body.purpose || null,
-      purposeOther: body.purposeOther || null,
-      deadline: body.deadline || null,
-      issueTime,
+      purpose: body.purposes ? body.purposes.join(", ") : null, // Convert array to comma-separated string
+      purposeOther: body.otherPurpose || null,
+      deadline: null, // Not used by new modals
+      issueTime: null, // Not used by new modals
       documentHtml,
       status: "PENDING",
     },
@@ -264,8 +282,11 @@ async function handlePost(req: AuthenticatedRequest) {
       requester: {
         select: {
           id: true,
-          fullName: true,
+          titlePrefix: true,
+          firstName: true,
+          lastName: true,
           email: true,
+          profileImageUrl: true,
         },
       },
     },
@@ -274,7 +295,7 @@ async function handlePost(req: AuthenticatedRequest) {
   // Create timeline entry
   await createRequestTimeline(
     serviceRequest.id,
-    "SUBMITTED",
+    "CREATED",
     `${requesterName} ส่งคำร้องเข้าสู่ระบบ`,
     userId,
     requesterName

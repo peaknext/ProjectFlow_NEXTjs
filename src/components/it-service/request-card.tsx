@@ -3,6 +3,7 @@
 import { Database, Code, Wrench, LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ServiceRequest } from "@/hooks/use-service-requests";
 import type { RequestStatus, ServiceRequestType } from "@/generated/prisma";
@@ -103,7 +104,22 @@ export function RequestCard({ request, onClick }: RequestCardProps) {
 
         {/* Footer */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{typeInfo.label}</span>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage
+                src={request.requester?.profileImageUrl || undefined}
+                alt={request.requester?.fullName || request.requesterName}
+              />
+              <AvatarFallback className="text-xs">
+                {(request.requester?.fullName || request.requesterName)
+                  .charAt(0)
+                  .toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-medium text-foreground">
+              {request.requester?.fullName || request.requesterName}
+            </span>
+          </div>
           <span>
             {new Date(request.createdAt).toLocaleDateString("th-TH", {
               year: "numeric",
