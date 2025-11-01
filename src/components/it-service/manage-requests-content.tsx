@@ -89,10 +89,6 @@ export function ManageRequestsContent() {
         return "ขอโปรแกรม";
       case "IT_ISSUE":
         return "แจ้งปัญหา IT";
-      case "HARDWARE":
-        return "ขอฮาร์ดแวร์";
-      case "NETWORK":
-        return "ขอเครือข่าย";
       default:
         return type;
     }
@@ -182,8 +178,6 @@ export function ManageRequestsContent() {
                 <SelectItem value="DATA">ขอข้อมูล</SelectItem>
                 <SelectItem value="PROGRAM">ขอโปรแกรม</SelectItem>
                 <SelectItem value="IT_ISSUE">แจ้งปัญหา IT</SelectItem>
-                <SelectItem value="HARDWARE">ขอฮาร์ดแวร์</SelectItem>
-                <SelectItem value="NETWORK">ขอเครือข่าย</SelectItem>
               </SelectContent>
             </Select>
 

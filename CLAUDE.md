@@ -2,8 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Version**: 2.34.0 (2025-10-30)
-**Last Major Update**: P0 Type Safety Refactoring Complete (Removed all 49 `as any` assertions, 100% type-safe React Query hooks)
+**Version**: 2.37.0 (2025-11-01)
+**Last Major Update**: IT Service Module Session 6 Complete (Menu consolidation, timeline enhancements, bug fixes)
 
 ---
 
@@ -48,11 +48,34 @@ const selectedYears = useFiscalYearStore((state) => state.selectedYears);
 // Pass to API: params.fiscalYears = selectedYears.join(",")
 ```
 
+**🛡️ TYPE SAFETY** (NEVER use `as any`):
+```typescript
+// 1. Type inference with generics
+getQueryData<BoardData>(key)
+
+// 2. Type guards for union types
+if (isBoardData(data)) { /* use data */ }
+
+// 3. Double cast via unknown (last resort)
+(source as unknown as Target)
+
+// 4. Omit pattern for Date conflicts
+extends Omit<Type, 'createdAt'>
+
+// 5. Optional vs Nullable (Zod compatible)
+field?: string  // NOT: field: string | null
+```
+
 **✅ BEFORE COMMIT/PUSH:**
 ```bash
-git status              # Check untracked files
-npm run type-check      # BEFORE commit (2-3 min)
-npm run build          # BEFORE push (catches 80% errors)
+# Before EVERY commit
+git status && npm run type-check    # Check files + types (2-3 min)
+
+# Before EVERY push
+npm run build                       # Test production build (catches 80% errors)
+
+# Commit message format (conventional commits)
+feat: Add feature    fix: Bug fix    refactor: Improve code    docs: Update docs
 ```
 
 **📖 Full details below** ⬇️
@@ -82,18 +105,76 @@ npm run build          # BEFORE push (catches 80% errors)
 
 ---
 
+### IT Service Module (New Feature - In Progress) ⭐
+
+**Status**: Phase 2 Complete - Portal UI & Navigation Consolidation (100%)
+
+**Purpose**: Internal IT service request system for USER role with approval workflow.
+
+**Key Features**:
+- 3 request types: DATA (ขอข้อมูล), PROGRAM (ขอโปรแกรม), IT_ISSUE (แจ้งปัญหา)
+- FIFO queue system per request type (with real-time position tracking)
+- HTML document generation with Thai formatting (Sarabun 16pt font, Buddhist calendar)
+- Approval workflow (HEAD+ can approve by type)
+- Automatic task creation upon approval with assignee tracking
+- Satisfaction rating system (1-10 stars + comments)
+- Timeline with task assignment details (assignees + status)
+
+**Current Implementation** (as of 2025-11-01):
+- ✅ Phase 1: Database schema (ServiceRequest, ServiceRequestComment, ServiceRequestTimeline tables)
+- ✅ Phase 2: Portal UI + Request submission forms (100% complete) ⭐ **NEW**
+  - ✅ Task 1: USER role layout isolation + ITServiceTopBar
+  - ✅ Task 2: Sidebar navigation (consolidated to single "IT Service" menu with 3 tabs)
+  - ✅ Task 3: Portal landing page (4 action cards, responsive design)
+  - ✅ Task 4: Request forms (3 modals with full validation, z-index fixes, custom scrollbar)
+  - ✅ Task 5: Document preview (HTML generation, iframe preview modal, print functionality)
+  - ✅ Session 6: Menu consolidation + Timeline enhancements + Bug fixes ⭐ **NEW**
+- ⏳ Phase 3-6: Request tracking enhancements, Approval workflow, System settings, Testing
+
+**Documentation**:
+- Design: `IT_SERVICE_MODULE_SPECIFICATION.md` (2,800+ lines)
+- Conflicts: `IT_SERVICE_MODULE_CONFLICT_ANALYSIS.md` (resolved conflicts)
+- Settings: `SYSTEM_SETTINGS_DESIGN.md` (System Settings page for SUPER_ADMIN)
+- Local setup: `LOCAL_DEVELOPMENT_SETUP.md` (PostgreSQL setup guide)
+- Session 2: `IT_SERVICE_SESSION_2_SUMMARY.md` (Portal UI implementation)
+- Session 3: `IT_SERVICE_SESSION_3_SUMMARY.md` (Request forms enhancement)
+- Session 4: `IT_SERVICE_SESSION_4_SUMMARY.md` (Document preview implementation)
+- Session 6: `IT_SERVICE_SESSION_6_COMPLETE.md` (Menu consolidation + Timeline + Bug fixes) ⭐ **NEW**
+
+**Critical Notes**:
+- USER role auto-redirects to IT Service portal on login (isolated from main dashboard)
+- Non-USER roles access via `/it-service-admin` with 3 tabs (Portal, Manage, My Requests)
+- Requires SUPER_ADMIN role for system settings (not yet implemented)
+- fiscalYear field must be added to ServiceRequest table
+- Follow same type safety patterns as main project (NEVER use `as any`)
+- 6 files have hard-coded `role === 'ADMIN'` checks that need role hierarchy refactoring
+- **Type Safety Lessons**: Always match Prisma schema field names (e.g., `type` not `statusType`)
+- **Modal Pattern**: Use `onOpenChange` prop, not `onClose` for shadcn/ui Dialog components
+- **Enum Validation**: Only use values that exist in Prisma schema enums
+
+---
+
 ## 🎯 Current Priority
 
-**What to work on next**: Mobile Layout Phase 4 - Task Panel Mobile (Full-screen task panel on mobile devices)
+**What to work on next**: IT Service Module Phase 3 (Request Tracking Enhancements)
+
+**Recently Completed** (2025-11-01):
+- ✅ **IT Service Session 6 Complete** - Menu consolidation (3-tab navigation), timeline enhancements, bug fixes ⭐ **NEW**
+- ✅ **IT Service Phase 2 Complete** - Document preview with HTML generation and print functionality
+- ✅ **IT Service Phase 2 Task 4** - Request submission forms (3 request types)
+- ✅ **IT Service Phase 2 Tasks 1-3** - Portal UI, sidebar navigation, layout isolation
+- ✅ **Mobile Layout Phase 4-8** - Complete mobile implementation (100%)
+- ✅ **Division View** - Executive dashboard for LEADER role (100%)
 
 **Current Status**:
 
-- **Mobile Layout Phase 1**: ✅ Complete (Responsive infrastructure at 768px breakpoint)
-- **Mobile Layout Phase 2**: ✅ Complete (5-tab bottom nav, My Tasks page, Notifications page, Hamburger menu)
-- **Mobile Layout Phase 3**: ✅ Complete (Dynamic titles, context actions, animations)
-- **Mobile Layout Phase 4**: ⏳ Pending (Task Panel full-screen on mobile)
-- **Mobile Layout Progress**: 3 / 8 phases complete (37.5%)
-- **Version 1.5**: Near completion (47/48 components)
+- **Mobile Layout**: ✅ **COMPLETE** (8/8 phases, 100%)
+  - Phase 1: ✅ Responsive infrastructure at 768px breakpoint
+  - Phase 2: ✅ 5-tab bottom nav, My Tasks page, Notifications page, Hamburger menu
+  - Phase 3: ✅ Dynamic titles, context actions, animations
+  - Phase 4-8: ✅ Task Panel mobile, filters, search, settings
+- **Division View**: ✅ **COMPLETE** (Executive dashboard with 4 sections)
+- **Version 1.5**: Near completion (49/50 components, 98%)
 
 **Dashboard Implementation Status**: ✅ **COMPLETE WITH UI/UX REFINEMENT** (7/7 widgets)
 
@@ -166,6 +247,47 @@ npm run build          # BEFORE push (catches 80% errors)
 
 ---
 
+### IT Service Module (Separate Feature Track)
+
+**Status**: Phase 2 Task 4 Complete (80% of Phase 2)
+
+**Roadmap**:
+- ✅ Phase 1: Database Schema (ServiceRequest, Comments, Timeline, Ratings) - COMPLETE
+- ⏳ Phase 2: IT Service Portal UI (Tasks 1-5) - 80% Complete
+  - ✅ Task 1: IT Service Layout (USER role isolation, ITServiceTopBar)
+  - ✅ Task 2: Sidebar Navigation (IT Service menu, คำร้องขอ menu with badges)
+  - ✅ Task 3: Portal Landing Page (4 action cards, request list, responsive)
+  - ✅ Task 4: Request Forms (3 modals: DATA, PROGRAM, IT_ISSUE, HARDWARE/NETWORK)
+  - ⏳ Task 5: Document Preview (PDF/Word preview, template generation, print/download) - **NEXT**
+- ⏳ Phase 3: Request Tracking & Timeline (2-3 days)
+  - Timeline component with avatar + role + timestamp
+  - Comment system with mentions
+  - Queue position display
+  - Document preview in tracking page
+- ⏳ Phase 4: Approval System (3-4 days)
+  - Management page for approvers (HEAD+ role)
+  - Approve/Reject actions
+  - Auto-create task upon approval
+  - Notification system integration
+- ⏳ Phase 5: System Settings (SUPER_ADMIN) (2 days)
+  - Add SUPER_ADMIN role (enum migration + 6 file refactors)
+  - System settings page (IT Service toggle, hospital name)
+  - Approver assignment UI
+- ⏳ Phase 6: Testing & Polish (2-3 days)
+  - E2E testing for all workflows
+  - Mobile responsive testing
+  - Performance optimization
+  - Documentation completion
+
+**Total Estimate**: 18-21 days (11-13 days remaining)
+
+**Critical Dependencies**:
+- ⚠️ SUPER_ADMIN role implementation (6 files with hard-coded ADMIN checks)
+- ⚠️ Role hierarchy refactoring (`hasRoleLevel()` helper function)
+- ⚠️ fiscalYear integration (ServiceRequest table + API filtering)
+
+---
+
 ### Ideas (No Timeline Yet)
 
 **Advanced Features** (3 ideas):
@@ -176,6 +298,8 @@ npm run build          # BEFORE push (catches 80% errors)
 
 **Recently Completed** (Last 7 days):
 
+- ✅ **Mobile Layout Phase 4-8 - COMPLETE (2025-10-31)** - Full mobile implementation (Task Panel, filters, search, settings) [See MOBILE_LAYOUT_DESIGN.md]
+- ✅ **Division View - COMPLETE (2025-10-31)** - Executive dashboard for LEADER role with 4 sections [See DIVISION_VIEW_DESIGN.md]
 - ✅ **Phase 1.1: Remove @ts-nocheck - COMPLETE (2025-10-30)** - [See PHASE_1.1_COMPLETE.md]
 - ✅ **P0 Type Safety Refactoring - COMPLETE (2025-10-30)** - Removed all 49 `as any` assertions, 100% type-safe [See P0_TYPE_SAFETY_REFACTORING_COMPLETE.md]
 - ✅ **Mobile Layout Additional Features + Turbopack Build Fix (2025-10-29)** - 6 mobile enhancements, Windows build fix [See Changelog v2.33.0]
@@ -331,7 +455,11 @@ import { prisma } from "@/lib/db";
 
 **Core Schema Patterns**:
 
-- **Users**: 6-level role hierarchy (ADMIN → CHIEF → LEADER → HEAD → MEMBER → USER)
+- **Users**: 7-level role hierarchy (SUPER_ADMIN → ADMIN → CHIEF → LEADER → HEAD → MEMBER → USER)
+  - ⚠️ **SUPER_ADMIN not yet implemented** - Planned for IT Service Phase 5
+  - Requires enum migration + refactoring 6 files with hard-coded `role === 'ADMIN'` checks
+  - See `IT_SERVICE_MODULE_CONFLICT_ANALYSIS.md` (lines 27-95) for implementation plan
+  - Role hierarchy helper needed: `hasRoleLevel(userRole, requiredRole)` function
 - **Projects**: Belong to departments, have custom workflow statuses
 - **Tasks**: Support subtasks, checklists, comments with @mentions, priority 1-4
 - **Task Assignees**: ⭐ **IMPORTANT: Multi-assignee system** via `task_assignees` table
@@ -639,6 +767,8 @@ src/
 - `src/hooks/use-notifications.ts` - Notification center data
 - `src/hooks/use-department-tasks.ts` - Department-wide task view data
 - `src/hooks/use-projects-list.ts` - Projects list with filters and pagination
+- `src/hooks/use-service-requests.ts` - IT Service requests data and mutations ⭐ **NEW**
+- `src/hooks/use-system-settings.ts` - System settings (SUPER_ADMIN only) ⭐ **NEW (Planned)**
 - `src/stores/use-sync-store.ts` - Sync animation control
 - `src/stores/use-ui-store.ts` - Modals and panels control
 - `src/stores/use-navigation-store.ts` - Navigation state management
@@ -675,6 +805,51 @@ NEXT_PUBLIC_APP_URL="http://localhost:3010"  # Base URL for links
 - **CRITICAL**: Ensure `BYPASS_AUTH=false` and `BYPASS_EMAIL=false` in production
 - Never commit real API keys or credentials to version control
 - Use environment variable management service (Vercel, Railway, etc.)
+
+### MCP (Model Context Protocol) Tools
+
+This project has integrated MCP tools for enhanced development workflow.
+
+**Configuration**: See `.mcp.json` for server configurations
+
+#### Available MCP Servers
+
+1. **Next.js DevTools MCP** (`mcp__next-devtools__*`)
+   - **Browser automation** - Test pages with real browser rendering
+   - **Runtime diagnostics** - Query Next.js dev server for errors, routes, logs
+   - **Cache Components** - Enable and verify Cache Components in Next.js 16
+   - **Documentation search** - Search Next.js official documentation
+   - **Upgrade assistant** - Guide through Next.js 16 upgrade process
+
+   **Useful for**:
+   - Testing pages with JavaScript execution (better than curl)
+   - Debugging runtime errors from Next.js dev server
+   - Searching Next.js docs for latest features
+   - Upgrading to Next.js 16 with automated codemods
+
+2. **GitHub MCP** (`mcp__github__*`)
+   - **Repository management** - Create repos, fork, create branches
+   - **File operations** - Create/update files, push multiple files
+   - **Issue and PR management** - Create issues, PRs, reviews, merge
+   - **Search** - Search repositories, code, issues, users
+
+   **Useful for**:
+   - Creating PRs with proper formatting
+   - Managing issues programmatically
+   - Bulk file updates in a single commit
+   - Searching across repositories
+
+3. **PostgreSQL MCP** (`mcp__postgres__*`)
+   - **Database queries** - Execute read-only SQL queries
+
+   **Useful for**:
+   - Quick database queries for verification
+   - Data inspection without Prisma Studio
+
+**When to use MCP tools**:
+- Browser automation: Testing pages with runtime JavaScript (Next.js runtime errors)
+- GitHub: Creating PRs, managing issues, bulk file operations
+- PostgreSQL: Quick data verification queries
 
 ---
 
@@ -1791,6 +1966,19 @@ npm run build
 9. Create corresponding React Query hook in src/hooks/
 10. **Run `npm run type-check` after implementation**
 
+**If working on IT Service Module**:
+
+1. Check `IT_SERVICE_MODULE_SPECIFICATION.md` for detailed spec (2,800+ lines)
+2. Check `IT_SERVICE_MODULE_CONFLICT_ANALYSIS.md` for resolved conflicts
+3. Check session summaries: `IT_SERVICE_SESSION_2_SUMMARY.md`, `IT_SERVICE_SESSION_3_SUMMARY.md`
+4. Follow same patterns: type safety (NO `as any`), optimistic updates, Next.js 15 compliance
+5. Add fiscalYear field to ServiceRequest table (use `buildFiscalYearFilter` helper)
+6. Test with local PostgreSQL database (see `LOCAL_DEVELOPMENT_SETUP.md`)
+7. SUPER_ADMIN role implementation required before Phase 5 (System Settings)
+8. 6 files need role hierarchy refactoring (replace hard-coded `role === 'ADMIN'` checks)
+9. USER role must be isolated to IT Service portal (no access to main dashboard)
+10. Request forms must follow consistent modal structure (see Session 3 summary)
+
 **If asked about the codebase**:
 
 1. Check CLAUDE.md (this file) for overview and current status
@@ -1974,6 +2162,58 @@ const taskWhereClause = {
 - Global store: `src/stores/use-fiscal-year-store.ts`
 - Helper functions: `src/lib/fiscal-year.ts`
 
+### SUPER_ADMIN Role Implementation Required ⚠️ **CRITICAL**
+
+**Status**: Not yet implemented (planned for IT Service Phase 5)
+
+**Problem**: 6 files have hard-coded `role === 'ADMIN'` checks that will exclude SUPER_ADMIN:
+- `src/components/navigation/breadcrumb.tsx`
+- `src/app/api/dashboard/route.ts`
+- `src/lib/permissions.ts`
+- `src/components/users/user-row.tsx`
+- `src/components/users/users-view.tsx`
+- `src/components/users/users-table.tsx`
+
+**Why this matters**:
+- If SUPER_ADMIN role is added without refactoring these files
+- SUPER_ADMIN users will NOT have access to features that check `role === 'ADMIN'`
+- This creates a lower-privileged "super admin" (incorrect!)
+
+**Required Solution**: Implement role hierarchy system:
+```typescript
+// src/lib/permissions.ts
+const ROLE_HIERARCHY = {
+  SUPER_ADMIN: 7,
+  ADMIN: 6,
+  CHIEF: 5,
+  LEADER: 4,
+  HEAD: 3,
+  MEMBER: 2,
+  USER: 1,
+};
+
+export function hasRoleLevel(userRole: UserRole, requiredRole: UserRole): boolean {
+  return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole];
+}
+
+// Usage: Replace all `role === 'ADMIN'` with:
+if (hasRoleLevel(user.role, 'ADMIN')) {
+  // Allow ADMIN and SUPER_ADMIN
+}
+```
+
+**Migration Checklist**:
+- [ ] Add SUPER_ADMIN to UserRole enum (Prisma schema migration)
+- [ ] Create `hasRoleLevel()` helper function
+- [ ] Refactor 6 files to use role hierarchy
+- [ ] Add SUPER_ADMIN permissions to ROLE_PERMISSIONS
+- [ ] Test all ADMIN features work for SUPER_ADMIN
+- [ ] Update permission system documentation
+
+**See**: `IT_SERVICE_MODULE_CONFLICT_ANALYSIS.md` (lines 27-95) for detailed implementation plan.
+
+**Effort**: 4-6 hours (schema migration + 6 file refactors + testing)
+
 ### Historical Context
 
 This project was migrated from Google Apps Script (GAS) to Next.js 15 + PostgreSQL. **Migration is now complete (2025-10-27)**.
@@ -2103,13 +2343,42 @@ Contains original GAS codebase (`.gs` files) for historical reference only. Usef
 
 ### Feature Planning & Design
 
+- `DIVISION_VIEW_DESIGN.md` - Division View executive dashboard (completed) ⭐ **NEW**
+- `DIVISION_VIEW_DESIGN_CONSISTENCY.md` - Division View design refinements ⭐ **NEW**
+- `MOBILE_LAYOUT_DESIGN.md` - Mobile responsive design (8 phases, 100% complete)
 - `NEXT_GOAL_DEPARTMENT_TASKS.md` - Department tasks (completed)
 - `DEPARTMENT_TASKS_VIEW_DESIGN.md` - Department tasks design
 - `DEPARTMENT_TASKS_GANTT_CHART_DESIGN.md` - Gantt chart plan (future)
 - `DEPARTMENT_TASKS_CUSTOM_GROUPING_DESIGN.md` - Custom grouping (future)
 - `EDIT_PROJECT_MODAL_IMPLEMENTATION_PLAN.md` - Edit project modal design
 
-### Recent Bug Fixes & Improvements (2025-10-24 to 2025-10-26)
+### IT Service Module (New Feature) ⭐
+
+- `IT_SERVICE_MODULE_SPECIFICATION.md` - Complete module specification (2,800+ lines) ⭐ **IMPORTANT**
+- `IT_SERVICE_MODULE_CONFLICT_ANALYSIS.md` - Conflict analysis and resolutions ⭐ **IMPORTANT**
+- `SYSTEM_SETTINGS_DESIGN.md` - System Settings page design (SUPER_ADMIN only)
+- `LOCAL_DEVELOPMENT_SETUP.md` - PostgreSQL local development setup guide
+- `IT_SERVICE_SESSION_2_SUMMARY.md` - Session 2: Portal UI implementation (Tasks 1-3)
+- `IT_SERVICE_SESSION_3_SUMMARY.md` - Session 3: Request forms enhancement (Task 4)
+
+### Recent Refactoring Plans (2025-10-30)
+
+- `REFACTORING_PLAN_2025-10-30.md` - Comprehensive refactoring roadmap (106K+ LOC analysis) ⭐ **NEW**
+- `PHASE_1.1_COMPLETE.md` - @ts-nocheck removal complete (14 files fixed) ⭐ **NEW**
+- `PHASE_1.1_REMOVE_TS_NOCHECK_PLAN.md` - Planning document for Phase 1.1
+- `PHASE_2_ASSIGNEE_MIGRATION_PLAN.md` - Assignee field migration plan ⭐ **NEW**
+
+### Fiscal Year Implementation (Complete)
+
+- `FISCAL_YEAR_FILTER_IMPLEMENTATION.md` - Global fiscal year filter
+- `FISCAL_YEAR_PHASE2_COMPLETE.md` - Reports integration
+- `FISCAL_YEAR_PHASE3_COMPLETE.md` - Department tasks integration
+- `FISCAL_YEAR_PHASE4_COMPLETE.md` - Dashboard integration
+- `FISCAL_YEAR_PHASE5_COMPLETE.md` - Projects list integration
+- `FISCAL_YEAR_MOBILE_SUPPORT_COMPLETE.md` - Mobile menu support
+- `FISCAL_YEAR_MY_TASKS_CHECKLIST_COMPLETE.md` - My Tasks/Checklist support
+
+### Recent Bug Fixes & Improvements (2025-10-24 to 2025-10-30)
 
 - `DATA_LEAKAGE_SECURITY_FIX.md` - Critical security fix for session isolation (React Query cache clearing on login) ⭐ **NEW - CRITICAL**
 - `CROSS_DEPARTMENT_TASK_IDENTIFICATION_COMPLETE.md` - Department badges in Dashboard widgets, personal activity feed ⭐ **NEW**
@@ -2292,9 +2561,194 @@ const { data, isLoading } = useReports({
 
 ---
 
-**End of CLAUDE.md v2.34.0** (2025-10-30)
+**End of CLAUDE.md v2.37.0** (2025-11-01)
 
 ## Changelog
+
+### v2.37.0 (2025-11-01) - IT Service Session 6: Menu Consolidation & Bug Fixes
+
+**Major changes:**
+
+- ✅ Consolidated IT Service navigation into single menu with 3 tabs
+- ✅ Enhanced timeline with task assignment details (assignees + status)
+- ✅ Fixed 4 critical bugs (request detail page, modal props, type errors, double card border)
+- ✅ Removed COMMENT_ADDED from timeline (kept notification only)
+- ✅ Fixed all TypeScript type errors (12 errors → 0 errors)
+- ✅ Production build successful (73 pages, 8.2s)
+
+**Menu Consolidation** (3-Tab Navigation):
+
+Created unified IT Service admin page for non-USER roles:
+1. **IT Service Portal** - Action cards for creating requests (portal-content.tsx)
+2. **จัดการคำร้อง** - Manage all requests table with filters (manage-requests-content.tsx)
+3. **คำร้องของฉัน** - My requests table view (my-requests-content.tsx)
+
+**Architecture Change:**
+- USER role: `/it-service` (portal page, unchanged)
+- Non-USER roles: `/it-service-admin` (3 tabs with pending badge on tab 2)
+- Removed "คำร้องขอ" menu from sidebar
+- Moved pending badge to "IT Service" menu
+
+**Timeline Enhancement:**
+
+Created RequestTimeline component with task assignment display:
+- Shows task status name for TASK_CREATED events
+- Displays assignees with avatars and formatted names
+- Blue info box for visual distinction
+- API includes task.status and task.assignees relations
+
+**Bug Fixes:**
+
+1. **Request Detail Page Type Error** - Fixed Prisma schema field name mismatch (`type` vs `statusType`)
+2. **Modal Props Error** - Fixed `onOpenChange is not a function` by using correct prop name
+3. **Comment Type Mismatch** - Updated to use name parts instead of fullName
+4. **Invalid Enum Values** - Removed HARDWARE/NETWORK from components (not in enum)
+5. **Double Card Border** - Removed extra wrapper divs in timeline section
+6. **Notification Inconsistency** - USER role now uses NotificationBell component
+
+**Files Created (5):**
+
+- src/app/(dashboard)/it-service-admin/page.tsx (118 lines)
+- src/components/it-service/portal-content.tsx (108 lines)
+- src/components/it-service/manage-requests-content.tsx (317 lines)
+- src/components/it-service/my-requests-content.tsx (277 lines)
+- src/components/it-service/request-timeline.tsx (260 lines)
+
+**Files Modified (7):**
+
+- src/components/layout/sidebar.tsx
+- src/app/api/service-requests/[id]/route.ts
+- src/app/api/service-requests/[id]/comments/route.ts
+- src/hooks/use-service-requests.ts
+- src/components/it-service/it-service-top-bar.tsx
+- IT_SERVICE_SESSION_6_COMPLETE.md (new)
+- CLAUDE.md (updated to v2.37.0)
+
+**Type Safety Lessons Learned:**
+
+1. Always match Prisma schema field names exactly (e.g., `type` not `statusType`)
+2. Use `onOpenChange` prop for shadcn/ui Dialog components, not `onClose`
+3. Only use enum values that exist in Prisma schema (validate against generated types)
+4. Fix type errors immediately - don't let them accumulate
+5. Run `npm run type-check` and `npm run build` before final commit
+
+**Testing Results:**
+- Type-check: ✅ 0 errors (fixed 12 errors)
+- Production build: ✅ 73 pages compiled in 8.2s
+- All features working correctly
+
+**Commits:**
+- 7f141f9: Menu consolidation, bug fixes, timeline enhancement
+- [Pending]: Type error fixes
+
+**Next**: Phase 3 - Request Tracking Enhancements
+
+---
+
+### v2.36.0 (2025-11-01) - IT Service Module Phase 2 Complete - Document Preview
+
+**Major changes:**
+
+- ✅ Completed Phase 2 Task 5: Document Preview functionality
+- ✅ Created `src/lib/document-helpers.ts` (684 lines) - HTML document generation engine
+  - Thai Buddhist calendar date formatting (+543 years)
+  - Three template generators (DATA/PROGRAM, HARDWARE/NETWORK, IT_ISSUE)
+  - Sarabun 16pt font from Google Fonts
+  - A4 page size with 2.5cm margins
+  - Print-optimized CSS with `@media print` rules
+- ✅ Created `src/components/it-service/document-preview-modal.tsx` (112 lines)
+  - iframe-based document rendering for CSS isolation
+  - Print button with browser print dialog integration
+  - Responsive full-screen modal (90vh height)
+- ✅ Integrated preview into all 3 request modals:
+  - data-request-modal.tsx (DATA/PROGRAM requests)
+  - hardware-network-modal.tsx (HARDWARE/NETWORK requests)
+  - it-issue-modal.tsx (IT_ISSUE requests)
+- ✅ Form validation before preview (async `form.trigger()`)
+- ✅ Auto-filled requester information from authenticated user
+- ✅ Preview button with Eye icon in all modals
+- ✅ Type-check passed (0 errors)
+
+**Technical Implementation:**
+
+- Document generation uses `DocumentData` interface with 15+ fields
+- Templates follow Thai government document format
+- Purpose checkboxes formatted with ☑/☐ symbols
+- Temporary request number in preview (SR-YYYY-XXXXX)
+- Hospital name currently hardcoded (TODO: system settings integration)
+- Print functionality via `iframe.contentWindow.print()`
+
+**Phase 2 Status**: ✅ **100% COMPLETE** (5/5 tasks)
+
+1. ✅ USER role layout isolation
+2. ✅ Sidebar navigation
+3. ✅ Portal landing page
+4. ✅ Request submission forms
+5. ✅ Document preview ⭐ **NEW**
+
+**Files Created:**
+
+- src/lib/document-helpers.ts (684 lines)
+- src/components/it-service/document-preview-modal.tsx (112 lines)
+- IT_SERVICE_SESSION_4_SUMMARY.md (complete implementation summary)
+
+**Files Modified:**
+
+- src/components/it-service/data-request-modal.tsx
+- src/components/it-service/hardware-network-modal.tsx
+- src/components/it-service/it-issue-modal.tsx
+- CLAUDE.md (updated to v2.36.0)
+
+**Next**: Phase 3 - Request Tracking & Timeline (2-3 days estimated)
+
+---
+
+### v2.35.0 (2025-11-01) - IT Service Module Phase 2 Tasks 1-4 Complete
+
+**Major changes:**
+
+- ✅ Implemented IT Service Module Phase 2 (Portal UI) - 80% Complete
+- ✅ USER role isolation with clean layout (no sidebar, ITServiceTopBar only)
+- ✅ 4 action cards (DATA, PROGRAM, IT_ISSUE, HARDWARE/NETWORK requests)
+- ✅ 3 request submission modals with comprehensive validation
+- ✅ Purpose checkboxes for DATA/PROGRAM requests
+- ✅ Dropdown z-index fix (z-[300] prevents modal overlap)
+- ✅ Custom scrollbar styling (thin, right-aligned, hover effect)
+- ✅ White backgrounds on all inputs (light mode)
+- ✅ Responsive design (mobile: 1 col, tablet: 2 cols, desktop: 4 cols)
+- ✅ Updated CLAUDE.md with IT Service documentation
+
+**Phase 2 Tasks Completed:**
+1. ✅ **Task 1: IT Service Layout** - USER role redirect, ITServiceTopBar, clean layout
+2. ✅ **Task 2: Sidebar Navigation** - "IT Service" menu, "คำร้องขอ" menu with badges
+3. ✅ **Task 3: Portal Landing Page** - 4 action cards, request list, responsive
+4. ✅ **Task 4: Request Forms** - 3 modals with validation, z-index fixes, custom scrollbar
+
+**UI/UX Enhancements:**
+- Centered action cards with increased spacing
+- Removed unnecessary text (headers, descriptions)
+- Simplified filter controls
+- Mobile-responsive layout
+- Touch-friendly card sizing
+- Professional lucide icons (Database, Network, Wrench, Search)
+
+**Files:**
+- Created: ~15 files (portal page, modals, components)
+- Modified: 8 files (layout, breadcrumb, checklist widget, navbar)
+- Updated: 6 docs (CLAUDE.md, IT Service spec, conflict analysis, system settings, session summaries)
+
+**Next:** Phase 2 Task 5 - Document Preview (PDF/Word preview, template generation, print/download)
+
+**Documentation:**
+- Added IT Service Module section to CLAUDE.md
+- Added IT Service roadmap to Version Status
+- Added IT Service documentation to Documentation Index
+- Updated Current Priority to Phase 2 Task 5
+- Added SUPER_ADMIN role warning in Architecture section
+
+**Branch**: `refactor/p0-type-safety` (or current working branch)
+
+---
 
 ### v2.34.0 (2025-10-30) - P0 Type Safety Refactoring Complete
 

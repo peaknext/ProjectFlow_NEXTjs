@@ -299,7 +299,9 @@ export function useRequestComments(id: string) {
           createdAt: string;
           commentor: {
             id: string;
-            fullName: string;
+            titlePrefix?: string | null;
+            firstName: string;
+            lastName: string;
             profileImageUrl?: string | null;
             jobTitle?: {
               jobTitleTh: string;
